@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 04: Frontend` (QA visual) |
-| **Status Loop** | `running` |
+| **Fase Aktif** | `Fase 05: Audit` — selesai, menunggu approval owner (gerbang 05/06) |
+| **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | 70% (backend + UI baru selesai, 46 tes lulus; QA visual, audit, deploy menyusul) |
+| **Progress** | 90% (backend + UI + QA + audit selesai, 62 tes lulus; tinggal deploy) |
 
 ---
 
@@ -38,11 +38,14 @@
 - [x] API: `/api/map`, `/api/overview`, `/api/devices`, `/api/profiles`, `/api/providers`, `/api/accounts`, `/api/sign-ins` (+ tempat sampah & pulihkan)
 - [x] Asisten AI: 6 alat baca + 8 alat ubah (kartu konfirmasi), sebut @perangkat/@akun, perintah `/`
 - [x] Tes: domain peta login, isolasi RLS, platform, agen AI, gateway AI, aturan bahasa kode — 46/46 lulus
-### 🔄 Fase 04: Frontend
+### ✅ Fase 04: Frontend
 - [x] Layar: landing, masuk/daftar, peta login, perangkat (+detail), akun (+detail), penyedia, asisten, pengaturan (AI + pengguna), konsol platform
-- [x] Bahasa `id` + `en` (file bahasa dibangun ulang dari kunci yang dipakai)
-- [ ] QA visual (desktop, HP, terang/gelap) di server lokal dengan basis data lokal
-### ⏳ Fase 05: Audit · ⏳ Fase 06: Deployment (butuh persetujuan owner: repo GitHub, proyek Vercel, migrasi Neon, `APP_SECRET`)
+- [x] Bahasa `id` + `en` (file bahasa dibangun ulang dari kunci yang dipakai; nada "kamu")
+- [x] QA visual: 35 tangkapan layar (terang, gelap, HP 390 px) di server produksi lokal + basis data lokal; perbaikan `12b7b2f`
+### 👀 Fase 05: Audit — selesai (`audit-report.md`), menunggu approval owner
+- [x] Security, performance, code quality, i18n, UI/UX, mobile, database
+- [ ] Approval owner
+### ⏳ Fase 06: Deployment (butuh owner: repo GitHub, proyek Vercel, migrasi Neon, `APP_SECRET`)
 
 ---
 
@@ -60,4 +63,6 @@
 | Waktu | Fase | Catatan |
 |---|---|---|
 | 2026-10-11 00:20 | 00 | Kickoff: folder, loop-v5, requirement; antre setelah modul rekap EventMu |
-| 2026-10-11 02:30 | 03–04 | Backend + UI baru selesai; 46 tes, tsc, lint lulus; lanjut QA visual |
+| 2026-10-11 02:30 | 03–04 | Backend + UI baru selesai (`1db0214`); 46 tes, tsc, lint lulus |
+| 2026-10-11 02:45 | 04 | QA visual di server lokal (PGlite, AI tiruan); perbaikan hidrasi drawer, rail, HP (`12b7b2f`) |
+| 2026-10-11 03:00 | 05 | Audit selesai (`audit-report.md`), 62 tes; berhenti di gerbang approval 05/06 |
