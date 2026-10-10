@@ -63,7 +63,7 @@ function RailLink({ item, active }: { item: ShellNavItem; active: boolean }) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex w-[58px] flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10.5px] font-semibold leading-3 transition-colors",
+        "group flex w-[70px] flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-semibold leading-3 transition-colors",
         active ? "bg-rail-active text-white" : "text-rail-ink hover:bg-rail-hover hover:text-white",
       )}
     >
@@ -127,7 +127,7 @@ export function AppShell({
   return (
     <StaffContext.Provider value={{ user, permissions }}>
       <div className="min-h-dvh bg-canvas">
-        <aside className="print-hidden fixed inset-y-0 left-0 z-30 hidden w-[74px] flex-col items-center bg-rail py-3 md:flex">
+        <aside className="print-hidden fixed inset-y-0 left-0 z-30 hidden w-[82px] flex-col items-center bg-rail py-3 md:flex">
           <Link href={homeHref} aria-label={caption ?? t("nav.home")} className="mb-4 rounded-xl transition-opacity hover:opacity-80">
             <LogoMark className="size-9" />
           </Link>
@@ -143,7 +143,7 @@ export function AppShell({
           </div>
         </aside>
 
-        <div className="md:pl-[74px]">
+        <div className="md:pl-[82px]">
           <header className="print-hidden sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface/85 px-3 backdrop-blur sm:px-5">
             <Link href={homeHref} className="flex min-w-0 items-center gap-2 md:hidden">
               <LogoMark className="size-7" />
@@ -177,7 +177,9 @@ export function AppShell({
                 </button>
               ) : null}
               <ThemeToggle />
-              <LocaleSwitcher className="hidden sm:inline-flex" />
+              <div className="hidden sm:block">
+                <LocaleSwitcher />
+              </div>
               <div ref={menuRef} className="relative">
                 <button
                   type="button"

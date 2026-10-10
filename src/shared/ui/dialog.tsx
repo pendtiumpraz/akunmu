@@ -4,6 +4,7 @@ import { AlertTriangle, RotateCcw } from "lucide-react";
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./button";
+import { useIsClient } from "./use-client";
 
 /** Small confirmation dialog for destructive or important actions (delete, restore, sign out). */
 export function ConfirmDialog({
@@ -28,6 +29,7 @@ export function ConfirmDialog({
   onCancel: () => void;
 }) {
   const titleId = useId();
+  const isClient = useIsClient();
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -37,7 +39,7 @@ export function ConfirmDialog({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onCancel]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!open || !isClient) return null;
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 animate-fade-in bg-overlay" onClick={onCancel} aria-hidden="true" />

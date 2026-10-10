@@ -465,6 +465,7 @@ export function ActionCard({
   const secretField = action.preview.secret;
   const missingSecret = Boolean(secretField?.required && !secret.trim());
   const statusLabel = t.dynamic(`ai.status${action.status.charAt(0).toUpperCase()}${action.status.slice(1)}`);
+  const toolLabel = t.dynamic(`ai.tools.${action.tool}`);
   return (
     <div className={cn("overflow-hidden rounded-xl border bg-surface", pending ? "border-warn-line ring-4 ring-warn-soft" : "border-line")}>
       <div className="flex items-center gap-3 border-b border-line px-4 py-3">
@@ -473,7 +474,7 @@ export function ActionCard({
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-semibold text-ink">{action.preview.title}</p>
-          <p className="text-xs text-muted">{t.dynamic(`ai.tools.${action.tool}`)}</p>
+          {toolLabel !== action.preview.title ? <p className="text-xs text-muted">{toolLabel}</p> : null}
         </div>
         <Badge tone={tone.badge}>{statusLabel}</Badge>
       </div>

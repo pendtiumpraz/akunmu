@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "./use-client";
 
 /**
  * Right-side drawer for every create/edit form (loop-v5 rule #5):
@@ -28,9 +29,11 @@ export function Drawer({
 }) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  // The server renders nothing here; the portal appears right after hydration (a drawer open on the first render).
+  const isClient = useIsClient();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !isClient) return;
     const previous = document.activeElement as HTMLElement | null;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -45,9 +48,9 @@ export function Drawer({
       document.body.style.overflow = overflow;
       previous?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open, onClose, isClient]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!open || !isClient) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-50">

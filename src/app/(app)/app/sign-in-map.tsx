@@ -104,9 +104,9 @@ function ColumnHeader({ title, count, onBack, backLabel, actions }: { title: Rea
           <ArrowLeft className="size-4" />
         </IconButton>
       ) : null}
-      <h2 className="min-w-0 flex-1 truncate px-1 text-[13px] font-bold text-ink">
-        {title}
-        {count !== undefined ? <span className="ml-1.5 font-mono text-xs font-medium text-faint">{count}</span> : null}
+      <h2 className="flex min-w-0 flex-1 items-center gap-1.5 px-1 text-[13px] font-bold text-ink">
+        <span className="min-w-0 truncate">{title}</span>
+        {count !== undefined ? <span className="shrink-0 font-mono text-xs font-medium text-faint">{count}</span> : null}
       </h2>
       {actions}
     </header>
@@ -276,36 +276,42 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <dl className="flex flex-1 flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <dl className="grid flex-1 grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">
           {summary.map((item) => (
-            <div key={item.label} className="flex items-baseline gap-1.5">
+            <div key={item.label} className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
               <dt className="sr-only">{item.label}</dt>
               <dd className="font-mono text-lg font-bold text-ink tabular-nums">{format.number(item.value)}</dd>
-              <span aria-hidden="true" className="text-[13px] text-muted">
+              <span aria-hidden="true" className="truncate text-[12px] text-muted sm:text-[13px]">
                 {item.label}
               </span>
             </div>
           ))}
         </dl>
-        <Segmented
-          label={t("map.view")}
-          value={selection.view}
-          onChange={(view) => select({ view })}
-          options={[
-            { value: "map", label: t("map.viewMap"), icon: <Waypoints className="size-3.5" /> },
-            {
-              value: "check",
-              label: toCheck.length > 0 ? t("map.viewCheckCount", { count: toCheck.length }) : t("map.viewCheck"),
-              icon: <ListChecks className="size-3.5" />,
-            },
-          ]}
-        />
-        {canWrite ? (
-          <Button icon={<Plus className="size-4" />} onClick={() => setDrawer({ kind: "signIn", deviceId: device?.id ?? null, place: place?.key ?? null, account: null })}>
-            {t("signIns.recordButton")}
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          <Segmented
+            label={t("map.view")}
+            value={selection.view}
+            onChange={(view) => select({ view })}
+            options={[
+              { value: "map", label: t("map.viewMap"), icon: <Waypoints className="size-3.5" /> },
+              {
+                value: "check",
+                label: toCheck.length > 0 ? t("map.viewCheckCount", { count: toCheck.length }) : t("map.viewCheck"),
+                icon: <ListChecks className="size-3.5" />,
+              },
+            ]}
+          />
+          {canWrite ? (
+            <Button
+              className="ml-auto"
+              icon={<Plus className="size-4" />}
+              onClick={() => setDrawer({ kind: "signIn", deviceId: device?.id ?? null, place: place?.key ?? null, account: null })}
+            >
+              {t("signIns.recordButton")}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {selection.view === "check" ? (
@@ -534,6 +540,7 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
                       key={row.id}
                       row={row}
                       show="place"
+                      compact
                       staleBefore={staleBefore}
                       actions={actions}
                       canWrite={canWrite}

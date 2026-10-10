@@ -74,7 +74,7 @@ export function MapIllustration({ labels, className }: { labels: MapIllustration
           <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-wider text-white/40">{labels.devices}</p>
           <Row icon={Laptop} label={labels.deviceOffice} detail="Windows" active />
           <Row icon={Smartphone} label={labels.devicePhone} detail="Android" />
-          <Row icon={MonitorSmartphone} label={labels.deviceHome} detail="macOS" />
+          <Row icon={MonitorSmartphone} label={labels.deviceHome} detail="Windows" />
         </div>
         <div className="space-y-1 rounded-xl bg-white/[0.03] p-1.5">
           <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-wider text-white/40">{labels.places}</p>

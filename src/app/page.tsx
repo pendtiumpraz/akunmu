@@ -63,7 +63,9 @@ export default async function LandingPage() {
           </nav>
           <div className="ml-auto flex items-center gap-1">
             <ThemeToggle />
-            <LocaleSwitcher className="hidden sm:inline-flex" />
+            <div className="hidden sm:block">
+              <LocaleSwitcher />
+            </div>
             {home ? (
               <ButtonLink href={home} size="sm">
                 {t("landing.openApp")}
@@ -176,7 +178,10 @@ export default async function LandingPage() {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-muted sm:px-6">
           <Logo nameClassName="text-sm" />
-          <p>{t("landing.footer", { year: String(new Date().getFullYear()) })}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <LocaleSwitcher />
+            <p>{t("landing.footer", { year: String(new Date().getFullYear()) })}</p>
+          </div>
         </div>
       </footer>
     </div>

@@ -130,6 +130,7 @@ export function SignInLine({
   selected,
   onSelect,
   href,
+  compact = false,
 }: {
   row: MapSignIn;
   show: "account" | "place" | "both";
@@ -139,10 +140,27 @@ export function SignInLine({
   selected?: boolean;
   onSelect?: () => void;
   href?: string;
+  /** Narrow columns: the status goes under the name and every action into the menu. */
+  compact?: boolean;
 }) {
   const { t, format } = useI18n();
   const active = row.status === "signed_in";
   const stale = needsCheck(row, staleBefore) && !row.review;
+  const status = active ? (
+    <>
+      {row.review ? (
+        <Badge tone="warn">
+          <Flag className="size-3" />
+          {t("signIns.markedForReview")}
+        </Badge>
+      ) : null}
+      <Freshness lastVerifiedAt={row.lastVerifiedAt} stale={stale} />
+    </>
+  ) : (
+    <span className="text-xs text-faint">{row.signedOutAt ? t("signIns.signedOutOn", { date: shortDate(row.signedOutAt, format) }) : t("signIns.signedOutStatus")}</span>
+  );
+  // On phones (and in compact lines) the status sits under the name instead of in its own column.
+  const inlineStatus = <span className={cn("mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1", !compact && "sm:hidden")}>{status}</span>;
   const main =
     show === "place" ? (
       <>
@@ -150,6 +168,7 @@ export function SignInLine({
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold text-ink">{placeLabel(row, t)}</span>
           <span className="block truncate text-xs text-muted">{row.device.name}</span>
+          {inlineStatus}
         </span>
       </>
     ) : (
@@ -160,27 +179,14 @@ export function SignInLine({
           <span className="block truncate text-xs text-muted">
             {[row.provider.name, row.account.label, show === "both" ? `${placeLabel(row, t)} — ${row.device.name}` : null].filter(Boolean).join(" · ")}
           </span>
+          {inlineStatus}
         </span>
       </>
     );
   const body = (
     <>
       {main}
-      <span className="hidden shrink-0 flex-col items-end gap-0.5 sm:flex">
-        {active ? (
-          <>
-            {row.review ? (
-              <Badge tone="warn">
-                <Flag className="size-3" />
-                {t("signIns.markedForReview")}
-              </Badge>
-            ) : null}
-            <Freshness lastVerifiedAt={row.lastVerifiedAt} stale={stale} />
-          </>
-        ) : (
-          <span className="text-xs text-faint">{row.signedOutAt ? t("signIns.signedOutOn", { date: shortDate(row.signedOutAt, format) }) : t("signIns.signedOutStatus")}</span>
-        )}
-      </span>
+      {compact ? null : <span className="hidden shrink-0 flex-col items-end gap-0.5 sm:flex">{status}</span>}
     </>
   );
   const rowClass = cn(
@@ -203,18 +209,21 @@ export function SignInLine({
       )}
       {canWrite && active ? (
         <div className="flex shrink-0 items-center">
-          <button
-            type="button"
-            onClick={() => actions.confirm(row)}
-            aria-label={t("signIns.confirm")}
-            title={t("signIns.confirm")}
-            className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ok-soft hover:text-ok-ink"
-          >
-            <CheckCheck className="size-4" />
-          </button>
+          {compact ? null : (
+            <button
+              type="button"
+              onClick={() => actions.confirm(row)}
+              aria-label={t("signIns.confirm")}
+              title={t("signIns.confirm")}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ok-soft hover:text-ok-ink"
+            >
+              <CheckCheck className="size-4" />
+            </button>
+          )}
           <Menu
             label={t("common.more")}
             items={[
+              { label: t("signIns.confirm"), icon: CheckCheck, hidden: !compact, onSelect: () => actions.confirm(row) },
               { label: t("signIns.signOut"), icon: LogOut, onSelect: () => actions.askSignOut(row) },
               { label: row.review ? t("signIns.clearReview") : t("signIns.markReview"), icon: row.review ? FlagOff : Flag, onSelect: () => actions.toggleReview(row) },
               { label: t("common.edit"), icon: Pencil, onSelect: () => actions.edit(row) },
