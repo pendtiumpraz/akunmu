@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+next-env.d.ts
+
+# Environment and secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Workflow reference clone (kept locally, tracked in its own repository)
+loop-v5/
+
+# Local uploads (storage driver "local")
+public/uploads/
+
+# Tooling
+.vercel/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Bootstrap accounts (real emails of the owner)
+bootstrap.json
+.bootstrap-credentials.txt

@@ -1,0 +1,68 @@
+# User Requirement — AkunMu
+
+> Tempat kebutuhan, feedback, dan approval antara owner dan AI developer (loop-v5).
+> Bahasa dokumen: Indonesia (komunikasi). Kode aplikasi: Inggris (aturan #12).
+
+---
+
+## 📋 Requirement Project
+
+### Nama Project
+`akunmu` — **AkunMu** (usulan AI; owner: "Device Management Account atau terserah kamu kasih nama apa deh suka2 kamu"). Saudara EventMu.
+
+### Deskripsi Singkat
+Aplikasi Next.js untuk mencatat **di perangkat dan profil browser mana setiap akun sedang login**, supaya owner yang punya banyak akun (terutama Google) dan jarang logout tetap tahu jejak loginnya.
+
+Struktur: **Perangkat → Profil browser → Akun yang login (penyedia + akun)**. Contoh owner:
+- Device A → Chrome profile A → provider A, akun A
+- Device A → Chrome profile B → provider A, akun B
+- Device C → Chrome profile B → provider D, akun D
+
+Nama profil yang sama bisa muncul di beberapa perangkat; satu akun bisa login di banyak tempat.
+
+### Target Pengguna
+- Owner (pemakai pribadi dengan banyak akun dan perangkat).
+- Arsitektur tetap SaaS seperti EventMu (tenant + RLS), sehingga bisa dipakai orang/tim lain.
+
+### Deadline
+Tidak ditentukan.
+
+---
+
+## 🎯 Fitur Utama (dari pesan owner, dirinci AI)
+
+1. **Peta login** (High): perangkat, profil browser per perangkat, akun yang login di tiap profil, penyedia akun.
+2. **Cari dua arah** (High): "akun X login di mana saja?" dan "di perangkat/profil ini login akun apa saja?".
+3. **Tanpa rahasia** (High): tidak ada password, token, atau kode pemulihan yang disimpan; hanya catatan lokasi login.
+4. **Asisten AI** (High): perilaku agentic sama persis dengan EventMu (tool calling sesuai izin, perubahan hanya jalan setelah dikonfirmasi di kartu, gateway multi-penyedia, kuota bulanan, BYOK).
+5. **Bahasa** (High): kode 100% Inggris; aplikasi `id` + `en`; bahasa baru = 1 file + 1 entri registry.
+6. **Tampilan berbeda** (High): UI **harus beda** dari EventMu (bukan gaya poster paper/coal/marker).
+
+---
+
+## ⚙️ Teknologi
+
+Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
+- Next.js (App Router) + React + TypeScript strict + Tailwind v4.
+- PostgreSQL (Neon) + Drizzle ORM + RLS per tenant; Vercel Blob; deploy Vercel.
+- Tes PGlite + Vitest, lint ESLint, typecheck `tsc`.
+- Env dikirim owner nanti ("aku bakal kirim envnya nanti").
+
+---
+
+## 💬 Pesan owner (verbatim)
+
+**2026-10-11 00:15 WIB**
+> oke sekarang setelah bikin event tadi aku mau bikin serupa untuk device management account, Device A, chrome profile A, isinya profider A akun A, chrome porofile B isinya profider A akun B, lalu device C chrome profile B isinya profider D akun D, gitu2 paham gak?? dan aku mau buat ini di D:/AI/privasimu/device jadi ini juga nextjs aku bakal kirim envnya nanti, intinya sama basisnya clone dulu loop v5 tadi kayak yang di folder event, harus ada juga di folder device ini untuk loop-v5 sainskerta, dan perilaku agenticnya harus sama persis bro! bedanya ini device & account management gitu, biar aku gak lupa karena aku punya banyak account google juga, cuma biar tahu aku login akun2 itu dimana gitu karena jarang logout, dan karena aku pakai agentic nama appsnya adalah Device Management Account atau terserah kamu kasih nama apa deh suka2 kamu, technya sama persis seperti event
+
+**2026-10-11 00:18 WIB**
+> tapi tolong UI nya harus beda!
+
+---
+
+## ✅ Approval & Feedback
+
+| Waktu | Gerbang / Topik | Keputusan owner |
+|---|---|---|
+| 2026-10-11 00:15 | 00–01 Kickoff | Instruksi build langsung (stack sama EventMu, loop-v5, agentic sama persis) |
+| 2026-10-11 00:18 | UI | Harus beda dari EventMu |
