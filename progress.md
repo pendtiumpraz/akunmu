@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 05: Audit` — selesai, menunggu approval owner (gerbang 05/06) |
+| **Fase Aktif** | `Fase 06: Deployment` — Neon + GitHub selesai, menunggu proyek Vercel |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | 90% (backend + UI + QA + audit selesai, 62 tes lulus; tinggal deploy) |
+| **Progress** | 95% (Neon termigrasi, repo GitHub terpush; tinggal Vercel + akun pertama) |
 
 ---
 
@@ -42,10 +42,16 @@
 - [x] Layar: landing, masuk/daftar, peta login, perangkat (+detail), akun (+detail), penyedia, asisten, pengaturan (AI + pengguna), konsol platform
 - [x] Bahasa `id` + `en` (file bahasa dibangun ulang dari kunci yang dipakai; nada "kamu")
 - [x] QA visual: 35 tangkapan layar (terang, gelap, HP 390 px) di server produksi lokal + basis data lokal; perbaikan `12b7b2f`
-### 👀 Fase 05: Audit — selesai (`audit-report.md`), menunggu approval owner
+### ✅ Fase 05: Audit — selesai (`audit-report.md`), disetujui owner
 - [x] Security, performance, code quality, i18n, UI/UX, mobile, database
-- [ ] Approval owner
-### ⏳ Fase 06: Deployment (butuh owner: repo GitHub, proyek Vercel, migrasi Neon, `APP_SECRET`)
+- [x] Approval owner ("migrate neon , ku buatkan githubnya", 11 Okt 06.55)
+### 🔄 Fase 06: Deployment
+- [x] Migrasi Neon `0000_init` + `0001_rls` (proyek Neon sendiri, terpisah dari EventMu). Diverifikasi: 15 tabel, RLS ENABLE + FORCE + kebijakan di semua tabel ruang kerja, peran `akunmu_app` NOBYPASSRLS
+- [x] Repo GitHub `pendtiumpraz/akunmu` (dibuat owner), `main` terpush
+- [x] `APP_SECRET` dibuat di `.env` lokal (tidak dicetak)
+- [ ] Proyek Vercel terhubung ke repo + env `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET`
+- [ ] Akun pemilik platform + ruang kerja pertama (`platform:bootstrap` atau `/signup`)
+- [ ] Kunci AI di `/platform/ai` (`claude-haiku-5-5`)
 
 ---
 
@@ -54,7 +60,7 @@
 | # | Issue | Severity | Status |
 |---|-------|----------|--------|
 | 1 | Env (Neon, Blob) belum ada; build lokal tetap jalan dengan PGlite | Medium | ✅ `.env` dari owner (11 Okt 00.40) |
-| 2 | Repo GitHub + proyek Vercel untuk AkunMu belum ada | Medium | ⏳ menunggu owner di gerbang deploy |
+| 2 | Repo GitHub + proyek Vercel untuk AkunMu belum ada | Medium | ⏳ repo GitHub ✅ (11 Okt); proyek Vercel menunggu owner |
 
 ---
 
@@ -66,3 +72,4 @@
 | 2026-10-11 02:30 | 03–04 | Backend + UI baru selesai (`1db0214`); 46 tes, tsc, lint lulus |
 | 2026-10-11 02:45 | 04 | QA visual di server lokal (PGlite, AI tiruan); perbaikan hidrasi drawer, rail, HP (`12b7b2f`) |
 | 2026-10-11 03:00 | 05 | Audit selesai (`audit-report.md`), 62 tes; berhenti di gerbang approval 05/06 |
+| 2026-10-11 06:58 | 06 | Approval owner; migrasi Neon `0000`–`0001` diterapkan + diverifikasi; repo GitHub `pendtiumpraz/akunmu` |
