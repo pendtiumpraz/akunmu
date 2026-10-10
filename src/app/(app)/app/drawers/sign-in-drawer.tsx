@@ -1,0 +1,344 @@
+"use client";
+
+import { CalendarCheck, Check, MonitorSmartphone, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { api, firstFieldErrors, type Paginated } from "@/shared/http/client";
+import { useI18n } from "@/shared/i18n/client";
+import { Button } from "@/shared/ui/button";
+import { cn } from "@/shared/ui/cn";
+import { Drawer } from "@/shared/ui/drawer";
+import { Checkbox, Field, Input, Select, Textarea } from "@/shared/ui/form-controls";
+import { useToast } from "@/shared/ui/toast";
+import { useApi } from "@/shared/ui/use-api";
+import type { AccountListItem, MapData, PlaceKey, ProviderItem } from "../map-types";
+import { BrowserMark, ProviderAvatar, browserLabel } from "../ui";
+
+export type FixedAccount = { id: number; identifier: string; label: string | null; provider: { id: number; name: string; color: string } };
+
+/** An existing sign-in being corrected (its account and device stay). */
+export type SignInEdit = {
+  id: number;
+  account: FixedAccount;
+  deviceId: number;
+  place: PlaceKey;
+  app: string | null;
+  since: string | null;
+  review: boolean;
+  notes: string | null;
+};
+
+type Draft = {
+  providerId: number | null;
+  identifier: string;
+  deviceId: number | null;
+  place: PlaceKey | null;
+  app: string;
+  since: string;
+  review: boolean;
+  notes: string;
+};
+
+function todayLocal(): string {
+  return new Date().toLocaleDateString("en-CA");
+}
+
+/**
+ * Records an account as signed in at a place, or corrects one. Context from the screen (device, place, account)
+ * fills the form. The account is picked by provider and identifier: an existing one is reused, a new one is added.
+ * Render it only while open.
+ */
+export function SignInDrawer({
+  deviceId,
+  place,
+  account,
+  edit,
+  onClose,
+  onSaved,
+}: {
+  deviceId?: number | null;
+  place?: PlaceKey | null;
+  account?: FixedAccount | null;
+  edit?: SignInEdit | null;
+  onClose: () => void;
+  onSaved: (signIn: { id: number; device: { id: number }; profile: { id: number } | null; app: string | null; account: { id: number } }) => void;
+}) {
+  const { t } = useI18n();
+  const notify = useToast();
+  const map = useApi<MapData>("/api/map");
+  const providers = useApi<ProviderItem[]>(edit || account ? null : "/api/providers");
+  const fixedAccount = edit?.account ?? account ?? null;
+  const [draft, setDraft] = useState<Draft>(() => ({
+    providerId: null,
+    identifier: "",
+    deviceId: edit?.deviceId ?? deviceId ?? null,
+    place: edit?.place ?? place ?? null,
+    app: edit?.app ?? (place?.startsWith("a:") ? place.slice(2) : ""),
+    since: edit?.since ?? "",
+    review: edit?.review ?? false,
+    notes: edit?.notes ?? "",
+  }));
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [lookup, setLookup] = useState("");
+
+  const set = <Key extends keyof Draft>(key: Key, value: Draft[Key]) => setDraft((current) => ({ ...current, [key]: value }));
+
+  // Suggestions follow the identifier as it is typed (debounced).
+  useEffect(() => {
+    const timer = window.setTimeout(() => setLookup(draft.identifier.trim()), 200);
+    return () => window.clearTimeout(timer);
+  }, [draft.identifier]);
+  const suggestionPath =
+    !fixedAccount && draft.providerId ? `/api/accounts?${new URLSearchParams({ provider: String(draft.providerId), per_page: "6", ...(lookup ? { search: lookup } : {}) })}` : null;
+  const suggestions = useApi<Paginated<AccountListItem>>(suggestionPath);
+  const exact = suggestions.data?.items.find((item) => item.identifier.toLowerCase() === draft.identifier.trim().toLowerCase()) ?? null;
+
+  const devices = map.data?.devices ?? [];
+  const profiles = (map.data?.profiles ?? []).filter((profile) => profile.deviceId === draft.deviceId);
+  const apps = [
+    ...new Set(
+      (map.data?.signIns ?? [])
+        .filter((row) => row.device.id === draft.deviceId && !row.profile && row.app)
+        .map((row) => row.app as string),
+    ),
+  ];
+  const onDevice = draft.place === "d" || Boolean(draft.place?.startsWith("a:"));
+
+  const save = async () => {
+    setSaving(true);
+    setErrors({});
+    const profileId = draft.place?.startsWith("p:") ? Number(draft.place.slice(2)) : null;
+    const app = onDevice ? draft.app.trim() : "";
+    try {
+      if (!draft.place) {
+        setErrors({ profileId: t("signIns.choosePlace") });
+        return;
+      }
+      if (edit) {
+        const result = await api<{ id: number; device: { id: number }; profile: { id: number } | null; app: string | null; account: { id: number } }>(
+          `/api/sign-ins/${edit.id}`,
+          { method: "PATCH", body: { profileId, app, since: draft.since, review: draft.review, notes: draft.notes } },
+        );
+        notify(result.message);
+        onSaved(result.data);
+        return;
+      }
+      const accountPart = fixedAccount
+        ? { accountId: fixedAccount.id }
+        : exact
+          ? { accountId: exact.id }
+          : { providerId: draft.providerId, identifier: draft.identifier };
+      const result = await api<{ id: number; device: { id: number }; profile: { id: number } | null; app: string | null; account: { id: number } }>("/api/sign-ins", {
+        method: "POST",
+        body: { ...accountPart, deviceId: draft.deviceId, profileId, app, since: draft.since, review: draft.review, notes: draft.notes },
+      });
+      notify(result.message);
+      onSaved(result.data);
+    } catch (error) {
+      setErrors(firstFieldErrors(error));
+      notify(error instanceof Error && error.message ? error.message : t("common.saveFailed"), "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Drawer
+      open
+      onClose={onClose}
+      title={edit ? t("signIns.editTitle") : t("signIns.recordTitle")}
+      description={t("signIns.drawerHint")}
+      closeLabel={t("common.close")}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            {t("common.cancel")}
+          </Button>
+          <Button onClick={save} loading={saving}>
+            {edit ? t("common.save") : t("signIns.recordButton")}
+          </Button>
+        </>
+      }
+    >
+      <form
+        className="space-y-5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void save();
+        }}
+      >
+        <section className="space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-faint">{t("signIns.stepAccount")}</h3>
+          {fixedAccount ? (
+            <div className="flex items-center gap-3 rounded-xl border border-line bg-subtle p-3">
+              <ProviderAvatar provider={fixedAccount.provider} />
+              <div className="min-w-0">
+                <p className="truncate font-mono text-[13px] font-semibold text-ink">{fixedAccount.identifier}</p>
+                <p className="truncate text-xs text-muted">{[fixedAccount.provider.name, fixedAccount.label].filter(Boolean).join(" · ")}</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Field label={t("accounts.fieldProvider")} htmlFor="signin-provider" required error={errors.providerId}>
+                <Select
+                  id="signin-provider"
+                  value={draft.providerId ?? ""}
+                  onChange={(event) => set("providerId", event.target.value ? Number(event.target.value) : null)}
+                  invalid={Boolean(errors.providerId)}
+                >
+                  <option value="">{t("accounts.chooseProvider")}</option>
+                  {(providers.data ?? []).map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field
+                label={t("accounts.fieldIdentifier")}
+                htmlFor="signin-identifier"
+                required
+                error={errors.identifier ?? errors.accountId}
+                hint={draft.identifier.trim() && draft.providerId ? (exact ? t("signIns.existingAccount") : t("signIns.newAccount")) : t("accounts.identifierHint")}
+              >
+                <Input
+                  id="signin-identifier"
+                  value={draft.identifier}
+                  maxLength={200}
+                  onChange={(event) => set("identifier", event.target.value)}
+                  invalid={Boolean(errors.identifier)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={!draft.providerId}
+                  className="font-mono text-[13px]"
+                />
+              </Field>
+              {draft.providerId && (suggestions.data?.items.length ?? 0) > 0 && !exact ? (
+                <ul className="-mt-1 overflow-hidden rounded-lg border border-line" aria-label={t("signIns.suggestions")}>
+                  {suggestions.data?.items.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => set("identifier", item.identifier)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-subtle"
+                      >
+                        <ProviderAvatar provider={item.provider} size="sm" />
+                        <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-ink">{item.identifier}</span>
+                        {item.label ? <span className="truncate text-xs text-muted">{item.label}</span> : null}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </>
+          )}
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-faint">{t("signIns.stepPlace")}</h3>
+          <Field label={t("signIns.fieldDevice")} htmlFor="signin-device" required error={errors.deviceId}>
+            <Select
+              id="signin-device"
+              value={draft.deviceId ?? ""}
+              disabled={Boolean(edit)}
+              onChange={(event) => {
+                set("deviceId", event.target.value ? Number(event.target.value) : null);
+                set("place", null);
+              }}
+              invalid={Boolean(errors.deviceId)}
+            >
+              <option value="">{t("signIns.chooseDevice")}</option>
+              {devices.map((device) => (
+                <option key={device.id} value={device.id}>
+                  {device.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          {draft.deviceId ? (
+            <div role="radiogroup" aria-label={t("signIns.fieldPlace")} className="space-y-1.5">
+              {profiles.map((profile) => {
+                const key = `p:${profile.id}`;
+                const selected = draft.place === key;
+                return (
+                  <button
+                    key={profile.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => set("place", key)}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors",
+                      selected ? "border-accent bg-accent-soft" : "border-line hover:bg-subtle",
+                    )}
+                  >
+                    <BrowserMark browser={profile.browser} color={profile.color} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-ink">{profile.name}</span>
+                      <span className="block text-xs text-muted">{browserLabel(profile.browser, t)}</span>
+                    </span>
+                    {selected ? <Check className="size-4 text-accent" /> : null}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={onDevice}
+                onClick={() => set("place", draft.app.trim() ? `a:${draft.app.trim().toLowerCase()}` : "d")}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors",
+                  onDevice ? "border-accent bg-accent-soft" : "border-line hover:bg-subtle",
+                )}
+              >
+                <span className="inline-flex size-7 items-center justify-center rounded-lg bg-sunken text-ink-2">
+                  <MonitorSmartphone className="size-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-ink">{t("signIns.onDevice")}</span>
+                  <span className="block text-xs text-muted">{t("signIns.onDeviceHint")}</span>
+                </span>
+                {onDevice ? <Check className="size-4 text-accent" /> : null}
+              </button>
+              {profiles.length === 0 ? <p className="px-1 text-xs text-muted">{t("signIns.noProfilesHint")}</p> : null}
+              {errors.profileId ? <p className="text-xs text-danger-ink">{errors.profileId}</p> : null}
+            </div>
+          ) : null}
+          {onDevice ? (
+            <Field label={t("signIns.fieldApp")} htmlFor="signin-app" optionalLabel={t("common.optional")} error={errors.app} hint={t("signIns.appHint")}>
+              <Input id="signin-app" value={draft.app} maxLength={60} list="signin-app-options" onChange={(event) => set("app", event.target.value)} />
+              <datalist id="signin-app-options">
+                {apps.map((app) => (
+                  <option key={app} value={app} />
+                ))}
+              </datalist>
+            </Field>
+          ) : null}
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-faint">{t("signIns.stepDetails")}</h3>
+          <Field label={t("signIns.fieldSince")} htmlFor="signin-since" optionalLabel={t("common.optional")} error={errors.since}>
+            <div className="flex gap-2">
+              <Input id="signin-since" type="date" value={draft.since} onChange={(event) => set("since", event.target.value)} className="flex-1" />
+              <Button variant="secondary" icon={<CalendarCheck className="size-4" />} onClick={() => set("since", todayLocal())}>
+                {t("signIns.today")}
+              </Button>
+            </div>
+          </Field>
+          <Checkbox label={t("signIns.reviewLabel")} description={t("signIns.reviewHint")} checked={draft.review} onChange={(event) => set("review", event.target.checked)} />
+          <Field label={t("signIns.fieldNotes")} htmlFor="signin-notes" optionalLabel={t("common.optional")} error={errors.notes} hint={t("common.noSecretsHint")}>
+            <Textarea id="signin-notes" value={draft.notes} maxLength={1000} onChange={(event) => set("notes", event.target.value)} />
+          </Field>
+        </section>
+        {!edit && !fixedAccount ? (
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            <Plus className="size-3.5" />
+            {t("signIns.autoAccountHint")}
+          </p>
+        ) : null}
+        <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />
+      </form>
+    </Drawer>
+  );
+}

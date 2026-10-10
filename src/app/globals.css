@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+/*
+ * AkunMu design tokens: a calm control map. Slate neutrals, teal as the one accent, providers' own colors as
+ * identity. Every color is a semantic token that switches with the theme (light, dark, or the system's), so
+ * components never use fixed Tailwind hues (slate-*, white, red-*): they would break in dark mode.
+ * The theme is `data-theme` on <html> (set before paint by the script in app/layout.tsx); without it the
+ * system preference decides.
+ */
+:root {
+  color-scheme: light;
+  --canvas: #f4f6f8;
+  --surface: #ffffff;
+  --subtle: #f1f4f7;
+  --sunken: #e7ecf1;
+  --line: #e1e7ed;
+  --line-strong: #c9d3dd;
+  --ink: #0e1726;
+  --ink-2: #334155;
+  --muted: #5f6e7f;
+  --faint: #8e9bab;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --on-primary: #ffffff;
+  --accent: #0f766e;
+  --accent-soft: #e5f6f3;
+  --accent-line: #b5e3dc;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-soft: #fef1f1;
+  --danger-line: #f8c9c9;
+  --danger-ink: #b42318;
+  --warn: #d97706;
+  --warn-soft: #fff7e6;
+  --warn-line: #f6d9a8;
+  --warn-ink: #8a4b0b;
+  --ok: #059669;
+  --ok-soft: #eaf8f1;
+  --ok-line: #b9e6cf;
+  --ok-ink: #046c4e;
+  --rail: #0d151c;
+  --rail-ink: #93a4b3;
+  --rail-hover: rgb(255 255 255 / 0.06);
+  --rail-active: rgb(255 255 255 / 0.1);
+  --overlay: rgb(0 0 0 / 0.5);
+  --shadow-color: 215 30% 20%;
+}
+
+/* Dark values, used for data-theme="dark" and for the system preference when no theme is chosen. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0a0f14;
+  --surface: #10171e;
+  --subtle: #151e26;
+  --sunken: #1b2631;
+  --line: #222e39;
+  --line-strong: #31404d;
+  --ink: #e7edf3;
+  --ink-2: #c4cfd9;
+  --muted: #8d9cab;
+  --faint: #5f6f7e;
+  --primary: #2dd4bf;
+  --primary-hover: #5eead4;
+  --on-primary: #032622;
+  --accent: #5eead4;
+  --accent-soft: rgb(45 212 191 / 0.12);
+  --accent-line: rgb(45 212 191 / 0.3);
+  --danger: #f87171;
+  --danger-hover: #fca5a5;
+  --danger-soft: rgb(248 113 113 / 0.12);
+  --danger-line: rgb(248 113 113 / 0.32);
+  --danger-ink: #fca5a5;
+  --warn: #fbbf24;
+  --warn-soft: rgb(251 191 36 / 0.12);
+  --warn-line: rgb(251 191 36 / 0.3);
+  --warn-ink: #fcd34d;
+  --ok: #34d399;
+  --ok-soft: rgb(52 211 153 / 0.12);
+  --ok-line: rgb(52 211 153 / 0.3);
+  --ok-ink: #6ee7b7;
+  --rail: #070b0f;
+  --rail-ink: #8496a6;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow-color: 210 40% 2%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0a0f14;
+    --surface: #10171e;
+    --subtle: #151e26;
+    --sunken: #1b2631;
+    --line: #222e39;
+    --line-strong: #31404d;
+    --ink: #e7edf3;
+    --ink-2: #c4cfd9;
+    --muted: #8d9cab;
+    --faint: #5f6f7e;
+    --primary: #2dd4bf;
+    --primary-hover: #5eead4;
+    --on-primary: #032622;
+    --accent: #5eead4;
+    --accent-soft: rgb(45 212 191 / 0.12);
+    --accent-line: rgb(45 212 191 / 0.3);
+    --danger: #f87171;
+    --danger-hover: #fca5a5;
+    --danger-soft: rgb(248 113 113 / 0.12);
+    --danger-line: rgb(248 113 113 / 0.32);
+    --danger-ink: #fca5a5;
+    --warn: #fbbf24;
+    --warn-soft: rgb(251 191 36 / 0.12);
+    --warn-line: rgb(251 191 36 / 0.3);
+    --warn-ink: #fcd34d;
+    --ok: #34d399;
+    --ok-soft: rgb(52 211 153 / 0.12);
+    --ok-line: rgb(52 211 153 / 0.3);
+    --ok-ink: #6ee7b7;
+    --rail: #070b0f;
+    --rail-ink: #8496a6;
+    --overlay: rgb(0 0 0 / 0.6);
+    --shadow-color: 210 40% 2%;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-danger-ink: var(--danger-ink);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
+  --color-warn-ink: var(--warn-ink);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-line: var(--ok-line);
+  --color-ok-ink: var(--ok-ink);
+  --color-rail: var(--rail);
+  --color-rail-ink: var(--rail-ink);
+  --color-rail-hover: var(--rail-hover);
+  --color-rail-active: var(--rail-active);
+  --color-overlay: var(--overlay);
+  --shadow-card: 0 1px 2px 0 hsl(var(--shadow-color) / 0.06);
+  --shadow-float: 0 18px 40px -16px hsl(var(--shadow-color) / 0.35), 0 2px 6px -2px hsl(var(--shadow-color) / 0.12);
+  --radius-panel: 12px;
+}
+
+@theme {
+  --animate-drawer-in: drawer-in 300ms ease;
+  --animate-fade-in: fade-in 200ms ease;
+  --animate-pop: pop 160ms ease-out;
+  --animate-column-in: column-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  @keyframes drawer-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.97) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes column-in {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 20px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+}
+
+@layer components {
+  /* Thin scrollbars inside the map's columns and other scrolling panels. */
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  /* Faint grid behind the landing hero and the empty map: the "map" paper. */
+  .bg-map-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--line) 70%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--line) 70%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  .print-hidden {
+    display: none !important;
+  }
+}

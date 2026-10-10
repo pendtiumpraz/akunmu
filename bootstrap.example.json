@@ -1,0 +1,11 @@
+{
+  "owner": { "name": "Platform Owner", "email": "owner@example.com" },
+  "tenants": [
+    {
+      "slug": "personal",
+      "name": "Personal",
+      "contactEmail": "owner@example.com",
+      "admin": { "name": "Platform Owner", "email": "owner+personal@example.com" }
+    }
+  ]
+}
