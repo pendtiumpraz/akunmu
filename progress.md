@@ -23,9 +23,10 @@
 - [x] Folder `D:/AI/privasimu/device`, repo git `main`
 - [x] Salinan `loop-v5` (sama dengan EventMu, termasuk aturan #12 bahasa kode)
 - [x] Requirement owner dicatat verbatim (`user_requirement.md`)
-- [ ] Database credentials (Neon pooled + unpooled) — menunggu owner
-- [ ] Storage credentials (Vercel Blob) — menunggu owner
-- [ ] `APP_SECRET` untuk Vercel
+- [x] Database credentials (Neon pooled + unpooled) di `.env` (owner, 11 Okt 00.40; di-gitignore, nilai tidak dicetak)
+- [x] Storage credentials (Vercel Blob) di `.env`
+- [x] Target deploy: Vercel (owner: "nanti juga bakal di deploy ke vercel")
+- [ ] `APP_SECRET` untuk Vercel (dibuat saat Fase 03, dipasang owner di Vercel)
 ### ⏳ Fase 01: Planning
 - [ ] Analisa requirement + model data (perangkat → profil browser → akun login; penyedia; akun lintas profil)
 - [ ] Keputusan arsitektur (`architecture-decisions.md`): stack sama EventMu, UI berbeda
@@ -39,7 +40,7 @@
 
 | # | Issue | Severity | Status |
 |---|-------|----------|--------|
-| 1 | Env (Neon, Blob) belum ada; build lokal tetap jalan dengan PGlite | Medium | ⏳ menunggu owner |
+| 1 | Env (Neon, Blob) belum ada; build lokal tetap jalan dengan PGlite | Medium | ✅ `.env` dari owner (11 Okt 00.40) |
 
 ---
 
