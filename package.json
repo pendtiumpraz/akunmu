@@ -22,8 +22,10 @@
     "platform:bootstrap": "node --env-file-if-exists=.env --import tsx scripts/bootstrap.ts"
   },
   "dependencies": {
+    "@xyflow/react": "^12.12.0",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.4",
+    "gsap": "^3.15.0",
     "lucide-react": "^1.54.0",
     "next": "16.4.0",
     "postgres": "^3.4.9",

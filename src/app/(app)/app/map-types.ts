@@ -1,6 +1,6 @@
 import type { accountDetail, listAccountsView, listProvidersView } from "@/modules/accounts/service";
 import type { deviceDetail, listDevicesView } from "@/modules/devices/service";
-import type { mapView, overview } from "@/modules/signins/service";
+import type { mapView, overview, treeView } from "@/modules/signins/service";
 import type { Json } from "@/shared/http/client";
 
 /** Shapes of the map API responses as the browser receives them (types only; no server code reaches the client). */
@@ -9,6 +9,7 @@ export type MapDevice = MapData["devices"][number];
 export type MapProfile = MapData["profiles"][number];
 export type MapSignIn = MapData["signIns"][number];
 export type OverviewData = Json<Awaited<ReturnType<typeof overview>>>;
+export type TreeData = Json<Awaited<ReturnType<typeof treeView>>>;
 export type DeviceListItem = Json<Awaited<ReturnType<typeof listDevicesView>>[number]>;
 export type DeviceDetail = Json<Awaited<ReturnType<typeof deviceDetail>>>;
 export type AccountListItem = Json<Awaited<ReturnType<typeof listAccountsView>>["items"][number]>;

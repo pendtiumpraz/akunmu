@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { boolean, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { baseColumns, referenceColumn, tenantColumn } from "../../shared/db/columns";
-import type { SignInStatus } from "./types";
+import type { AppKind, ApprovalMethod, SignInStatus } from "./types";
 
 /**
  * An account signed in somewhere: in a browser profile of a device, or on the device itself (the system or an
@@ -16,6 +16,14 @@ export const signIns = pgTable(
     deviceId: referenceColumn("device_id").notNull(),
     profileId: referenceColumn("profile_id"),
     app: text("app"),
+    /** Set with `app`: an app or a command-line tool. */
+    appKind: text("app_kind").$type<AppKind>(),
+    /**
+     * The sign-in of the same account that let this one in (a code, link, QR code or prompt approved there): the
+     * account grew to this place from that one. Null when it was signed in directly.
+     */
+    approvedFromId: referenceColumn("approved_from_id"),
+    approvalMethod: text("approval_method").$type<ApprovalMethod>(),
     status: text("status").$type<SignInStatus>().notNull().default("signed_in"),
     /** Local date (YYYY-MM-DD) the account was signed in there, when known. */
     since: text("since"),
@@ -31,6 +39,7 @@ export const signIns = pgTable(
     index("sign_ins_account_index").on(table.accountId),
     index("sign_ins_device_index").on(table.deviceId),
     index("sign_ins_profile_index").on(table.profileId),
+    index("sign_ins_approved_from_index").on(table.approvedFromId),
     // One active sign-in per account and place (profile, or app on the device).
     uniqueIndex("sign_ins_active_place_unique")
       .on(table.accountId, table.deviceId, sql`coalesce(${table.profileId}, 0)`, sql`lower(coalesce(${table.app}, ''))`)

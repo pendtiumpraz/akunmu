@@ -2,6 +2,7 @@
 
 import { CalendarCheck, Check, MonitorSmartphone, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { APP_KINDS, APPROVAL_METHODS, type AppKind, type ApprovalMethod } from "@/modules/signins/types";
 import { api, firstFieldErrors, type Paginated } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { Button } from "@/shared/ui/button";
@@ -10,10 +11,10 @@ import { Drawer } from "@/shared/ui/drawer";
 import { Checkbox, Field, Input, Select, Textarea } from "@/shared/ui/form-controls";
 import { useToast } from "@/shared/ui/toast";
 import { useApi } from "@/shared/ui/use-api";
-import type { AccountListItem, MapData, PlaceKey, ProviderItem } from "../map-types";
-import { BrowserMark, ProviderAvatar, browserLabel } from "../ui";
+import type { AccountDetail, AccountListItem, MapData, PlaceKey, ProviderItem } from "../map-types";
+import { APPROVAL_ICONS, AppMark, BrowserMark, ProviderAvatar, browserLabel, placeLabel } from "../ui";
 
-export type FixedAccount = { id: number; identifier: string; label: string | null; provider: { id: number; name: string; color: string } };
+export type FixedAccount = { id: number; identifier: string; label: string | null; provider: { id: number; name: string; color: string; slug?: string } };
 
 /** An existing sign-in being corrected (its account and device stay). */
 export type SignInEdit = {
@@ -22,6 +23,9 @@ export type SignInEdit = {
   deviceId: number;
   place: PlaceKey;
   app: string | null;
+  appKind: AppKind | null;
+  approvedFromId: number | null;
+  approvalMethod: ApprovalMethod | null;
   since: string | null;
   review: boolean;
   notes: string | null;
@@ -33,6 +37,9 @@ type Draft = {
   deviceId: number | null;
   place: PlaceKey | null;
   app: string;
+  appKind: AppKind;
+  approvedFromId: number | null;
+  approvalMethod: ApprovalMethod | null;
   since: string;
   review: boolean;
   notes: string;
@@ -73,6 +80,9 @@ export function SignInDrawer({
     deviceId: edit?.deviceId ?? deviceId ?? null,
     place: edit?.place ?? place ?? null,
     app: edit?.app ?? (place?.startsWith("a:") ? place.slice(2) : ""),
+    appKind: edit?.appKind ?? "app",
+    approvedFromId: edit?.approvedFromId ?? null,
+    approvalMethod: edit?.approvalMethod ?? null,
     since: edit?.since ?? "",
     review: edit?.review ?? false,
     notes: edit?.notes ?? "",
@@ -104,11 +114,29 @@ export function SignInDrawer({
   ];
   const onDevice = draft.place === "d" || Boolean(draft.place?.startsWith("a:"));
 
+  // Where the account grew from: one of its other sign-ins (an existing account only), except this one and those
+  // grown from it, which would make a loop.
+  const originAccountId = fixedAccount?.id ?? exact?.id ?? null;
+  const originAccount = useApi<AccountDetail>(originAccountId ? `/api/accounts/${originAccountId}` : null);
+  const grownFromThis = new Set<number>(edit ? [edit.id] : []);
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const row of originAccount.data?.signIns ?? []) {
+      if (row.approvedFromId !== null && grownFromThis.has(row.approvedFromId) && !grownFromThis.has(row.id)) {
+        grownFromThis.add(row.id);
+        changed = true;
+      }
+    }
+  }
+  const originOptions = (originAccount.data?.signIns ?? []).filter((row) => !grownFromThis.has(row.id));
+  const approvedFromId = originOptions.some((row) => row.id === draft.approvedFromId) ? draft.approvedFromId : null;
+
   const save = async () => {
     setSaving(true);
     setErrors({});
     const profileId = draft.place?.startsWith("p:") ? Number(draft.place.slice(2)) : null;
     const app = onDevice ? draft.app.trim() : "";
+    const origin = { appKind: app ? draft.appKind : null, approvedFromId, approvalMethod: approvedFromId ? draft.approvalMethod : null };
     try {
       if (!draft.place) {
         setErrors({ profileId: t("signIns.choosePlace") });
@@ -117,7 +145,7 @@ export function SignInDrawer({
       if (edit) {
         const result = await api<{ id: number; device: { id: number }; profile: { id: number } | null; app: string | null; account: { id: number } }>(
           `/api/sign-ins/${edit.id}`,
-          { method: "PATCH", body: { profileId, app, since: draft.since, review: draft.review, notes: draft.notes } },
+          { method: "PATCH", body: { profileId, app, ...origin, since: draft.since, review: draft.review, notes: draft.notes } },
         );
         notify(result.message);
         onSaved(result.data);
@@ -130,7 +158,7 @@ export function SignInDrawer({
           : { providerId: draft.providerId, identifier: draft.identifier };
       const result = await api<{ id: number; device: { id: number }; profile: { id: number } | null; app: string | null; account: { id: number } }>("/api/sign-ins", {
         method: "POST",
-        body: { ...accountPart, deviceId: draft.deviceId, profileId, app, since: draft.since, review: draft.review, notes: draft.notes },
+        body: { ...accountPart, deviceId: draft.deviceId, profileId, app, ...origin, since: draft.since, review: draft.review, notes: draft.notes },
       });
       notify(result.message);
       onSaved(result.data);
@@ -314,6 +342,80 @@ export function SignInDrawer({
               </datalist>
             </Field>
           ) : null}
+          {onDevice && draft.app.trim() ? (
+            <div role="radiogroup" aria-label={t("signIns.fieldAppKind")} className="grid grid-cols-2 gap-1.5">
+              {APP_KINDS.map((kind) => {
+                const selected = draft.appKind === kind;
+                return (
+                  <button
+                    key={kind}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => set("appKind", kind)}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left text-[13px] font-semibold transition-colors",
+                      selected ? "border-accent bg-accent-soft text-ink" : "border-line text-ink-2 hover:bg-subtle",
+                    )}
+                  >
+                    <AppMark kind={kind} className="size-6" />
+                    {t.dynamic(`signIns.appKind_${kind}`)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-faint">{t("signIns.stepOrigin")}</h3>
+          {originAccountId === null ? (
+            <p className="rounded-lg bg-subtle px-3 py-2 text-xs text-muted">
+              {draft.providerId && draft.identifier.trim() ? t("signIns.originNewAccount") : t("signIns.originPickAccount")}
+            </p>
+          ) : (
+            <>
+              <Field label={t("signIns.fieldOrigin")} htmlFor="signin-origin" hint={t("signIns.originHint")} error={errors.approvedFromId}>
+                <Select
+                  id="signin-origin"
+                  value={approvedFromId ?? ""}
+                  onChange={(event) => set("approvedFromId", event.target.value ? Number(event.target.value) : null)}
+                  invalid={Boolean(errors.approvedFromId)}
+                >
+                  <option value="">{t("signIns.originDirect")}</option>
+                  {originOptions.map((row) => (
+                    <option key={row.id} value={row.id}>
+                      {[row.device.name, placeLabel(row, t), row.status === "signed_out" ? t("signIns.signedOutStatus") : null].filter(Boolean).join(" · ")}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              {approvedFromId ? (
+                <div role="radiogroup" aria-label={t("signIns.fieldApprovalMethod")} className="grid grid-cols-2 gap-1.5">
+                  {APPROVAL_METHODS.map((method) => {
+                    const Icon = APPROVAL_ICONS[method];
+                    const selected = draft.approvalMethod === method;
+                    return (
+                      <button
+                        key={method}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => set("approvalMethod", selected ? null : method)}
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-[13px] font-semibold transition-colors",
+                          selected ? "border-accent bg-accent-soft text-ink" : "border-line text-ink-2 hover:bg-subtle",
+                        )}
+                      >
+                        <Icon className={cn("size-4 shrink-0", selected ? "text-accent" : "text-muted")} />
+                        {t.dynamic(`signIns.approvalLong_${method}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </>
+          )}
         </section>
 
         <section className="space-y-3">

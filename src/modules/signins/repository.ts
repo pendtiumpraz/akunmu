@@ -5,6 +5,7 @@ import { accounts, providers } from "../accounts/schema";
 import { browserProfiles, devices } from "../devices/schema";
 import type { Browser, DeviceKind, DeviceSystem } from "../devices/types";
 import { signIns, type NewSignInRecord } from "./schema";
+import type { AppKind, ApprovalMethod } from "./types";
 
 const profile = alias(browserProfiles, "profile");
 
@@ -13,6 +14,10 @@ export type SignInRow = {
   id: number;
   status: "signed_in" | "signed_out";
   app: string | null;
+  appKind: AppKind | null;
+  /** The sign-in of the same account that let this one in, and how. */
+  approvedFromId: number | null;
+  approvalMethod: ApprovalMethod | null;
   since: string | null;
   lastVerifiedAt: string;
   signedOutAt: string | null;
@@ -51,6 +56,9 @@ export async function signInRows(filter: SignInFilter): Promise<SignInRow[]> {
     id: signIn.id,
     status: signIn.status,
     app: signIn.app,
+    appKind: signIn.app ? (signIn.appKind ?? "app") : null,
+    approvedFromId: signIn.approvedFromId,
+    approvalMethod: signIn.approvedFromId ? signIn.approvalMethod : null,
     since: signIn.since,
     lastVerifiedAt: signIn.lastVerifiedAt.toISOString(),
     signedOutAt: signIn.signedOutAt?.toISOString() ?? null,

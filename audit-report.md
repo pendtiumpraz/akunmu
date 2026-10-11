@@ -79,3 +79,13 @@
 1. Repo GitHub untuk AkunMu dan proyek Vercel yang terhubung.
 2. Migrasi Neon (`0000`, `0001`) + bootstrap pemilik platform & ruang kerja pertama.
 3. `APP_SECRET` di environment Vercel.
+
+## Addendum — Fase 07 (11 Okt 2026): pohon akun, UI baru, landing
+
+| Area | Hasil | Catatan |
+|---|---|---|
+| Security | ✅ | `/api/tree` memakai izin `map.read`; asal login divalidasi di service (akun sama, tanpa putaran, dalam RLS ruang kerja); asisten ikut aturan yang sama. Logo, tangkapan layar, dan pustaka disajikan dari situs sendiri (CSP tetap `self`). Tidak ada kolom rahasia baru |
+| Database | ✅ | Migrasi `0002` hanya menambah 3 kolom nullable + 1 indeks; tabel tetap dengan RLS paksa |
+| Code quality | ✅ | 73 tes (baru: 8 pohon, termasuk 40 hutan acak tanpa tabrakan; 3 asal login), tsc 0, eslint 0, `next build` sukses |
+| UI/UX + mobile | ✅ | Pohon terang/gelap/HP, panel detail, drawer asal login, landing desktop/HP/gelap/reduced-motion: 0 galat browser, 0 scroll horizontal |
+| Catatan | ℹ️ | React Flow memasang ulang kabel saat elemen di luar layar mendapat fokus; animasi gambar kabel hanya sekali (kelas `tree-settled`) sehingga tidak berkedip |

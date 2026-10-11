@@ -8,20 +8,22 @@ import {
   ChevronRight,
   Laptop,
   ListChecks,
-  MonitorSmartphone,
   Pencil,
   Plus,
   Sparkles,
+  TreeDeciduous,
   Waypoints,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import type { AppKind } from "@/modules/signins/types";
 import { api } from "@/shared/http/client";
 import type { Translator } from "@/shared/i18n/translate";
 import { useI18n } from "@/shared/i18n/client";
 import { Button, ButtonLink, IconButton } from "@/shared/ui/button";
+import { CountUp } from "@/shared/ui/count-up";
 import { cn } from "@/shared/ui/cn";
 import { EmptyState, ErrorState, Skeleton } from "@/shared/ui/feedback";
 import { Segmented } from "@/shared/ui/form-controls";
@@ -32,13 +34,17 @@ import { useStaff } from "./app-shell";
 import { DeviceDrawer, type DeviceDraft } from "./drawers/device-drawer";
 import { ProfileDrawer } from "./drawers/profile-drawer";
 import { SignInDrawer, type FixedAccount } from "./drawers/sign-in-drawer";
-import { needsCheck, placeKeyOf, type MapData, type MapDevice, type MapProfile, type PlaceKey } from "./map-types";
+import { needsCheck, placeKeyOf, type MapData, type MapDevice, type MapProfile, type PlaceKey, type TreeData } from "./map-types";
 import { SignInLine, useSignInActions } from "./sign-in-actions";
-import { BrowserMark, DeviceIcon, ProviderAvatar, browserLabel, systemLabel } from "./ui";
+import { AccountForest } from "./tree/account-forest";
+import { AppMark, BrowserMark, DeviceIcon, ProviderAvatar, browserLabel, systemLabel } from "./ui";
 
-export type MapSelection = { deviceId: number | null; place: PlaceKey | null; accountId: number | null; view: "map" | "check" };
+/** Which view the map opens in: the account trees, the columns (device → place → account) or the list to check. */
+export type MapView = "tree" | "map" | "check";
 
-type Place = { key: PlaceKey; label: string; detail: string; profile: MapProfile | null; count: number; toCheck: number };
+export type MapSelection = { deviceId: number | null; place: PlaceKey | null; accountId: number | null; view: MapView };
+
+type Place = { key: PlaceKey; label: string; detail: string; profile: MapProfile | null; appKind: AppKind | null; count: number; toCheck: number };
 
 type DrawerState =
   | { kind: "device"; device: DeviceDraft | null }
@@ -49,9 +55,12 @@ type DrawerState =
 function urlFor(selection: MapSelection): string {
   const params = new URLSearchParams();
   if (selection.view === "check") params.set("view", "check");
-  if (selection.deviceId) params.set("device", String(selection.deviceId));
-  if (selection.place) params.set("place", selection.place);
-  if (selection.accountId) params.set("account", String(selection.accountId));
+  if (selection.view === "map") {
+    params.set("view", "columns");
+    if (selection.deviceId) params.set("device", String(selection.deviceId));
+    if (selection.place) params.set("place", selection.place);
+    if (selection.accountId) params.set("account", String(selection.accountId));
+  }
   const query = params.toString();
   return query ? `/app?${query}` : "/app";
 }
@@ -69,6 +78,7 @@ function placesOf(device: MapDevice, data: MapData, staleBefore: string, t: Tran
         label: profile.name,
         detail: browserLabel(profile.browser, t),
         profile,
+        appKind: null,
         count: inside.length,
         toCheck: inside.filter((row) => needsCheck(row, staleBefore)).length,
       };
@@ -83,7 +93,9 @@ function placesOf(device: MapDevice, data: MapData, staleBefore: string, t: Tran
     .sort(([a], [b]) => (a === "d" ? -1 : b === "d" ? 1 : a.localeCompare(b)))
     .map(([key, label]) => {
       const inside = count(key);
-      return { key, label, detail: t("signIns.onDevice"), profile: null, count: inside.length, toCheck: inside.filter((row) => needsCheck(row, staleBefore)).length };
+      // A command-line tool shows as one when any of its sign-ins says so.
+      const appKind = key === "d" ? null : inside.some((row) => row.appKind === "cli") ? ("cli" as const) : ("app" as const);
+      return { key, label, detail: t("signIns.onDevice"), profile: null, appKind, count: inside.length, toCheck: inside.filter((row) => needsCheck(row, staleBefore)).length };
     });
   return [...profiles, ...apps];
 }
@@ -145,6 +157,11 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
   const canWrite = can("map.write");
   const map = useApi<MapData>("/api/map");
   const [selection, setSelection] = useState<MapSelection>(initial);
+  const tree = useApi<TreeData>(selection.view === "tree" ? "/api/tree" : null);
+  const reloadAll = () => {
+    map.reload();
+    if (selection.view === "tree") tree.reload();
+  };
   const [drawer, setDrawer] = useState<DrawerState>(startRecording ? { kind: "signIn", deviceId: initial.deviceId, place: initial.place, account: null } : null);
   const { actions, dialogs } = useSignInActions(map.reload);
 
@@ -231,8 +248,9 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
           onClose={() => setDrawer(null)}
           onSaved={(saved) => {
             setDrawer(null);
-            map.reload();
-            select({ deviceId: saved.device.id, place: placeKeyOf(saved), accountId: saved.account.id, view: "map" });
+            reloadAll();
+            // The trees redraw with the new leaf; the columns open where it was recorded.
+            if (selection.view !== "tree") select({ deviceId: saved.device.id, place: placeKeyOf(saved), accountId: saved.account.id, view: "map" });
           }}
         />
       ) : null}
@@ -281,19 +299,22 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
           {summary.map((item) => (
             <div key={item.label} className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
               <dt className="sr-only">{item.label}</dt>
-              <dd className="font-mono text-lg font-bold text-ink tabular-nums">{format.number(item.value)}</dd>
+              <dd className="font-mono text-lg font-bold text-ink tabular-nums">
+                <CountUp value={item.value} format={format.number} />
+              </dd>
               <span aria-hidden="true" className="truncate text-[12px] text-muted sm:text-[13px]">
                 {item.label}
               </span>
             </div>
           ))}
         </dl>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Segmented
             label={t("map.view")}
             value={selection.view}
             onChange={(view) => select({ view })}
             options={[
+              { value: "tree", label: t("map.viewTree"), icon: <TreeDeciduous className="size-3.5" /> },
               { value: "map", label: t("map.viewMap"), icon: <Waypoints className="size-3.5" /> },
               {
                 value: "check",
@@ -314,7 +335,15 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
         </div>
       </div>
 
-      {selection.view === "check" ? (
+      {selection.view === "tree" ? (
+        tree.data ? (
+          <AccountForest data={tree.data} reload={reloadAll} canWrite={canWrite} onRecord={() => setDrawer({ kind: "signIn", deviceId: null, place: null, account: null })} />
+        ) : tree.error ? (
+          <ErrorState title={t("common.loadFailed")} description={t("common.loadFailedHint")} retryLabel={t("common.retry")} onRetry={tree.reload} />
+        ) : (
+          <Skeleton className="h-[calc(100dvh-15rem)] min-h-[440px] w-full sm:h-[calc(100dvh-11.5rem)]" />
+        )
+      ) : selection.view === "check" ? (
         <section className="rounded-panel border border-line bg-surface">
           <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
             <div>
@@ -441,9 +470,7 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
                     .filter((candidate) => !candidate.profile)
                     .map((candidate) => (
                       <button key={candidate.key} type="button" onClick={() => select({ place: candidate.key, accountId: null })} className={rowClass(candidate.key === place?.key)} aria-pressed={candidate.key === place?.key}>
-                        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-sunken text-ink-2">
-                          <MonitorSmartphone className="size-4" />
-                        </span>
+                        <AppMark kind={candidate.appKind} />
                         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{candidate.label}</span>
                         <CountPill count={candidate.count} toCheck={candidate.toCheck} />
                       </button>

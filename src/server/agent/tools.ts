@@ -11,7 +11,7 @@ import { BROWSER_NAMES, BROWSERS, DEVICE_KINDS, DEVICE_SYSTEMS, SYSTEM_NAMES, ty
 import { deviceInputSchema, profileInputSchema } from "@/modules/devices/validation";
 import type { SignInRow } from "@/modules/signins/repository";
 import { confirmSignIn, listSignIns, overview, recordSignIn, signOut, updateSignIn } from "@/modules/signins/service";
-import { staleBefore } from "@/modules/signins/types";
+import { APP_KINDS, APPROVAL_METHODS, staleBefore, type AppKind } from "@/modules/signins/types";
 import { signInInputSchema } from "@/modules/signins/validation";
 import { can, type Permission } from "@/modules/users/permissions";
 import type { StaffRole } from "@/modules/users/schema";
@@ -100,9 +100,9 @@ export function systemName(system: DeviceSystem, t: Translator): string {
 }
 
 /** Where a sign-in is, in the person's language: "Chrome · Work — Office laptop". */
-export function placeText(row: Pick<SignInRow, "app" | "device" | "profile">, t: Translator): string {
+export function placeText(row: Pick<SignInRow, "app" | "device" | "profile"> & { appKind?: AppKind | null }, t: Translator): string {
   if (row.profile) return t("signIns.placeProfile", { browser: browserName(row.profile.browser, t), profile: row.profile.name, device: row.device.name });
-  if (row.app) return t("signIns.placeApp", { app: row.app, device: row.device.name });
+  if (row.app) return t(row.appKind === "cli" ? "signIns.placeCli" : "signIns.placeApp", { app: row.app, device: row.device.name });
   return t("signIns.placeDevice", { device: row.device.name });
 }
 
@@ -119,8 +119,9 @@ function signInForModel(row: SignInRow, stale: Date) {
     place: row.profile
       ? { browserProfileId: row.profile.id, browser: row.profile.browser, profile: row.profile.name }
       : row.app
-        ? { app: row.app }
+        ? { app: row.app, kind: row.appKind }
         : "the device itself",
+    grewFrom: row.approvedFromId ? { signInId: row.approvedFromId, how: row.approvalMethod } : null,
     status: row.status,
     since: row.since,
     lastConfirmed: localDay(row.lastVerifiedAt),
@@ -391,12 +392,20 @@ const recordSignInsInput = z.object({
   deviceId,
   browserProfileId: z.number().int().min(1).optional().describe("Browser profile id from get_device. Leave out for sign-ins on the device itself (its system or an app)."),
   app: z.string().max(60).optional().describe("Only without a browser profile: the app or system signed in, e.g. Windows, Gmail app or WhatsApp."),
+  appKind: z.enum(APP_KINDS).optional().describe("With app: 'cli' for a command-line tool (gh, claude, gcloud, vercel), otherwise 'app'."),
   accounts: z
     .array(
       z.object({
         accountId: accountId.optional().describe("An existing account's id; or give provider and identifier instead."),
         provider: providerName.optional(),
         identifier: z.string().max(200).optional().describe("Email, username or phone number the account signs in with. A new account is added when the workspace has none."),
+        grewFromSignInId: z
+          .number()
+          .int()
+          .min(1)
+          .optional()
+          .describe("When this place was let in from another one where the same account was already signed in (a code, magic link, QR code or prompt approved there): that sign-in's id from find_account."),
+        approvalMethod: z.enum(APPROVAL_METHODS).optional().describe("How it was let in: code (device code), link (magic link), qr (QR scanned there) or prompt (approved there)."),
       }),
     )
     .min(1)
@@ -410,7 +419,15 @@ const recordSignInsInput = z.object({
 });
 
 type RecordInput = z.output<typeof recordSignInsInput>;
-type PlannedAccount = { account: AccountRecord | null; provider: ProviderRecord; identifier: string; alreadyThere: boolean };
+type PlannedAccount = {
+  account: AccountRecord | null;
+  provider: ProviderRecord;
+  identifier: string;
+  alreadyThere: boolean;
+  /** The sign-in this place was let in from, and how. */
+  origin: SignInRow | null;
+  approvalMethod: RecordInput["accounts"][number]["approvalMethod"] | null;
+};
 
 /** Resolves the place and each account of a record_sign_ins call; shared by the preview and the run. */
 async function planSignIns(input: RecordInput) {
@@ -418,8 +435,11 @@ async function planSignIns(input: RecordInput) {
   const profile = input.browserProfileId ? await getProfile(input.browserProfileId) : null;
   if (profile && profile.deviceId !== device.id) throw validationError("browserProfileId", "validation.profileOfDevice");
   const app = profile ? null : input.app?.trim() || null;
+  const appKind = app ? (input.appKind ?? "app") : null;
   if (profile && input.app?.trim()) throw validationError("app", "validation.appWithProfile");
   const active = await listSignIns({ deviceId: device.id });
+  const originIds = input.accounts.flatMap((entry) => (entry.grewFromSignInId ? [entry.grewFromSignInId] : []));
+  const origins = originIds.length > 0 ? await listSignIns({ ids: originIds, includeSignedOut: true }) : [];
   const samePlace = (row: SignInRow) => (row.profile?.id ?? null) === (profile?.id ?? null) && (row.app ?? "").toLowerCase() === (app ?? "").toLowerCase();
   const planned: PlannedAccount[] = [];
   for (const [index, entry] of input.accounts.entries()) {
@@ -436,9 +456,11 @@ async function planSignIns(input: RecordInput) {
     const identifier = account?.identifier ?? entry.identifier?.trim() ?? "";
     if (planned.some((item) => item.provider.id === provider.id && item.identifier.toLowerCase() === identifier.toLowerCase())) continue;
     const alreadyThere = account !== null && active.some((row) => row.account.id === account.id && samePlace(row));
-    planned.push({ account, provider, identifier, alreadyThere });
+    const origin = entry.grewFromSignInId ? (origins.find((row) => row.id === entry.grewFromSignInId) ?? null) : null;
+    if (entry.grewFromSignInId && (!origin || !account || origin.account.id !== account.id)) throw validationError(`accounts.${index}.grewFromSignInId`, "validation.originChoice");
+    planned.push({ account, provider, identifier, alreadyThere, origin, approvalMethod: origin ? (entry.approvalMethod ?? null) : null });
   }
-  return { device, profile, app, planned };
+  return { device, profile, app, appKind, planned };
 }
 
 const recordSignInsAction = actionTool({
@@ -448,18 +470,22 @@ const recordSignInsAction = actionTool({
   permission: "map.write",
   input: recordSignInsInput,
   preview: async (input, context) => {
-    const { device, profile, app, planned } = await planSignIns(input);
+    const { device, profile, app, appKind, planned } = await planSignIns(input);
     const { t } = context.i18n;
-    const place = placeText({ device: { ...device }, profile: profile ? { ...profile } : null, app }, t);
+    const place = placeText({ device: { ...device }, profile: profile ? { ...profile } : null, app, appKind }, t);
     const fresh = planned.filter((item) => !item.account);
     const skipped = planned.filter((item) => item.alreadyThere);
+    const grewFrom = (item: PlannedAccount) =>
+      item.origin
+        ? ` · ${t("ai.grewFrom", { place: placeText(item.origin, t), how: item.approvalMethod ? t.dynamic(`signIns.approval_${item.approvalMethod}`) : t("signIns.approvalAny") })}`
+        : "";
     return {
       title: t("ai.action.recordSignIns"),
       fields: [
         ...field(t("signIns.fieldPlace"), place),
         ...planned.map((item) => ({
           label: item.provider.name,
-          value: `${item.identifier}${!item.account ? ` · ${t("ai.newAccount")}` : item.alreadyThere ? ` · ${t("ai.alreadySignedInThere")}` : ""}`,
+          value: `${item.identifier}${!item.account ? ` · ${t("ai.newAccount")}` : item.alreadyThere ? ` · ${t("ai.alreadySignedInThere")}` : ""}${grewFrom(item)}`,
         })),
         ...field(t("signIns.fieldSince"), input.since ? context.i18n.format.date(new Date(`${input.since}T00:00:00Z`), "UTC") : null),
         ...field(t("signIns.fieldNotes"), input.notes ? clip(input.notes, 200) : null),
@@ -470,7 +496,7 @@ const recordSignInsAction = actionTool({
     };
   },
   run: async (input, context) => {
-    const { device, profile, app, planned } = await planSignIns(input);
+    const { device, profile, app, appKind, planned } = await planSignIns(input);
     const recorded: unknown[] = [];
     const skipped: string[] = [];
     for (const item of planned) {
@@ -485,6 +511,9 @@ const recordSignInsAction = actionTool({
         deviceId: device.id,
         profileId: profile?.id ?? null,
         app,
+        appKind,
+        approvedFromId: item.origin?.id ?? null,
+        approvalMethod: item.approvalMethod,
         since: input.since ?? null,
         notes: input.notes ?? null,
       });

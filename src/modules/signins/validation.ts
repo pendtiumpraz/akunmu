@@ -3,6 +3,7 @@ import { patchSchema } from "../../shared/patch-schema";
 import { safeText } from "../../shared/secrets";
 import { blankToNull } from "../../shared/text";
 import { isLocalDate } from "../../shared/time";
+import { APP_KINDS, APPROVAL_METHODS } from "./types";
 
 const id = z.number().int().positive();
 const localDate = z.preprocess(blankToNull, z.string().refine(isLocalDate, { error: "validation.date" }).nullish());
@@ -10,7 +11,9 @@ const localDate = z.preprocess(blankToNull, z.string().refine(isLocalDate, { err
 /**
  * Records an account as signed in somewhere. The account is either an existing one (`accountId`) or named by
  * provider and identifier, and is then created when the workspace does not have it yet. The place is a
- * browser profile of the device, or the device itself with an optional app name ("Windows", "Gmail app").
+ * browser profile of the device, or the device itself with an optional app name ("Windows", "Gmail app") or
+ * command-line tool. `approvedFromId` names the sign-in of the same account that let this one in (code, link,
+ * QR code or prompt), when there was one.
  */
 export const signInInputSchema = z
   .object({
@@ -20,6 +23,9 @@ export const signInInputSchema = z
     deviceId: id,
     profileId: id.nullish(),
     app: safeText(60),
+    appKind: z.enum(APP_KINDS).nullish(),
+    approvedFromId: id.nullish(),
+    approvalMethod: z.enum(APPROVAL_METHODS).nullish(),
     since: localDate,
     review: z.boolean().default(false),
     notes: safeText(1000),
@@ -36,6 +42,9 @@ export const signInUpdateSchema = patchSchema(
   z.object({
     profileId: id.nullable(),
     app: safeText(60),
+    appKind: z.enum(APP_KINDS).nullable(),
+    approvedFromId: id.nullable(),
+    approvalMethod: z.enum(APPROVAL_METHODS).nullable(),
     since: localDate,
     review: z.boolean(),
     notes: safeText(1000),

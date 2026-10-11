@@ -89,3 +89,17 @@ Layar: Peta login · Perangkat (daftar + detail) · Akun (daftar + "login di man
 | Identitas akun ke AI | Email/username dikirim ke penyedia AI saat dibutuhkan untuk menjawab; kata sandi yang terketik di chat disamarkan sebelum dikirim | Inti fitur "akun X login di mana"; tidak ada rahasia yang tersimpan untuk bocor |
 | Daftar mandiri | Nama ruang kerja → alamat (slug) otomatis; tanpa syarat/ketentuan dan tanpa persetujuan Privasimu | AkunMu tidak memakai Privasimu; data hanya milik pemilik ruang kerja |
 
+
+---
+
+## 6. Pohon Akun (owner, 11 Okt 2026: "temanya adalah pohon")
+
+| Aspek | Keputusan | Alasan |
+|---|---|---|
+| Asal login | `sign_ins.approved_from_id` + `approval_method` (`code`, `link`, `qr`, `prompt`), migrasi `0002`. Asal harus login dari akun yang sama; tidak boleh berputar (dicek di service) | Kasus owner: CLI di perangkat lain masuk pakai kode/magic link yang disetujui di browser perangkat A |
+| Jenis aplikasi | `sign_ins.app_kind` (`app`, `cli`) | CLI tampil sebagai daun bertanda terminal |
+| Bentuk pohon | Batang = akun; akar = perangkat tempat login langsung; dahan = perangkat yang dicapai lewat persetujuan (induk = perangkat persetujuan pertama, tanpa siklus); daun = profil browser/aplikasi/CLI. Riwayat: asal yang sudah logout tetap tampil sebagai daun gugur | "kita ngelihat akar akunnya dari device mana, dipakai di dahan & daun device mana" |
+| Tata letak | Fungsi murni `src/modules/signins/tree.ts`: pita per subpohon (anak ditumpuk, induk di tengah) → tidak ada node bertabrakan; hutan dipak ke kolom sesuai rasio kanvas. Dijaga tes acak 40 hutan | "gak boleh saling tabrak" |
+| Kanvas | React Flow (`@xyflow/react`, MIT) dengan node/kabel sendiri ala ComfyUI; tidak bisa digeser (tata letak otomatis), pan/zoom/minimap | Interaksi node editor yang matang; tata letak tetap milik kita |
+| Logo | Browser: `alrra/browser-logos` (MIT), Arc dari Simple Icons; penyedia: Simple Icons (CC0) sebagai mask CSS. Semua di `public/brands` (CSP `self`). Merek milik pemiliknya | "pakai icon2 / logo browser sebenarnya" |
+| Landing | Tangkapan layar asli (WebP, id/en) + GSAP 3.15 (ScrollTrigger) untuk cabang tumbuh, layar miring 3D yang tegak saat digulir, tombol magnetik, etalase menempel; semua mati saat `prefers-reduced-motion` | "UI lebih kreatif … gsap … motion boleh" |

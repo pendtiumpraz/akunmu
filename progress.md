@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 06: Deployment` — Neon + GitHub selesai, menunggu proyek Vercel |
+| **Fase Aktif** | `Fase 07: Improvement` — Pohon akun + UI baru + landing (commit lokal, menunggu izin push) |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | 95% (Neon termigrasi, repo GitHub terpush; tinggal Vercel + akun pertama) |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); perbaikan Fase 07 siap push |
 
 ---
 
@@ -52,6 +52,14 @@
 - [ ] Proyek Vercel terhubung ke repo + env `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET`
 - [x] Akun pemilik platform + 3 ruang kerja: `pribadi` (admin = alamat Gmail owner dengan akhiran `+pribadi`, karena email harus unik per akun), `privasimu`, `sainskerta` (masing-masing email kerja owner); alamat email disamarkan atas permintaan owner; kata sandi sementara di `.bootstrap-credentials.txt` (di-gitignore)
 - [ ] Kunci AI di `/platform/ai` (`claude-haiku-5-5`)
+### 🔄 Fase 07: Improvement — Pohon akun (owner 11 Okt 08.10–08.25)
+- [x] Asal login: `approved_from_id` + `approval_method` (kode, magic link, QR, konfirmasi) + `app_kind` (aplikasi/CLI), migrasi `0002` (hanya tambah kolom); validasi akun sama + tanpa putaran; drawer "Asal login"; lencana "Masuk lewat …"; asisten bisa mencatat asal (`grewFromSignInId`)
+- [x] Logo asli: browser (Chrome, Edge, Firefox, Safari, Brave, Opera, Arc, + Vivaldi, Samsung Internet) dan 19 penyedia, disajikan dari `public/brands`
+- [x] Tampilan **Pohon** (bawaan halaman utama): batang akun → akar → dahan → daun, kabel ala ComfyUI berlabel cara masuk, sorot garis keturunan, panel detail, riwayat (daun gugur), cari, legenda, minimap; tata letak tanpa tabrakan (tes 40 hutan acak), dipak ke kolom
+- [x] Dashboard: logo pohon, rail hijau hutan, menu "Pohon", angka menghitung naik, tombol tekan, daun bergoyang
+- [x] Landing baru: tangkapan layar asli (id/en), GSAP (cabang tumbuh, layar 3D, tombol magnetik, etalase menempel), aman untuk reduced motion
+- [x] QA: 73 tes, tsc, lint, build; tangkapan layar terang/gelap/HP tanpa galat; 0 node bertumpuk
+- [ ] Izin owner untuk push (Vercel deploy + migrasi `0002` di Neon)
 
 ---
 
@@ -73,3 +81,5 @@
 | 2026-10-11 02:45 | 04 | QA visual di server lokal (PGlite, AI tiruan); perbaikan hidrasi drawer, rail, HP (`12b7b2f`) |
 | 2026-10-11 03:00 | 05 | Audit selesai (`audit-report.md`), 62 tes; berhenti di gerbang approval 05/06 |
 | 2026-10-11 06:58 | 06 | Approval owner; migrasi Neon `0000`–`0001` diterapkan + diverifikasi; repo GitHub `pendtiumpraz/akunmu` |
+| 2026-10-11 07:45 | 06 | Akun: superadmin + 3 ruang kerja (Pribadi, Privasimu, Sainskerta) |
+| 2026-10-11 09:10 | 07 | Pohon akun, asal login, logo asli, dashboard + landing baru; 73 tes; commit lokal |

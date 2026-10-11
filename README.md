@@ -1,6 +1,6 @@
 # AkunMu
 
-A map of where your accounts are signed in. Devices (laptops, PCs, phones, tablets) hold browser profiles (Chrome's "Work", Edge's "Personal", …), and each place has accounts signed in to it (Google, Microsoft, GitHub, …). AkunMu answers "where is this account signed in?" and "what is on this laptop?", keeps a list of sign-ins to check, and never stores a password, code or cookie.
+The trees of where your accounts are signed in. Devices (laptops, PCs, phones, tablets) hold browser profiles (Chrome's "Work", Edge's "Personal", …), apps and command-line tools, and each place has accounts signed in to it (Google, Microsoft, GitHub, …). AkunMu draws every account as a tree: the device it was first signed in on (the root), the devices it reached with a code, magic link, QR code or prompt approved there (the branches), and the places it is signed in (the leaves). It answers "where is this account signed in?" and "what is on this laptop?", keeps a list of sign-ins to check, and never stores a password, code or cookie.
 
 Built with the Sainskerta loop-v5 workflow: see `progress.md`, `user_requirement.md`, `architecture-decisions.md`, `audit-report.md`.
 
@@ -43,6 +43,7 @@ tenants (workspaces)
 ```
 
 - One active sign-in per account and place; signing out keeps the row as history.
+- A sign-in can name the sign-in of the same account that let it in (`approved_from_id`, with `approval_method`: code, link, QR or prompt); loops are refused. The account trees (`src/modules/signins/tree.ts`, pure and tested) grow from these links and never let two nodes overlap.
 - A sign-in not confirmed for 30 days, or marked for review, shows under "To check".
 - Deleting a device trashes its profiles and sign-ins with the same timestamp; restoring brings them back together. The same goes for accounts and their sign-ins.
 - Free text (notes, labels) that looks like a secret (API keys, tokens, private keys, backup codes) is refused.
@@ -56,6 +57,11 @@ Every workspace-owned table has a `tenant_id`, and isolation is enforced by **Po
 `/app/assistant` answers with read tools (`find_account`, `list_devices`, `get_device`, `list_accounts`, `list_providers`, `get_overview`) and proposes changes with action tools (`add_device`, `add_browser_profile`, `add_provider`, `record_sign_ins`, `sign_out`, `confirm_sign_ins`, `mark_for_review`, `update_account`). A change runs only after the person confirms its card; the assistant cannot delete anything. Tools follow the role's permissions. Passwords typed into the chat are masked before anything reaches the AI provider.
 
 The platform owner sets AkunMu's AI providers and monthly quotas at `/platform/ai`; a workspace admin can switch to its own key at `/app/settings`.
+
+## Credits
+
+- Browser logos: [alrra/browser-logos](https://github.com/alrra/browser-logos) (MIT); the Arc glyph and provider glyphs: [Simple Icons](https://simpleicons.org) (CC0). All served from `public/brands`; the marks belong to their owners and only name the browser or provider.
+- The account trees canvas: [React Flow](https://reactflow.dev) (MIT). Landing motion: [GSAP](https://gsap.com) (standard no-charge license).
 
 ## Languages
 

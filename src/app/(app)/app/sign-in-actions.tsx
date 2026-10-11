@@ -1,9 +1,8 @@
 "use client";
 
-import { CheckCheck, Flag, FlagOff, LogOut, MonitorSmartphone, Pencil, Trash2 } from "lucide-react";
+import { CheckCheck, Flag, FlagOff, GitBranch, LogOut, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import type { Translator } from "@/shared/i18n/translate";
 import { api } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { Badge } from "@/shared/ui/badge";
@@ -13,22 +12,13 @@ import { Menu } from "@/shared/ui/menu";
 import { useToast } from "@/shared/ui/toast";
 import { SignInDrawer } from "./drawers/sign-in-drawer";
 import { needsCheck, placeKeyOf, type MapSignIn } from "./map-types";
-import { BrowserMark, Freshness, ProviderAvatar, browserLabel, shortDate } from "./ui";
+import { AppMark, BrowserMark, Freshness, ProviderAvatar, approvalLabel, placeLabel, shortDate } from "./ui";
 
-/** Where a sign-in is, short: "Chrome · Work", "Gmail app" or "On the device". */
-export function placeLabel(row: Pick<MapSignIn, "profile" | "app">, t: Translator): string {
-  if (row.profile) return `${browserLabel(row.profile.browser, t)} · ${row.profile.name}`;
-  if (row.app) return row.app;
-  return t("signIns.deviceItself");
-}
+export { approvalLabel, placeLabel } from "./ui";
 
-export function PlaceIcon({ row }: { row: Pick<MapSignIn, "profile"> }) {
+export function PlaceIcon({ row }: { row: Pick<MapSignIn, "profile" | "app" | "appKind"> }) {
   if (row.profile) return <BrowserMark browser={row.profile.browser} color={row.profile.color} />;
-  return (
-    <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-sunken text-ink-2">
-      <MonitorSmartphone className="size-4" />
-    </span>
-  );
+  return <AppMark kind={row.app ? row.appKind : null} />;
 }
 
 type Pending = { kind: "signOut" | "delete"; row: MapSignIn } | null;
@@ -98,6 +88,9 @@ export function useSignInActions(onChanged: () => void) {
             deviceId: editing.device.id,
             place: placeKeyOf(editing),
             app: editing.app,
+            appKind: editing.appKind,
+            approvedFromId: editing.approvedFromId,
+            approvalMethod: editing.approvalMethod,
             since: editing.since,
             review: editing.review,
             notes: editing.notes,
@@ -161,6 +154,12 @@ export function SignInLine({
   );
   // On phones (and in compact lines) the status sits under the name instead of in its own column.
   const inlineStatus = <span className={cn("mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1", !compact && "sm:hidden")}>{status}</span>;
+  const grewVia = row.approvedFromId ? (
+    <span className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-accent">
+      <GitBranch className="size-3" />
+      {t("signIns.grewVia", { how: approvalLabel(row.approvalMethod, t) })}
+    </span>
+  ) : null;
   const main =
     show === "place" ? (
       <>
@@ -168,6 +167,7 @@ export function SignInLine({
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold text-ink">{placeLabel(row, t)}</span>
           <span className="block truncate text-xs text-muted">{row.device.name}</span>
+          {grewVia}
           {inlineStatus}
         </span>
       </>
@@ -179,6 +179,7 @@ export function SignInLine({
           <span className="block truncate text-xs text-muted">
             {[row.provider.name, row.account.label, show === "both" ? `${placeLabel(row, t)} — ${row.device.name}` : null].filter(Boolean).join(" · ")}
           </span>
+          {grewVia}
           {inlineStatus}
         </span>
       </>

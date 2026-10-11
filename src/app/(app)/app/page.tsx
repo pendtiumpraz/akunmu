@@ -12,11 +12,17 @@ function idOf(value: string | string[] | undefined): number | null {
   return typeof value === "string" && /^\d{1,12}$/.test(value) ? Number(value) : null;
 }
 
-/** The sign-in map: devices → places → accounts. `?device`, `?place`, `?account` and `?record=1` set where it opens. */
+/**
+ * The sign-in map. It opens on the account trees; `?view=columns` (or a `?device`, `?place` or `?account` to open)
+ * shows the columns devices → places → accounts, `?view=check` the list to check, and `?record=1` the record drawer.
+ */
 export default async function MapPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireStaffPage("map.read");
   const params = await searchParams;
   const place = typeof params.place === "string" && /^(p:\d{1,12}|a:.{1,60}|d)$/.test(params.place) ? params.place : null;
-  const initial: MapSelection = { deviceId: idOf(params.device), place, accountId: idOf(params.account), view: params.view === "check" ? "check" : "map" };
+  const deviceId = idOf(params.device);
+  const accountId = idOf(params.account);
+  const columns = params.view === "columns" || params.view === "map" || deviceId !== null || place !== null || accountId !== null;
+  const initial: MapSelection = { deviceId, place, accountId, view: params.view === "check" ? "check" : columns ? "map" : "tree" };
   return <SignInMap initial={initial} startRecording={params.record === "1"} />;
 }

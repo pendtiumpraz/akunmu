@@ -16,9 +16,12 @@ import {
   type SignInFilter,
   type SignInRow,
 } from "./repository";
-import type { SignInRecord } from "./schema";
-import { STALE_AFTER_DAYS, staleBefore } from "./types";
+import type { NewSignInRecord, SignInRecord } from "./schema";
+import { STALE_AFTER_DAYS, staleBefore, type AppKind } from "./types";
 import type { SignInInput, SignInUpdateInput } from "./validation";
+
+/** Longest chain of origins followed when looking for a loop. */
+const MAX_ORIGIN_DEPTH = 64;
 
 async function getSignIn(id: number): Promise<SignInRecord> {
   const signIn = await findSignInById(id);
@@ -47,6 +50,27 @@ async function checkPlace(deviceId: number, profileId: number | null, app: strin
   }
 }
 
+/**
+ * Checks the sign-in this one was let in from: a sign-in of the same account, and following its own origins must
+ * not lead back to `selfId` (the account cannot have grown from itself).
+ */
+async function checkOrigin(accountId: number, originId: number, selfId?: number): Promise<void> {
+  const origin = await findSignInById(originId);
+  if (!origin || origin.accountId !== accountId || origin.id === selfId) throw validationError("approvedFromId", "validation.originChoice");
+  // A new sign-in has no descendants yet, so it cannot close a loop.
+  if (selfId === undefined) return;
+  let current: SignInRecord | undefined = origin;
+  for (let depth = 0; current?.approvedFromId && depth < MAX_ORIGIN_DEPTH; depth += 1) {
+    if (current.approvedFromId === selfId) throw validationError("approvedFromId", "validation.originLoop");
+    current = await findSignInById(current.approvedFromId);
+  }
+}
+
+/** An app sign-in is an app unless said otherwise; other places have no app kind. */
+function appKindFor(app: string | null, kind: AppKind | null | undefined): AppKind | null {
+  return app ? (kind ?? "app") : null;
+}
+
 async function resolveAccount(input: SignInInput, actorId: number) {
   if (input.accountId) {
     const account = await findAccountById(input.accountId);
@@ -65,6 +89,8 @@ export async function recordSignIn(input: SignInInput, actorId: number): Promise
   const app = input.app ?? null;
   await checkPlace(input.deviceId, profileId, app);
   const { account, created } = await resolveAccount(input, actorId);
+  const approvedFromId = input.approvedFromId ?? null;
+  if (approvedFromId !== null) await checkOrigin(account.id, approvedFromId);
   let signIn: SignInRecord;
   try {
     signIn = await insertSignIn({
@@ -72,6 +98,9 @@ export async function recordSignIn(input: SignInInput, actorId: number): Promise
       deviceId: input.deviceId,
       profileId,
       app,
+      appKind: appKindFor(app, input.appKind),
+      approvedFromId,
+      approvalMethod: approvedFromId !== null ? (input.approvalMethod ?? null) : null,
       since: input.since ?? null,
       review: input.review,
       notes: input.notes ?? null,
@@ -87,7 +116,7 @@ export async function recordSignIn(input: SignInInput, actorId: number): Promise
     action: "signin.created",
     subjectType: "sign_in",
     subjectId: signIn.id,
-    meta: { accountId: account.id, deviceId: input.deviceId, profileId },
+    meta: { accountId: account.id, deviceId: input.deviceId, profileId, approvedFromId },
   });
   return { ...(await signInRow(signIn.id)), accountCreated: created };
 }
@@ -96,15 +125,25 @@ export async function updateSignIn(id: number, input: SignInUpdateInput, actorId
   const signIn = await getSignIn(id);
   const profileId = input.profileId !== undefined ? input.profileId : signIn.profileId;
   const app = input.app !== undefined ? (input.app ?? null) : signIn.app;
-  if (input.profileId !== undefined || input.app !== undefined) await checkPlace(signIn.deviceId, profileId, app);
+  const placeChanged = input.profileId !== undefined || input.app !== undefined;
+  if (placeChanged) await checkPlace(signIn.deviceId, profileId, app);
+  const changes: Partial<NewSignInRecord> = {};
+  if (input.profileId !== undefined) changes.profileId = profileId;
+  if (input.app !== undefined) changes.app = app;
+  if (placeChanged || input.appKind !== undefined) changes.appKind = appKindFor(app, input.appKind !== undefined ? input.appKind : signIn.appKind);
+  const originId = input.approvedFromId !== undefined ? input.approvedFromId : signIn.approvedFromId;
+  if (input.approvedFromId !== undefined) {
+    if (originId !== null) await checkOrigin(signIn.accountId, originId, id);
+    changes.approvedFromId = originId;
+  }
+  if (input.approvedFromId !== undefined || input.approvalMethod !== undefined) {
+    changes.approvalMethod = originId !== null ? (input.approvalMethod !== undefined ? input.approvalMethod : signIn.approvalMethod) : null;
+  }
+  if (input.since !== undefined) changes.since = input.since ?? null;
+  if (input.review !== undefined) changes.review = input.review;
+  if (input.notes !== undefined) changes.notes = input.notes ?? null;
   try {
-    await updateSignInRow(id, {
-      ...(input.profileId !== undefined ? { profileId } : {}),
-      ...(input.app !== undefined ? { app } : {}),
-      ...(input.since !== undefined ? { since: input.since ?? null } : {}),
-      ...(input.review !== undefined ? { review: input.review } : {}),
-      ...(input.notes !== undefined ? { notes: input.notes ?? null } : {}),
-    });
+    await updateSignInRow(id, changes);
   } catch (error) {
     if (isUniqueViolation(error)) throw conflict("errors.alreadySignedIn");
     throw error;
@@ -136,6 +175,15 @@ export async function deleteSignIn(id: number, actorId: number) {
   await getSignIn(id);
   await updateSignInRow(id, { deletedAt: new Date() });
   await recordAudit({ actorType: "staff", actorId, action: "signin.deleted", subjectType: "sign_in", subjectId: id });
+}
+
+/**
+ * Every sign-in for the account trees, signed out ones included: a place an account grew from may have been signed
+ * out since, and the trees can show that history.
+ */
+export async function treeView() {
+  const signIns = await signInRows({ includeSignedOut: true });
+  return { signIns, staleBefore: staleBefore().toISOString(), staleAfterDays: STALE_AFTER_DAYS };
 }
 
 /** Everything the sign-in map needs: devices, their browser profiles and the active sign-ins. */

@@ -6,7 +6,7 @@ export type DeviceKind = (typeof DEVICE_KINDS)[number];
 export const DEVICE_SYSTEMS = ["windows", "macos", "linux", "chromeos", "android", "ios", "ipados", "other"] as const;
 export type DeviceSystem = (typeof DEVICE_SYSTEMS)[number];
 
-export const BROWSERS = ["chrome", "edge", "firefox", "safari", "brave", "opera", "arc", "other"] as const;
+export const BROWSERS = ["chrome", "edge", "firefox", "safari", "brave", "opera", "arc", "vivaldi", "samsung", "other"] as const;
 export type Browser = (typeof BROWSERS)[number];
 
 /** Colors a browser profile can be marked with (as browsers do), plus none. */
@@ -21,6 +21,8 @@ export const BROWSER_NAMES: Record<Exclude<Browser, "other">, string> = {
   brave: "Brave",
   opera: "Opera",
   arc: "Arc",
+  vivaldi: "Vivaldi",
+  samsung: "Samsung Internet",
 };
 
 export const SYSTEM_NAMES: Record<Exclude<DeviceSystem, "other">, string> = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, Boxes, ChevronDown, Laptop, LogOut, Search, Settings, Sparkles, Waypoints, type LucideIcon } from "lucide-react";
+import { AtSign, Boxes, ChevronDown, Laptop, LogOut, Search, Settings, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -23,7 +23,7 @@ type ShellUser = { name: string; email: string; role: StaffRole };
 export type ShellNavItem = { href: string; labelKey: string; icon: LucideIcon; color: string; permission?: Permission; exact?: boolean };
 
 const NAV: ShellNavItem[] = [
-  { href: "/app", labelKey: "nav.map", icon: Waypoints, color: "#14B8A6", exact: true },
+  { href: "/app", labelKey: "nav.map", icon: TreeDeciduous, color: "#34D399", exact: true },
   { href: "/app/devices", labelKey: "nav.devices", icon: Laptop, color: "#3B82F6" },
   { href: "/app/accounts", labelKey: "nav.accounts", icon: AtSign, color: "#F59E0B" },
   { href: "/app/providers", labelKey: "nav.providers", icon: Boxes, color: "#A855F7" },
@@ -67,7 +67,7 @@ function RailLink({ item, active }: { item: ShellNavItem; active: boolean }) {
         active ? "bg-rail-active text-white" : "text-rail-ink hover:bg-rail-hover hover:text-white",
       )}
     >
-      <item.icon className="size-5 transition-opacity group-hover:opacity-80" style={{ color: iconColor(item, active) }} strokeWidth={2.2} />
+      <item.icon className="size-5 transition-[opacity,transform] duration-200 group-hover:scale-110 group-hover:opacity-80 group-active:scale-95" style={{ color: iconColor(item, active) }} strokeWidth={2.2} />
       <span className="max-w-full truncate">{t.dynamic(item.labelKey)}</span>
     </Link>
   );

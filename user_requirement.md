@@ -58,6 +58,24 @@ Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
 **2026-10-11 00:18 WIB**
 > tapi tolong UI nya harus beda!
 
+**2026-10-11 07:00 WIB**
+> migrate neon , ku buatkan githubnya
+
+**2026-10-11 07:20 WIB**
+> iya pakai [email owner], ruang kerjanya Pribadi
+
+**2026-10-11 07:40 WIB**
+> loginnya apa di akunmu itu? ada [email 1] ada [email 2] ada [email 3] harusnya 3 tenant berbeda, [email 1] superadmin
+
+**2026-10-11 08:10 WIB**
+> jadi gini bro! aku kan ini untuk di device itu untuk melihat sesi login yaa, lalu aku udah pasang, device A, profile browser A, lalu akun provider, dan akunnya, nanti perlu aku tulis digunakan di laptop mana, apakah di device yang sama apa beda, nyatanya aku login dari device A di browsernya, tapi CLI nya login pakai magnet link minta code dari device itu loginnya di device lain, gitu? aku mau ada peta penambahan device dari akun2 provider itu, untuk tracking aja, dan aku mau ya setiap browser profile itu pakai icon2 / logo browser sebenarnya, dan juga untuk device - akun - dipakai di ini nanti jadi tree gitu kelihatan graph nya bisa gak yah??? aku pengen punya tampilan UI tree kayak comfy UI itu tapi bener2 kelihatan pohonnya, dan gak boleh saling tabrakk gitu
+
+**2026-10-11 08:20 WIB**
+> dan tolong UI nya lebih kreatif bisa gak, di landing page kasih screenshot screenshot gitu, tapi tolong perbaiki dulu UI dashboardnya soalnya aku gak mau yang terlalu standar kamu boleh pake micro interaction, gsap dll untuk landing pagenya, kalau perlu ada motion kasih aja motion motion boleh kok
+
+**2026-10-11 08:25 WIB**
+> ya temanya adalah pohon gitu, kita ngelihat akar akunnya dari device mana, dipakai di dahan & daun device mana gitu
+
 ---
 
 ## ✅ Approval & Feedback
