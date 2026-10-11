@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 07: Improvement` — Pohon akun + UI baru + landing (commit lokal, menunggu izin push) |
+| **Fase Aktif** | `Fase 07: Improvement` — Pohon akun + UI baru + landing: live (migrasi `0002`, push 11 Okt) |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); perbaikan Fase 07 siap push |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 07 terpush |
 
 ---
 
@@ -59,7 +59,7 @@
 - [x] Dashboard: logo pohon, rail hijau hutan, menu "Pohon", angka menghitung naik, tombol tekan, daun bergoyang
 - [x] Landing baru: tangkapan layar asli (id/en), GSAP (cabang tumbuh, layar 3D, tombol magnetik, etalase menempel), aman untuk reduced motion
 - [x] QA: 73 tes, tsc, lint, build; tangkapan layar terang/gelap/HP tanpa galat; 0 node bertumpuk
-- [ ] Izin owner untuk push (Vercel deploy + migrasi `0002` di Neon)
+- [x] Izin owner ("migrate dan push", 11 Okt): migrasi `0002` diterapkan di Neon + diverifikasi (3 kolom nullable + indeks, RLS paksa utuh, 3 login owner tak berubah); push `main` → Vercel
 
 ---
 
@@ -83,3 +83,4 @@
 | 2026-10-11 06:58 | 06 | Approval owner; migrasi Neon `0000`–`0001` diterapkan + diverifikasi; repo GitHub `pendtiumpraz/akunmu` |
 | 2026-10-11 07:45 | 06 | Akun: superadmin + 3 ruang kerja (Pribadi, Privasimu, Sainskerta) |
 | 2026-10-11 09:10 | 07 | Pohon akun, asal login, logo asli, dashboard + landing baru; 73 tes; commit lokal |
+| 2026-10-11 09:25 | 07 | Owner: "migrate dan push" → Neon `0002` + push |
