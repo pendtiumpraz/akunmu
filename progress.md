@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 08: Desktop Windows` — versi `.exe` offline dengan PGlite (Fase 07 live) |
+| **Fase Aktif** | `Fase 09: Unduh & hubungkan` — ekstensi browser, AkunMu Desktop Windows + Linux, buka profil dari web/desktop |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 07 terpush |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 08 terpush; Fase 09 commit lokal, menunggu "migrate dan push" |
 
 ---
 
@@ -82,6 +82,21 @@
 - [x] Ditemukan & diperbaiki saat QA: electron-builder membuang `node_modules` dan folder bertitik (`.next-desktop`) dari `extraResources` → disalin lewat hook `afterPack`; `pid` proses belum ada sebelum spawn; server standalone menyebut dirinya `localhost` → redirect relatif + jendela dikembalikan ke 127.0.0.1
 - [x] Izin owner ("push", 11 Okt): desktop, favicon, mode desktop, pemilih penyedia dipush → Vercel; tanpa migrasi Neon; installer tidak masuk git (dibagikan lewat `Downloads\akunmu-desktop`)
 
+### 🔄 Fase 09: Unduh & hubungkan (owner 11 Okt sore: "chrome extension yang dipakai sweep chrome profile dan devicenya … masukkan aja di halaman download & connect")
+- [x] Keputusan owner: semua sekaligus; temuan = **saran yang disetujui** (login yang sudah tercatat dan terlihat lagi dikonfirmasi otomatis); ekstensi dibagikan sebagai **zip, dipasang manual**; landing: tombol unduh Windows + Linux (macOS belum ada)
+- [x] Migrasi `0003_connect` (hanya tambah): tabel `ingest_tokens` (kunci per perangkat, hanya hash SHA-256 + 4 karakter terakhir) dan `findings` (sidik jari unik per ruang kerja, status baru/diterima/diabaikan), kolom `devices.hostname` dan `browser_profiles.directory`; RLS ENABLE + FORCE + kebijakan `tenant_isolation` di kedua tabel baru
+- [x] API ingest (`/api/ingest/hello`, `/api/ingest/report`): `Authorization: Bearer akm_…`, tanpa sesi/cookie, 120 laporan/jam per kunci, dijalankan dalam ruang kerja pemilik kunci. Laporan: yang belum ada → temuan; login tercatat yang terlihat lagi → dikonfirmasi (maks sekali sejam, audit `system`); login tercatat di situs yang dicek tapi tak terlihat → ditandai perlu dicek (tidak pernah di-logout)
+- [x] Halaman **Unduh & hubungkan** (`/app/connect`, menu "Hubungkan" di bawah rail): unduhan (Windows .exe, Linux .tar.gz, ekstensi .zip; macOS "belum tersedia"), temuan per tempat (terima, abaikan, terima semua; akun yang tak terbaca diketik di barisnya), kunci ekstensi (dibuat per perangkat, tampil sekali + alamat + salin, dicabut), tutorial lengkap ekstensi & desktop, catatan privasi
+- [x] **Ekstensi browser** (`extension/`, MV3, id/en): popup (nama profil, browser, sambungan ke web dan/atau AkunMu Desktop, "Periksa sekarang", "Cari juga situs lain"), service worker (lapor saat terhubung, tiap 6 jam, saat browser dibuka bila sudah lama). Deteksi dari **nama** cookie per situs (Google + daftar akun Google seperti Chrome sendiri, GitHub + nama pengguna dari cookie, Claude, ChatGPT, X, Facebook, Instagram, LinkedIn, Slack, Notion, Netflix, Spotify, Apple, Microsoft, GitLab, AWS) dan pola nama cookie login untuk situs lain; yang dikirim hanya domain + nama akun yang terbaca. Zip dibuat ulang tiap build (`npm run extension:pack`, tanpa paket, cap waktu tetap)
+- [x] **AkunMu Desktop** (Windows + Linux): halaman Hubungkan punya "Komputer ini" (nama komputer, perangkat yang mewakilinya, pindai profil Chrome/Edge/Brave/Vivaldi dari `Local State`, buka profil sekali klik); port tetap `127.0.0.1:47821` (cadangan 47822–47825) yang hanya meneruskan `/api/ingest/*` ke server app, sehingga ekstensi bisa melapor ke desktop; hello desktop memberi nama komputer → ekstensi mengirimnya di semua laporan → web tahu perangkat mana komputer itu; laporan ke desktop memakai nama & folder profil asli dari komputer itu
+- [x] **Buka di profil**: di menu sesi (detail perangkat/akun/peta) dan panel pohon, untuk profil Chromium di perangkat yang punya nama komputer. Desktop: langsung membuka browser `--profile-directory` (tanpa shell). Web: tautan `akunmu://open?…` → AkunMu Desktop di komputer itu (didaftarkan saat start; Linux menulis entri menu sendiri) → `/desktop/open` dengan kunci peluncuran; profil hanya dibuka bila nama komputer cocok, selain itu notifikasi
+- [x] Nama komputer di form perangkat (opsional, hanya laptop/PC/lainnya; satu nama = satu perangkat, duplikat ditolak)
+- [x] Landing: tombol Windows & Linux di hero, menu "Unduh", bagian unduhan (3 kartu, macOS belum tersedia); catatan hero diperbarui ("Ekstensi browser opsional")
+- [x] Paket desktop: `--win --linux`, nama aset tanpa versi (`AkunMu-Setup-x64.exe`, `AkunMu-win-x64.zip`, `AkunMu-linux-x64.tar.gz`) agar tautan "rilis terbaru" tetap; folder data khusus (`AKUNMU_DATA_DIR`) tidak mengambil alih tautan `akunmu://` sistem
+- [x] QA: build web lokal (PGlite) — kunci dibuat di UI, ekstensi asli (Chromium, unpacked) terhubung: kunci salah ditolak, laporan → 4 temuan (profil, Claude tanpa akun, GitHub `galih-qa`, situs lain), terima semua + isi akun Claude; nama komputer disimpan & duplikat 422; menu "Buka di profil" menyerahkan `akunmu://open?browser=chrome&profile=Kerja&host=…&url=https://github.com`; HP 390 px tanpa gulir samping; 0 galat konsol. Paket desktop: pindai komputer ini → 17 temuan diterima (perangkat + 8 profil + akun Google), port 47821: hello 200 + nama komputer, tanpa kunci 401, jalur lain 404; ekstensi asli melapor ke desktop dan menyimpan nama komputer
+- [ ] Izin owner: migrasi Neon `0003` (dijalankan otomatis oleh `vercel-build` saat push) + push
+- [ ] Rilis GitHub `v0.1.0` di `pendtiumpraz/akunmu` berisi 3 aset desktop (tautan unduh mengarah ke "latest release")
+
 ---
 
 ## Issue & Blocker
@@ -90,6 +105,8 @@
 |---|-------|----------|--------|
 | 1 | Env (Neon, Blob) belum ada; build lokal tetap jalan dengan PGlite | Medium | ✅ `.env` dari owner (11 Okt 00.40) |
 | 2 | Repo GitHub + proyek Vercel untuk AkunMu belum ada | Medium | ⏳ repo GitHub ✅ (11 Okt); proyek Vercel menunggu owner |
+| 3 | Tautan unduh desktop mengarah ke rilis GitHub terbaru, yang belum ada | Medium | ⏳ menunggu owner membuat rilis `v0.1.0` + mengunggah 3 aset (atau memberi token) |
+| 4 | Simpan Pengaturan → AI gagal di produksi (AkunMu & EventMu) | High | ⏳ menunggu owner: cek `APP_SECRET` di Vercel AkunMu, kirim teks galat EventMu |
 
 ---
 
@@ -108,3 +125,4 @@
 | 2026-10-11 10:10 | 07 | Pohon per perangkat (cabang/ranting/daun), sesi lintas perangkat, perbaikan hero; commit lokal |
 | 2026-10-11 14:50 | Data | Permintaan owner: 16 profil Chrome ditambahkan di Neon, ruang kerja Pribadi (PC #1: 3 profil; laptop Acer: 2 profil; laptop ASUS: 11 profil; nama profil disamarkan atas permintaan owner) lewat service app (RLS + audit), dicek kering dulu |
 | 2026-10-11 15:20 | Isu | Simpan Pengaturan → AI gagal di produksi (AkunMu & EventMu): tidak ada konfigurasi AI tersimpan di kedua Neon; upsert ke `app_settings` diuji (rollback) dan berhasil; di lokal simpan berhasil → dugaan `APP_SECRET` belum dipasang di Vercel AkunMu; menunggu cek owner |
+| 2026-10-11 16:20 | 09 | Unduh & hubungkan: migrasi `0003`, API ingest, temuan, ekstensi MV3, port & tautan desktop, Buka di profil, Linux, landing; QA web + paket desktop + ekstensi asli; commit lokal, menunggu izin "migrate dan push" |

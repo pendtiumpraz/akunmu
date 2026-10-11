@@ -113,6 +113,15 @@ Pilihan owner atas usulan AI: database desktop **PGlite** (Postgres tertanam; sk
 > di eventmu dan di akunmu masih error semua kayaknya
 > coba cek
 
+**2026-10-11 (sore, Fase 09)**
+> bisa gak sih ada chrome extension yang dipakai sweep chrome profile dan devicenya?? dan masuk ke akun yang terhubung gitu2? jadi chrome extension konek ke platform pake ingest token, dan juga chrome extension bisa connect ke desktop untuk cek semua profider yg terhubung dan emailnya? gitu?? sehingga nanti ketika di klik dari platform atau dari desktop app, platform tertentu ketika di klik langsung dibuka dari chrome profilenya gitu? bisa gak yah?
+
+> dan masukkan aja di halaman download & connect di account masing2 tenantnya
+
+Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **saran yang disetujui** (login yang sudah tercatat dikonfirmasi otomatis); ekstensi dibagikan sebagai **zip yang dipasang manual**.
+
+> dan di landing page kasih button download .exe windows, dan untuk app linuxnya dan macnya kalau ada, kalau gak ada cukup windows dan linux juga
+
 ---
 
 ## ✅ Approval & Feedback
@@ -122,3 +131,4 @@ Pilihan owner atas usulan AI: database desktop **PGlite** (Postgres tertanam; sk
 | 2026-10-11 00:15 | 00–01 Kickoff | Instruksi build langsung (stack sama EventMu, loop-v5, agentic sama persis) |
 | 2026-10-11 00:18 | UI | Harus beda dari EventMu |
 | 2026-10-11 | Fase 08 Desktop | Versi `.exe`: PGlite (bukan SQLite), data terpisah & offline |
+| 2026-10-11 | Fase 09 Unduh & hubungkan | Semua sekaligus; temuan = saran yang disetujui; ekstensi zip dipasang manual; landing: Windows + Linux (macOS belum ada) |
