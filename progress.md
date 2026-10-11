@@ -13,7 +13,7 @@
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 terpush + Neon `0003`; menunggu rilis GitHub `v0.1.0` untuk tautan unduh desktop |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 live: Neon `0003`, rilis desktop `v0.1.0`, asisten tanpa gulir di tampilan awal |
 
 ---
 
@@ -95,7 +95,7 @@
 - [x] Paket desktop: `--win --linux`, nama aset tanpa versi (`AkunMu-Setup-x64.exe`, `AkunMu-win-x64.zip`, `AkunMu-linux-x64.tar.gz`) agar tautan "rilis terbaru" tetap; folder data khusus (`AKUNMU_DATA_DIR`) tidak mengambil alih tautan `akunmu://` sistem
 - [x] QA: build web lokal (PGlite) — kunci dibuat di UI, ekstensi asli (Chromium, unpacked) terhubung: kunci salah ditolak, laporan → 4 temuan (profil, Claude tanpa akun, GitHub `galih-qa`, situs lain), terima semua + isi akun Claude; nama komputer disimpan & duplikat 422; menu "Buka di profil" menyerahkan `akunmu://open?browser=chrome&profile=Kerja&host=…&url=https://github.com`; HP 390 px tanpa gulir samping; 0 galat konsol. Paket desktop: pindai komputer ini → 17 temuan diterima (perangkat + 8 profil + akun Google), port 47821: hello 200 + nama komputer, tanpa kunci 401, jalur lain 404; ekstensi asli melapor ke desktop dan menyimpan nama komputer
 - [x] Izin owner ("migrate dan push", 11 Okt): migrasi `0003` diterapkan di Neon + diverifikasi (4 migrasi; `findings` & `ingest_tokens` RLS ENABLE + FORCE + `tenant_isolation`, hak `akunmu_app` lengkap, tanpa scope 0 baris; `devices.hostname` & `browser_profiles.directory` nullable; data lama tetap: 3 ruang kerja, 5 perangkat, 19 profil, 3 akun, 4 login); push `main` → Vercel
-- [ ] Rilis GitHub `v0.1.0` di `pendtiumpraz/akunmu` berisi 3 aset desktop (tautan unduh mengarah ke "latest release")
+- [x] Rilis GitHub `v0.1.0` di `pendtiumpraz/akunmu` (izin owner "ya, push dan buat rilisnya", 11 Okt): `AkunMu-Setup-x64.exe`, `AkunMu-win-x64.zip`, `AkunMu-linux-x64.tar.gz` (build ulang dengan perbaikan asisten); tautan `releases/latest/download/…` → 302 ke berkas, ukuran sama dengan berkas lokal; dibuat lewat API dengan login GitHub yang tersimpan di Git (token tidak dicetak)
 
 ---
 
@@ -105,7 +105,7 @@
 |---|-------|----------|--------|
 | 1 | Env (Neon, Blob) belum ada; build lokal tetap jalan dengan PGlite | Medium | ✅ `.env` dari owner (11 Okt 00.40) |
 | 2 | Repo GitHub + proyek Vercel untuk AkunMu belum ada | Medium | ⏳ repo GitHub ✅ (11 Okt); proyek Vercel menunggu owner |
-| 3 | Tautan unduh desktop mengarah ke rilis GitHub terbaru, yang belum ada | Medium | ⏳ menunggu owner membuat rilis `v0.1.0` + mengunggah 3 aset (atau memberi token) |
+| 3 | Tautan unduh desktop mengarah ke rilis GitHub terbaru, yang belum ada | Medium | ✅ rilis `v0.1.0` + 3 aset (11 Okt) |
 | 4 | Simpan Pengaturan → AI gagal di produksi (AkunMu & EventMu) | High | ⏳ menunggu owner: cek `APP_SECRET` di Vercel AkunMu, kirim teks galat EventMu |
 
 ---
@@ -128,3 +128,4 @@
 | 2026-10-11 16:20 | 09 | Unduh & hubungkan: migrasi `0003`, API ingest, temuan, ekstensi MV3, port & tautan desktop, Buka di profil, Linux, landing; QA web + paket desktop + ekstensi asli; commit lokal, menunggu izin "migrate dan push" |
 | 2026-10-11 16:35 | 09 | Owner: "migrate dan push" → Neon `0003` diterapkan + diverifikasi; push `main` |
 | 2026-10-11 16:55 | 09 | Asisten: tampilan awal tak perlu digulir lagi (owner: "UI asisten kebesaran … perlu scroll"): sapaan ringkas + saran di tengah, kotak tulis lebih pendek, placeholder & penafian pendek, saran ke-4 disembunyikan di HP pendek; diukur lokal 1366×657, 1536×730, 390×740, 360×640: luber 155/82/367/– px → 0 (360×640: 8 px padding); percakapan tetap normal; commit lokal, menunggu izin push |
+| 2026-10-11 17:05 | 09 | Owner: "ya, push dan buat rilisnya" → push `21c1b07` (asisten); rilis `v0.1.0` dengan 3 aset desktop; tautan unduh terbaru 302, ukuran cocok; deploy Vercel AkunMu & EventMu sukses |
