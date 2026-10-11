@@ -1,16 +1,7 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { desktopHome, desktopPeople } from "@/modules/desktop/service";
 import { startStaffSession } from "@/modules/users/session";
-import { desktopDefaults, desktopModeParam } from "@/server/desktop";
-import { desktopToken } from "@/shared/env";
-
-/** Whether two keys are the same, compared in constant time. */
-function sameKey(given: string, expected: string): boolean {
-  const a = Buffer.from(given);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
+import { desktopDefaults, desktopModeParam, isLaunchKey } from "@/server/desktop";
 
 /**
  * The desktop shell opens the app here with its launch key: the person of the asked mode (the default user unless
@@ -18,9 +9,8 @@ function sameKey(given: string, expected: string): boolean {
  * with a wrong key, the page does not exist.
  */
 export async function GET(request: Request) {
-  const expected = desktopToken();
   const params = new URL(request.url).searchParams;
-  if (!expected || !sameKey(params.get("key") ?? "", expected)) return new NextResponse(null, { status: 404 });
+  if (!isLaunchKey(params.get("key"))) return new NextResponse(null, { status: 404 });
   const mode = desktopModeParam(params.get("mode"));
   const people = await desktopPeople(await desktopDefaults());
   await startStaffSession(people[mode], request.headers.get("user-agent"));

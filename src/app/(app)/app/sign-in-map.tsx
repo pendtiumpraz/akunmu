@@ -439,7 +439,7 @@ export function SignInMap({ initial, startRecording, treeFocus = null }: { initi
                             label: t("common.edit"),
                             icon: Pencil,
                             hidden: !canWrite,
-                            onSelect: () => setDrawer({ kind: "device", device: { id: device.id, name: device.name, kind: device.kind, system: device.system, location: device.location, notes: device.notes } }),
+                            onSelect: () => setDrawer({ kind: "device", device: { id: device.id, name: device.name, kind: device.kind, system: device.system, location: device.location, notes: device.notes, hostname: device.hostname } }),
                           },
                           { label: t("devices.checkAll"), icon: CheckCheck, hidden: !canWrite, onSelect: () => void checkDevice(device) },
                         ]}

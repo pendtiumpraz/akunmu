@@ -39,7 +39,9 @@ tenants (workspaces)
 │   └─ browser_profiles   one per browser profile on that device
 ├─ providers          26 built in (Google, Microsoft, GitHub, …) plus the workspace's own
 │   └─ accounts           provider + identifier (email, username or phone)
-└─ sign_ins           account × device × (browser profile | app on the device)
+├─ sign_ins           account × device × (browser profile | app on the device)
+├─ ingest_tokens      one browser-extension key per device (only its hash is kept)
+└─ findings           what the extension or AkunMu Desktop saw that the trees lack, waiting for yes or no
 ```
 
 - One active sign-in per account and place; signing out keeps the row as history.
@@ -77,14 +79,23 @@ Code is English only (guarded by `tests/unit/code-language.test.ts`). Every user
 | `npm run db:migrate` | Apply migrations (also part of `vercel-build`) |
 | `npm run platform:bootstrap` | Platform owner + workspaces from `bootstrap.json` |
 | `npm run user:create` | One more staff account |
+| `npm run extension:pack` | Zip `extension/` into `public/downloads/akunmu-extension.zip` (also runs before `dev` and every build) |
 
 ## Deployment (Vercel)
 
 Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED` and `APP_SECRET` in the project's environment. `vercel-build` runs the migrations, then `next build`.
 
-## Desktop app (Windows)
+## Download & connect
 
-`desktop/` packages the same app as a Windows program that works offline, with its own database on the computer. It shares nothing with the web version.
+`/app/connect` (menu "Connect") offers the downloads, the browser extension's keys, the findings to accept or dismiss, and the full setup steps.
+
+- **Browser extension** (`extension/`, Manifest V3, English and Indonesian). Loaded by hand: unzip, open `chrome://extensions`, turn on Developer mode, Load unpacked. Its popup takes an address and a key (one key per device, made on the Connect page and shown once), and the profile's name. Every 6 hours, on browser start when overdue, and on "Check now", it looks at the workspace's providers in this browser profile (`extension/lib/sites.js`): which sites have a sign-in cookie, and the account name where the site states it (the Google accounts list, GitHub's user cookie). It sends only domains and account names to `/api/ingest/report`, never cookie values, passwords or page content. "Also look for other sites" adds any other site whose cookie names mean "signed in".
+- **Findings.** What the trees lack becomes a finding (`src/modules/connect`). Accepting one records the device, profile, provider, account and sign-in through the usual services. A recorded sign-in seen again is confirmed. One on a site the extension checked with a reliable rule but did not see is marked for review; nothing is ever signed out by an agent.
+- **Open in profile.** A sign-in in a Chromium browser profile, on a device with a computer name, can be opened at its provider's site in that profile. In the desktop app this runs the browser with `--profile-directory`. On the web it hands an `akunmu://open?…` link to AkunMu Desktop on that computer, which opens the profile only if the link names this computer.
+
+## Desktop app (Windows and Linux)
+
+`desktop/` packages the same app as a Windows and Linux program that works offline, with its own database on the computer. It shares nothing with the web version.
 
 - **How it runs.** The Electron shell (`desktop/src/main.ts`) starts two processes:
   - the database (`desktop/src/db-host.ts`): PGlite, which is PostgreSQL in WebAssembly, migrated with `drizzle/migrations` on every start;
@@ -100,10 +111,14 @@ Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED` and `APP_SECRET` in the project's en
   - `secret.json`: the key that encrypts stored AI keys, itself protected by Windows (DPAPI);
   - `logs\akunmu.log`.
 
-  Uninstalling keeps this folder. `AKUNMU_DATA_DIR` points the app at another folder.
+  Uninstalling keeps this folder. `AKUNMU_DATA_DIR` points the app at another folder (such a run leaves `akunmu://` links to the installed app). On Linux the folder is `~/.config/AkunMu`.
+- **This computer.** The Connect page knows the computer by its name, scans its Chrome, Edge, Brave and Vivaldi profiles (their `Local State` file; new ones become findings) and opens any of them in one click.
+- **For the browser extension.** The shell opens a fixed port, `http://127.0.0.1:47821` (or the next free one up to 47825), that forwards only `/api/ingest/*` to the app, so the extension can report to the desktop app as it does to the web. The desktop app also tells the extension the computer's name, which the extension then reports to the web too.
+- **`akunmu://` links.** The app registers itself for them on start (on Linux it writes its own menu entry, `~/.local/share/applications/akunmu.desktop`). "Open in profile" on the web uses them.
 - **AI.** Works as on the web: either the superadmin adds providers under Platform → AI, or the user adds their own key under Settings → AI.
 - **Build.** From `desktop/`:
   1. Run `npm install`, then `node node_modules/electron/install.js` once.
   2. Run `node scripts/build.mjs`.
 
-  The script runs `next build` with `AKUNMU_DESKTOP=1` into `.next-desktop` and stages it in `desktop/app`. It stops if any `.env` file or `.env` value would ship. It then writes the installer and a zip to `desktop/release/`. The program is not code-signed yet, so Windows SmartScreen asks for confirmation on the first run.
+  The script packs the browser extension, runs `next build` with `AKUNMU_DESKTOP=1` into `.next-desktop` and stages it in `desktop/app`. It stops if any `.env` file or `.env` value would ship. It then writes `AkunMu-Setup-x64.exe`, `AkunMu-win-x64.zip` and `AkunMu-linux-x64.tar.gz` to `desktop/release/`. The program is not code-signed yet, so Windows SmartScreen asks for confirmation on the first run.
+- **Releases.** The download links point at the latest release of `pendtiumpraz/akunmu` on GitHub (`releases/latest/download/<asset>`); the asset names carry no version so the links never change. There is no macOS build yet.

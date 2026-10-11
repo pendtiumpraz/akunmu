@@ -1,5 +1,6 @@
 import type { accountDetail, listAccountsView, listProvidersView } from "@/modules/accounts/service";
 import type { deviceDetail, listDevicesView } from "@/modules/devices/service";
+import type { listFindingsView, listIngestTokensView, thisComputerView } from "@/modules/connect/service";
 import type { mapView, overview, treeView } from "@/modules/signins/service";
 import type { Json } from "@/shared/http/client";
 
@@ -32,3 +33,7 @@ export function placeKeyOf(signIn: { profile: { id: number } | null; app: string
 export function needsCheck(signIn: { status: string; review: boolean; lastVerifiedAt: string }, staleBefore: string): boolean {
   return signIn.status === "signed_in" && (signIn.review || signIn.lastVerifiedAt < staleBefore);
 }
+
+export type FindingItem = Json<Awaited<ReturnType<typeof listFindingsView>>[number]>;
+export type IngestKeyItem = Json<Awaited<ReturnType<typeof listIngestTokensView>>[number]>;
+export type ThisComputer = Json<Awaited<ReturnType<typeof thisComputerView>>>;

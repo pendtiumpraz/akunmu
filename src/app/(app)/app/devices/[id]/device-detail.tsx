@@ -250,7 +250,7 @@ export function DeviceDetailView({ deviceId }: { deviceId: number }) {
       {dialogs}
       {drawer?.kind === "device" ? (
         <DeviceDrawer
-          device={{ id: device.id, name: device.name, kind: device.kind, system: device.system, location: device.location, notes: device.notes }}
+          device={{ id: device.id, name: device.name, kind: device.kind, system: device.system, location: device.location, notes: device.notes, hostname: device.hostname }}
           onClose={() => setDrawer(null)}
           onSaved={() => {
             setDrawer(null);

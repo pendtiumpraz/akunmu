@@ -10,6 +10,17 @@ export const deviceInputSchema = z.object({
   system: z.enum(DEVICE_SYSTEMS).default("other"),
   location: safeText(80),
   notes: safeText(1000),
+  /** The computer's own name (as the system shows it), so AkunMu Desktop knows a device is the computer it runs on. */
+  hostname: z.preprocess(
+    blankToNull,
+    z
+      .string()
+      .trim()
+      .toLowerCase()
+      .max(253)
+      .regex(/^[a-z0-9][a-z0-9._-]*$/, { error: "validation.hostname" })
+      .nullish(),
+  ),
 });
 
 export const deviceUpdateSchema = patchSchema(deviceInputSchema);

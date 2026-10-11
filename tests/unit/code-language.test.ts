@@ -17,14 +17,14 @@ const INDONESIAN_WORDS = [
 ];
 
 const ROOT = path.resolve(import.meta.dirname, "..", "..");
-const SCANNED = ["src", "scripts", "tests", path.join("desktop", "src"), path.join("desktop", "scripts")];
+const SCANNED = ["src", "scripts", "tests", "extension", path.join("desktop", "src"), path.join("desktop", "scripts")];
 const ALLOWED = new Set([path.join("tests", "unit", "code-language.test.ts")]);
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
     const full = path.join(directory, entry);
     if (statSync(full).isDirectory()) return sourceFiles(full);
-    return /\.(ts|tsx|mjs|css)$/.test(entry) ? [full] : [];
+    return /\.(ts|tsx|js|mjs|cjs|css|html)$/.test(entry) ? [full] : [];
   });
 }
 

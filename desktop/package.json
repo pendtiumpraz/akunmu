@@ -2,7 +2,7 @@
   "name": "akunmu-desktop",
   "productName": "AkunMu",
   "version": "0.1.0",
-  "description": "AkunMu for Windows: your sign-in trees, kept in a database on this computer.",
+  "description": "AkunMu for Windows and Linux: your sign-in trees, kept in a database on this computer.",
   "author": {
     "name": "AkunMu"
   },
@@ -58,7 +58,7 @@
         }
       ],
       "icon": "static/icon.png",
-      "artifactName": "AkunMu-${version}-win-${arch}.${ext}"
+      "artifactName": "AkunMu-win-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -67,7 +67,31 @@
       "createDesktopShortcut": true,
       "shortcutName": "AkunMu",
       "deleteAppDataOnUninstall": false,
-      "artifactName": "AkunMu-Setup-${version}.exe"
-    }
-  }
+      "artifactName": "AkunMu-Setup-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "static/icon.png",
+      "category": "Utility",
+      "executableName": "akunmu",
+      "artifactName": "AkunMu-linux-${arch}.${ext}",
+      "synopsis": "Your sign-in trees, on this computer"
+    },
+    "protocols": [
+      {
+        "name": "AkunMu",
+        "schemes": [
+          "akunmu"
+        ]
+      }
+    ]
+  },
+  "desktopName": "akunmu.desktop"
 }

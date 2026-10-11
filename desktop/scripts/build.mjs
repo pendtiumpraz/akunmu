@@ -1,9 +1,10 @@
-// Builds AkunMu for Windows. Run from desktop/: node scripts/build.mjs [--skip-next] [--no-package]
+// Builds AkunMu for Windows and Linux. Run from desktop/: node scripts/build.mjs [--skip-next] [--no-package]
+// 0. packs the browser extension into public/downloads (the desktop app serves it too);
 // 1. the app's desktop server: `next build` with AKUNMU_DESKTOP=1 (standalone, into .next-desktop);
 // 2. stages it with its static files and the database migrations into desktop/app;
 // 3. refuses to go on if any environment file or value of the web app's .env got into the stage;
 // 4. compiles the shell (src → dist);
-// 5. packages the installer and a zip into desktop/release (electron-builder).
+// 5. packages the Windows installer and zip, and the Linux .tar.gz, into desktop/release (electron-builder).
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import path from "node:path";
@@ -34,6 +35,8 @@ const buildEnv = {
   APP_SECRET: "desktop-build-placeholder-not-a-secret-0123456789",
   BLOB_READ_WRITE_TOKEN: "",
 };
+
+run("pack the browser extension", process.execPath, [path.join(root, "extension", "scripts", "pack.mjs")]);
 
 if (!flags.has("--skip-next")) {
   run("next build (desktop)", process.execPath, [path.join(root, "node_modules", "next", "dist", "bin", "next"), "build"], { cwd: root, env: buildEnv });
@@ -75,6 +78,6 @@ console.log(`${staged.length} files staged, no environment files, none of ${valu
 run("compile the shell", process.execPath, [path.join(desktop, "node_modules", "typescript", "bin", "tsc"), "-p", desktop]);
 
 if (!flags.has("--no-package")) {
-  run("package (electron-builder)", process.execPath, [path.join(desktop, "node_modules", "electron-builder", "cli.js"), "--win", "--publish", "never"], { cwd: desktop });
+  run("package (electron-builder)", process.execPath, [path.join(desktop, "node_modules", "electron-builder", "cli.js"), "--win", "--linux", "--publish", "never"], { cwd: desktop });
 }
 console.log("\nDone.");

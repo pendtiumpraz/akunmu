@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const tenant = await tenantById(staff.tenantId);
   const permissions = (Object.keys(PERMISSIONS) as Permission[]).filter((permission) => can(staff.user.role, permission));
   return (
-    <AppShell user={{ name: staff.user.name, email: staff.user.email, role: staff.user.role }} permissions={permissions} caption={tenant?.name} canSignOut={!isDesktop()} switchMode={isDesktop() ? "superadmin" : undefined}>
+    <AppShell user={{ name: staff.user.name, email: staff.user.email, role: staff.user.role }} permissions={permissions} caption={tenant?.name} canSignOut={!isDesktop()} switchMode={isDesktop() ? "superadmin" : undefined} desktop={isDesktop()}>
       {children}
     </AppShell>
   );

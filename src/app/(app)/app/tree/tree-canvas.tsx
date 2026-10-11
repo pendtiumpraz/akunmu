@@ -2,13 +2,13 @@
 
 import "@xyflow/react/dist/base.css";
 import { Background, BackgroundVariant, Controls, MiniMap, Panel, ReactFlow, ReactFlowProvider, useNodesInitialized, useReactFlow, type Node } from "@xyflow/react";
-import { ArrowUpRight, AtSign, Boxes, CheckCheck, GitBranch, History, KeyRound, Laptop, Leaf, LogOut, Pencil, Plus, Search, Sprout, TreeDeciduous, X } from "lucide-react";
+import { ArrowUpRight, AtSign, Boxes, CheckCheck, ExternalLink, GitBranch, History, KeyRound, Laptop, Leaf, LogOut, Pencil, Plus, Search, Sprout, TreeDeciduous, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "@/shared/i18n/client";
 import { Button, ButtonLink, IconButton } from "@/shared/ui/button";
 import { cn } from "@/shared/ui/cn";
 import type { TreeData } from "../map-types";
-import { PlaceIcon, useSignInActions } from "../sign-in-actions";
+import { PlaceIcon, canOpenInProfile, useSignInActions } from "../sign-in-actions";
 import { Freshness, ProviderAvatar, placeLabel, shortDate } from "../ui";
 import { ACCOUNT_NODE_TYPES, accountFlow, accountFrame, accountScene, accountStats, type SceneView } from "./account-mode";
 import { DEVICE_NODE_TYPES, deviceFlow, deviceFrame, deviceScene, deviceSpotlight, deviceStats } from "./device-mode";
@@ -410,6 +410,11 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
             </div>
           </dl>
           <div className="mt-4 flex flex-wrap gap-1.5 border-t border-line pt-3">
+            {selected.status === "signed_in" && canOpenInProfile(selected) ? (
+              <Button size="sm" icon={<ExternalLink className="size-4" />} onClick={() => actions.openInProfile(selected)}>
+                {t("signIns.openInProfile")}
+              </Button>
+            ) : null}
             {canWrite && selected.status === "signed_in" ? (
               <Button size="sm" variant="secondary" icon={<CheckCheck className="size-4" />} onClick={() => actions.confirm(selected)}>
                 {t("signIns.confirm")}

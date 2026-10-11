@@ -1,3 +1,7 @@
+import { headers } from "next/headers";
+import type { IngestTokenRecord } from "@/modules/connect/schema";
+import { authenticateIngest } from "@/modules/connect/service";
+import { enforceRateLimit } from "@/modules/security/rate-limit";
 import { asPlatform, inTenant } from "@/shared/db";
 import { getI18n } from "@/shared/i18n/server";
 import type { I18n } from "@/shared/i18n/messages-loader";
@@ -85,6 +89,25 @@ export function platformRoute<P extends RouteParams = RouteParams>(handler: (con
       const staff = await requireStaff();
       if (staff.tenantId !== null) throw forbidden();
       return { extra: { staff }, scope: asPlatform };
+    },
+    handler,
+  );
+}
+
+/** Reports an agent may send per key per hour (the extension reports a few times a day, per profile). */
+const INGEST_REQUESTS_PER_HOUR = 120;
+
+/**
+ * Agent endpoint (the browser extension): no session and no same-origin check, a workspace key in the
+ * Authorization header instead; runs in the key's workspace.
+ */
+export function ingestRoute<P extends RouteParams = RouteParams>(handler: (context: BaseContext<P> & { token: IngestTokenRecord }) => Promise<Response>) {
+  return wrap<P, { token: IngestTokenRecord }>(
+    { csrf: false },
+    async () => {
+      const token = await authenticateIngest((await headers()).get("authorization"));
+      await enforceRateLimit(`ingest:${token.id}`, INGEST_REQUESTS_PER_HOUR, 3600);
+      return { extra: { token }, scope: (operation) => inTenant(token.tenantId, operation) };
     },
     handler,
   );

@@ -5,6 +5,7 @@ import { recordAudit } from "../audit/service";
 import { restoreSignInsWhere, signInRows, softDeleteSignInsWhere, verifySignInsOfDevice } from "../signins/repository";
 import { staleBefore } from "../signins/types";
 import {
+  findDeviceByHostname,
   findDeviceById,
   findProfileById,
   insertDevice,
@@ -40,6 +41,7 @@ export function deviceView(device: DeviceRecord) {
     location: device.location,
     notes: device.notes,
     lastCheckedAt: device.lastCheckedAt?.toISOString() ?? null,
+    hostname: device.hostname,
     deletedAt: device.deletedAt?.toISOString() ?? null,
   };
 }
@@ -65,13 +67,22 @@ export async function deviceDetail(id: number) {
   };
 }
 
+/** A computer name belongs to one device; another device's is refused. */
+async function checkHostname(hostname: string | null | undefined, deviceId?: number) {
+  if (!hostname) return;
+  const other = await findDeviceByHostname(hostname);
+  if (other && other.id !== deviceId) throw validationError("hostname", "validation.hostnameTaken");
+}
+
 export async function createDevice(input: DeviceInput, actorId: number) {
+  await checkHostname(input.hostname);
   const device = await insertDevice({
     name: input.name,
     kind: input.kind,
     system: input.system,
     location: input.location ?? null,
     notes: input.notes ?? null,
+    hostname: input.hostname ?? null,
     lastCheckedAt: new Date(),
     createdBy: actorId,
   });
@@ -81,12 +92,14 @@ export async function createDevice(input: DeviceInput, actorId: number) {
 
 export async function updateDevice(id: number, input: DeviceUpdateInput, actorId: number) {
   await getDevice(id);
+  await checkHostname(input.hostname, id);
   const updated = await updateDeviceRow(id, {
     ...(input.name !== undefined ? { name: input.name } : {}),
     ...(input.kind !== undefined ? { kind: input.kind } : {}),
     ...(input.system !== undefined ? { system: input.system } : {}),
     ...(input.location !== undefined ? { location: input.location ?? null } : {}),
     ...(input.notes !== undefined ? { notes: input.notes ?? null } : {}),
+    ...(input.hostname !== undefined ? { hostname: input.hostname ?? null } : {}),
   });
   await recordAudit({ actorType: "staff", actorId, action: "device.updated", subjectType: "device", subjectId: id, meta: { fields: Object.keys(input) } });
   return deviceView(updated);

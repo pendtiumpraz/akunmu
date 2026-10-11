@@ -24,6 +24,9 @@ loop-v5/
 # Local uploads (storage driver "local")
 public/uploads/
 
+# The browser extension's zip, packed from extension/ before every build (npm run extension:pack)
+public/downloads/
+
 # Tooling
 .vercel/
 coverage/

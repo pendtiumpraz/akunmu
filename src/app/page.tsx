@@ -1,5 +1,7 @@
 import {
+  ArrowUpRight,
   Command,
+  Download,
   Fingerprint,
   GitBranch,
   KeyRound,
@@ -15,15 +17,18 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { DOWNLOADS } from "@/modules/connect/downloads";
 import { readStaffSession } from "@/modules/users/session";
 import { isDesktop } from "@/shared/env";
 import { getI18n } from "@/shared/i18n/server";
-import { ButtonLink } from "@/shared/ui/button";
+import { ButtonLink, buttonClasses } from "@/shared/ui/button";
 import { LocaleSwitcher } from "@/shared/ui/locale-switcher";
 import { APP_NAME, Logo } from "@/shared/ui/logo";
+import { SystemGlyph } from "@/shared/ui/system-glyph";
 import { ThemeToggle } from "@/shared/ui/theme";
 import { HERO_VIEW, heroTree } from "./_landing/hero-tree";
 import { LandingMotion } from "./_landing/landing-motion";
@@ -97,6 +102,28 @@ function Annotation({ x, y, wait, icon: Icon, text }: { x: string; y: string; wa
   );
 }
 
+/** A download card: the system or browsers it is for, what it is, and the file. */
+function DownloadCard({ href, mark, title, body, meta, action, sameOrigin }: { href: string; mark: ReactNode; title: string; body: string; meta: string; action: string; sameOrigin?: boolean }) {
+  return (
+    <a
+      href={href}
+      download={sameOrigin ? "" : undefined}
+      className="group flex h-full flex-col rounded-panel border border-line bg-surface p-5 transition duration-300 hover:-translate-y-1 hover:border-line-strong hover:shadow-float"
+    >
+      <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-subtle transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">{mark}</span>
+      <span className="mt-4 text-[15px] font-bold text-ink">{title}</span>
+      <span className="mt-1.5 flex-1 text-sm leading-6 text-muted">{body}</span>
+      <span className="mt-5 flex items-center justify-between gap-3">
+        <span className="font-mono text-xs text-faint">{meta}</span>
+        <span className={buttonClasses("primary", "sm", "pointer-events-none")}>
+          <Download className="size-4 transition-transform duration-200 group-hover:translate-y-0.5" />
+          {action}
+        </span>
+      </span>
+    </a>
+  );
+}
+
 function Feature({ icon: Icon, color, title, body }: { icon: LucideIcon; color: string; title: string; body: string }) {
   return (
     <div className="group h-full rounded-panel border border-line bg-surface p-5 transition duration-300 hover:-translate-y-1 hover:border-line-strong hover:shadow-float">
@@ -156,6 +183,9 @@ export default async function LandingPage() {
             <a href="#features" className="hover:text-ink">
               {t("landing.navFeatures")}
             </a>
+            <a href="#download" className="hover:text-ink">
+              {t("landing.navDownload")}
+            </a>
             <a href="#privacy" className="hover:text-ink">
               {t("landing.navPrivacy")}
             </a>
@@ -213,6 +243,19 @@ export default async function LandingPage() {
             <ShieldCheck className="size-4" />
             {t("landing.heroNote")}
           </p>
+          <div className="landing-rise mt-4 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold" style={delay(400)}>
+            <a href={DOWNLOADS.windows} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-white/80 transition hover:bg-white/10 hover:text-white">
+              <SystemGlyph system="windows" className="size-3.5" />
+              {t("landing.heroWindows")}
+            </a>
+            <a href={DOWNLOADS.linux} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-white/80 transition hover:bg-white/10 hover:text-white">
+              <SystemGlyph system="linux" className="size-3.5" />
+              {t("landing.heroLinux")}
+            </a>
+            <a href="#download" className="inline-flex items-center gap-1 rounded-full px-2 py-1.5 text-white/60 transition hover:text-white">
+              {t("landing.heroMoreDownloads")}
+            </a>
+          </div>
         </div>
         <div className="relative mx-auto mt-12 max-w-6xl px-4 pb-6 [perspective:1800px] sm:px-6">
           <div data-hero-shot className="origin-bottom">
@@ -281,6 +324,62 @@ export default async function LandingPage() {
           <Moon className="size-4" />
           {t("landing.featureThemes")}
         </p>
+      </section>
+
+      <section id="download" className="border-t border-line">
+        <div className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 lg:py-24">
+          <div data-reveal>
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">{t("landing.downloadEyebrow")}</p>
+            <h2 className="mt-2 max-w-2xl text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">{t("landing.downloadTitle")}</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">{t("landing.downloadBody")}</p>
+          </div>
+          <div data-stagger className="mt-10 grid gap-4 md:grid-cols-3">
+            <div>
+              <DownloadCard
+                href={DOWNLOADS.windows}
+                mark={<SystemGlyph system="windows" className="size-6 text-[#0078d4]" />}
+                title={t("landing.downloadWindows")}
+                body={t("landing.downloadDesktopBody")}
+                meta={t("landing.downloadWindowsMeta")}
+                action={t("connect.windowsButton")}
+              />
+            </div>
+            <div>
+              <DownloadCard
+                href={DOWNLOADS.linux}
+                mark={<SystemGlyph system="linux" className="size-7 text-ink" />}
+                title={t("landing.downloadLinux")}
+                body={t("landing.downloadDesktopBody")}
+                meta={t("landing.downloadLinuxMeta")}
+                action={t("connect.linuxButton")}
+              />
+            </div>
+            <div>
+              <DownloadCard
+                href={DOWNLOADS.extension}
+                sameOrigin
+                mark={
+                  <span className="grid grid-cols-2 gap-0.5">
+                    {(["chrome", "edge", "brave", "vivaldi"] as const).map((browser) => (
+                      <Image key={browser} src={`/brands/browsers/${browser}.svg`} alt="" width={16} height={16} unoptimized draggable={false} className="size-4" />
+                    ))}
+                  </span>
+                }
+                title={t("landing.downloadExtension")}
+                body={t("landing.downloadExtensionBody")}
+                meta={t("landing.downloadExtensionMeta")}
+                action={t("connect.extensionButton")}
+              />
+            </div>
+          </div>
+          <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted">
+            <span>{t("landing.downloadMacos")}</span>
+            <a href={DOWNLOADS.releases} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 font-semibold hover:text-ink">
+              {t("landing.downloadReleases")}
+              <ArrowUpRight className="size-3.5" />
+            </a>
+          </p>
+        </div>
       </section>
 
       <section id="privacy" className="border-t border-line bg-surface">

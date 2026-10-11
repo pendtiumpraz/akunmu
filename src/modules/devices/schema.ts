@@ -16,6 +16,8 @@ export const devices = pgTable(
     notes: text("notes"),
     /** When someone last went through this device's sign-ins. */
     lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
+    /** The computer's host name (lowercase), when the desktop app recorded it: how a scan knows "this computer". */
+    hostname: text("hostname"),
     createdBy: referenceColumn("created_by"),
   },
   (table) => [index("devices_tenant_name_index").on(table.tenantId, table.name)],
@@ -36,6 +38,8 @@ export const browserProfiles = pgTable(
     syncAccountId: referenceColumn("sync_account_id"),
     color: text("color"),
     notes: text("notes"),
+    /** The browser's own folder for the profile ("Profile 3"), when a desktop scan found it: opens sites in it. */
+    directory: text("directory"),
     createdBy: referenceColumn("created_by"),
   },
   (table) => [index("browser_profiles_device_index").on(table.deviceId)],

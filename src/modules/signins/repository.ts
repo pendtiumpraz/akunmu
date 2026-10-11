@@ -24,9 +24,10 @@ export type SignInRow = {
   review: boolean;
   notes: string | null;
   account: { id: number; identifier: string; label: string | null };
-  provider: { id: number; slug: string; name: string; color: string };
-  device: { id: number; name: string; kind: DeviceKind; system: DeviceSystem };
-  profile: { id: number; name: string; browser: Browser; color: string | null } | null;
+  provider: { id: number; slug: string; name: string; color: string; domain: string | null };
+  /** `hostname` and the profile's `directory` let the desktop app open the profile ("Open in profile"). */
+  device: { id: number; name: string; kind: DeviceKind; system: DeviceSystem; hostname: string | null };
+  profile: { id: number; name: string; browser: Browser; color: string | null; directory: string | null } | null;
 };
 
 export type SignInFilter = { ids?: number[]; accountId?: number; deviceId?: number; profileId?: number; includeSignedOut?: boolean };
@@ -65,9 +66,11 @@ export async function signInRows(filter: SignInFilter): Promise<SignInRow[]> {
     review: signIn.review,
     notes: signIn.notes,
     account: { id: account.id, identifier: account.identifier, label: account.label },
-    provider: { id: provider.id, slug: provider.slug, name: provider.name, color: provider.color },
-    device: { id: device.id, name: device.name, kind: device.kind, system: device.system },
-    profile: browserProfile ? { id: browserProfile.id, name: browserProfile.name, browser: browserProfile.browser, color: browserProfile.color } : null,
+    provider: { id: provider.id, slug: provider.slug, name: provider.name, color: provider.color, domain: provider.domain },
+    device: { id: device.id, name: device.name, kind: device.kind, system: device.system, hostname: device.hostname },
+    profile: browserProfile
+      ? { id: browserProfile.id, name: browserProfile.name, browser: browserProfile.browser, color: browserProfile.color, directory: browserProfile.directory }
+      : null,
   }));
 }
 

@@ -1,0 +1,122 @@
+{
+  "extensionName": {
+    "message": "AkunMu"
+  },
+  "extensionDescription": {
+    "message": "Menemukan akun yang login di profil browser ini dan melaporkannya ke pohon AkunMu-mu. Tidak pernah kata sandi atau cookie."
+  },
+  "checkNow": {
+    "message": "Periksa sekarang"
+  },
+  "thisProfile": {
+    "message": "Profil browser ini"
+  },
+  "profileLabel": {
+    "message": "Nama profil"
+  },
+  "browserLabel": {
+    "message": "Browser"
+  },
+  "profileEmail": {
+    "message": "Login ke browser sebagai $EMAIL$",
+    "placeholders": {
+      "email": {
+        "content": "$1"
+      }
+    }
+  },
+  "profileNoEmail": {
+    "message": "Belum login ke browser dengan akun Google."
+  },
+  "connections": {
+    "message": "Sambungan"
+  },
+  "addConnection": {
+    "message": "Tambah sambungan"
+  },
+  "addressLabel": {
+    "message": "Alamat"
+  },
+  "addressHint": {
+    "message": "Alamat AkunMu-mu, atau http://127.0.0.1:47821 untuk AkunMu Desktop."
+  },
+  "keyLabel": {
+    "message": "Kunci"
+  },
+  "keyHint": {
+    "message": "Dari Unduh & hubungkan › Kunci ekstensi."
+  },
+  "connectButton": {
+    "message": "Hubungkan"
+  },
+  "connecting": {
+    "message": "Menghubungkan…"
+  },
+  "cancel": {
+    "message": "Batal"
+  },
+  "remove": {
+    "message": "Hapus"
+  },
+  "desktopBadge": {
+    "message": "Desktop"
+  },
+  "lastReport": {
+    "message": "Melapor $WHEN$",
+    "placeholders": {
+      "when": {
+        "content": "$1"
+      }
+    }
+  },
+  "never": {
+    "message": "Belum melapor."
+  },
+  "resultSummary": {
+    "message": "$CONFIRMED$ dikonfirmasi, $FOUND$ baru, $REVIEW$ perlu dicek",
+    "placeholders": {
+      "confirmed": {
+        "content": "$1"
+      },
+      "found": {
+        "content": "$2"
+      },
+      "review": {
+        "content": "$3"
+      }
+    }
+  },
+  "discoverLabel": {
+    "message": "Cari juga situs lain"
+  },
+  "discoverHint": {
+    "message": "Situs di luar penyedia yang tampaknya login juga diusulkan."
+  },
+  "privacy": {
+    "message": "Hanya nama situs dan nama akun yang terbaca yang dikirim. Tidak pernah kata sandi, cookie, atau isi halaman."
+  },
+  "errorAddress": {
+    "message": "Isi alamat seperti https://akunmu.example.com."
+  },
+  "errorKey": {
+    "message": "Tempel kunci lengkap; diawali akm_."
+  },
+  "errorNetwork": {
+    "message": "Alamat ini tidak bisa dihubungi."
+  },
+  "errorUnauthorized": {
+    "message": "Kunci ditolak. Mungkin sudah dicabut."
+  },
+  "errorBusy": {
+    "message": "Terlalu banyak laporan. Coba lagi sejam lagi."
+  },
+  "errorServer": {
+    "message": "AkunMu sedang bermasalah. Coba lagi nanti."
+  },
+  "errorInvalid": {
+    "message": "Laporan ditolak."
+  },
+  "errorProfile": {
+    "message": "Isi nama profilnya."
+  }
+}

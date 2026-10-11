@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, AtSign, Boxes, ChevronDown, Laptop, LogOut, Search, Settings, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AtSign, Boxes, ChevronDown, Laptop, LogOut, Plug, Search, Settings, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -31,13 +31,16 @@ const NAV: ShellNavItem[] = [
   { href: "/app/assistant", labelKey: "nav.assistant", icon: Sparkles, color: "#EC4899" },
 ];
 
-const FOOTER_NAV: ShellNavItem[] = [{ href: "/app/settings", labelKey: "nav.settings", icon: Settings, color: "#94A3B8", permission: "settings.manage" }];
+const FOOTER_NAV: ShellNavItem[] = [
+  { href: "/app/connect", labelKey: "nav.connect", icon: Plug, color: "#22D3EE", permission: "map.read" },
+  { href: "/app/settings", labelKey: "nav.settings", icon: Settings, color: "#94A3B8", permission: "settings.manage" },
+];
 
 const ROLE_KEYS: Record<StaffRole, string> = { admin: "roles.admin", editor: "roles.editor", viewer: "roles.viewer" };
 
-const StaffContext = createContext<{ user: ShellUser; permissions: Permission[] } | null>(null);
+const StaffContext = createContext<{ user: ShellUser; permissions: Permission[]; desktop: boolean } | null>(null);
 
-/** Current staff user and permissions for client components inside the app. */
+/** Current staff user and permissions for client components inside the app, and whether this is the desktop app. */
 export function useStaff() {
   const value = useContext(StaffContext);
   if (!value) throw new Error("useStaff must be used inside AppShell.");
@@ -89,6 +92,7 @@ export function AppShell({
   search = true,
   canSignOut = true,
   switchMode,
+  desktop = false,
 }: {
   user: ShellUser;
   permissions: Permission[];
@@ -102,6 +106,8 @@ export function AppShell({
   canSignOut?: boolean;
   /** The desktop app's other mode, offered in the user menu (src/app/desktop/mode). */
   switchMode?: DesktopMode;
+  /** The desktop app: it can open browser profiles of its own computer. */
+  desktop?: boolean;
 }) {
   const { t } = useI18n();
   const pathname = usePathname();
@@ -132,7 +138,7 @@ export function AppShell({
   };
 
   return (
-    <StaffContext.Provider value={{ user, permissions }}>
+    <StaffContext.Provider value={{ user, permissions, desktop }}>
       <div className="min-h-dvh bg-canvas">
         <aside className="print-hidden fixed inset-y-0 left-0 z-30 hidden w-[82px] flex-col items-center bg-rail py-3 md:flex">
           <Link href={homeHref} aria-label={caption ?? t("nav.home")} className="mb-4 rounded-xl transition-opacity hover:opacity-80">

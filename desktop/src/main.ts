@@ -1,15 +1,19 @@
-import { BrowserWindow, Menu, app, dialog, nativeTheme, safeStorage, screen, session, shell, utilityProcess, type UtilityProcess } from "electron";
+import { BrowserWindow, Menu, Notification, app, dialog, nativeTheme, safeStorage, screen, session, shell, utilityProcess, type UtilityProcess } from "electron";
+import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, type WriteStream } from "node:fs";
+import { createServer as createHttpServer, request as httpRequest, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { createServer } from "node:net";
 import path from "node:path";
 import { format, languageFor, messagesFor, type Language, type Messages } from "./messages";
 
 /**
- * AkunMu for Windows. The shell starts two processes and opens a window on them:
+ * AkunMu for Windows and Linux. The shell starts two processes and opens a window on them:
  * - the database (db-host.ts): PGlite, its data in the user's profile, migrated to the app's schema on every start;
  * - the app's own server: the Next.js standalone build made by scripts/build.mjs, on a free port at 127.0.0.1.
  * The window opens the app with a key made for this launch, which signs the local owner in (src/app/desktop/start).
+ * Two doors let the browser in: a fixed local port the browser extension reports to (only the ingest API), and
+ * akunmu://open links from the web app, which open a browser profile of this computer at a site.
  * Quitting stops the server, then closes the database cleanly.
  */
 
@@ -17,6 +21,13 @@ const LOCAL_HOST = "127.0.0.1";
 const APP_ID = "app.akunmu.desktop";
 const START_TIMEOUT_MS = 60_000;
 const STOP_TIMEOUT_MS = 8_000;
+const PROTOCOL = "akunmu";
+/** The extension's address is http://127.0.0.1:<the first free one>, shown on the app's Download & connect page. */
+const AGENT_PORTS = [47821, 47822, 47823, 47824, 47825];
+/** The only paths the extension's port forwards to the app. */
+const AGENT_PATHS = new Set(["/api/ingest/hello", "/api/ingest/report"]);
+/** What an akunmu://open link may carry on to the app (src/app/desktop/open). */
+const OPEN_PARAMS = ["browser", "profile", "directory", "email", "host", "url"];
 
 // Data lives in the user's profile, or where AKUNMU_DATA_DIR points (a copy kept elsewhere, or a test run).
 const customDataDir = process.env.AKUNMU_DATA_DIR?.trim();
@@ -37,6 +48,12 @@ let log: WriteStream | null = null;
 let running = false;
 let stopping = false;
 let stopped = false;
+let agentServer: Server | null = null;
+/** The app's server, once it answers: where it runs and the key it was opened with. */
+let appPort = 0;
+let appKey = "";
+/** An akunmu:// link that arrived before the app was up (it started the app). */
+let pendingLink: string | null = null;
 
 class LaunchError extends Error {
   constructor(
@@ -134,7 +151,47 @@ async function waitForServer(url: string, hasExited: () => boolean): Promise<voi
   throw new Error("The server did not start in time.");
 }
 
-async function startServer(port: number, databasePort: number, key: string): Promise<void> {
+/** Hands an extension's request on to the app's server, for the ingest API only. */
+function forwardIngest(request: IncomingMessage, response: ServerResponse): void {
+  const target = request.url ?? "/";
+  if (!appPort || !AGENT_PATHS.has(target.split("?")[0])) {
+    response.writeHead(404).end();
+    return;
+  }
+  const upstream = httpRequest(
+    { host: LOCAL_HOST, port: appPort, path: target, method: request.method, headers: { ...request.headers, host: `${LOCAL_HOST}:${appPort}` } },
+    (answer) => {
+      response.writeHead(answer.statusCode ?? 502, answer.headers);
+      answer.pipe(response);
+    },
+  );
+  upstream.on("error", () => {
+    if (!response.headersSent) response.writeHead(502);
+    response.end();
+  });
+  request.pipe(upstream);
+}
+
+/**
+ * Opens the extension's port: the first free one of AGENT_PORTS at 127.0.0.1, so its address rarely changes even
+ * though the app's server moves to a new port every launch. Null when all are taken (the extension then can't report).
+ */
+async function startAgentPort(): Promise<number | null> {
+  for (const port of AGENT_PORTS) {
+    const candidate = createHttpServer(forwardIngest);
+    const opened = await new Promise<boolean>((resolve) => {
+      candidate.once("error", () => resolve(false));
+      candidate.listen(port, LOCAL_HOST, () => resolve(true));
+    });
+    if (opened) {
+      agentServer = candidate;
+      return port;
+    }
+  }
+  return null;
+}
+
+async function startServer(port: number, databasePort: number, key: string, agentPort: number | null): Promise<void> {
   const serverDir = path.join(resourcesDir(), "server");
   const databaseUrl = `postgres://postgres:postgres@${LOCAL_HOST}:${databasePort}/postgres`;
   // The user's own environment, without anything that could point the server elsewhere.
@@ -158,6 +215,7 @@ async function startServer(port: number, databasePort: number, key: string): Pro
       DEFAULT_LOCALE: language,
       AKUNMU_DESKTOP: "1",
       AKUNMU_DESKTOP_TOKEN: key,
+      AKUNMU_AGENT_ADDRESS: agentPort ? `http://${LOCAL_HOST}:${agentPort}` : "",
     },
   });
   server = child;
@@ -261,6 +319,80 @@ function guardNavigation(window: BrowserWindow, origin: string, startUrl: string
   contents.on("did-navigate-in-page", (_event, url) => signInAgain(url));
 }
 
+function notify(title: string, body: string): void {
+  if (Notification.isSupported()) new Notification({ title, body, icon: path.join(staticDir, "icon.png") }).show();
+  else void dialog.showMessageBox({ type: "info", title, message: body });
+}
+
+const isAppLink = (value: string) => value.toLowerCase().startsWith(`${PROTOCOL}://`);
+
+/**
+ * An akunmu://open link from the web app ("Open in profile"): the app opens that browser profile of this computer
+ * at the site, if it is here (src/app/desktop/open checks the computer name and the profile). The window stays put.
+ */
+async function openLink(link: string): Promise<void> {
+  if (!running) {
+    pendingLink = link;
+    return;
+  }
+  let url: URL;
+  try {
+    url = new URL(link);
+  } catch {
+    return;
+  }
+  if (url.hostname !== "open") return;
+  const target = new URL(`http://${LOCAL_HOST}:${appPort}/desktop/open`);
+  for (const name of OPEN_PARAMS) {
+    const value = url.searchParams.get(name);
+    if (value) target.searchParams.set(name, value);
+  }
+  target.searchParams.set("key", appKey);
+  try {
+    const response = await fetch(target, { signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) notify(messages.openFailedTitle, messages.profileNotHere);
+  } catch (error) {
+    write("main", `open link failed: ${String(error)}`);
+    notify(messages.openFailedTitle, messages.openFailed);
+  }
+}
+
+/** Lets akunmu:// links reach this app: the system's handler for them (and, on Linux, a menu entry that names it). */
+function registerProtocol(): void {
+  if (process.defaultApp) {
+    // Started with `electron .` while developing: the link must start electron with this app's folder.
+    app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [path.resolve(process.argv[1] ?? ".")]);
+    return;
+  }
+  if (process.platform === "linux") installLinuxEntry();
+  app.setAsDefaultProtocolClient(PROTOCOL);
+}
+
+/** The .tar.gz has no installer: the app adds its own menu entry, which is also what opens akunmu:// links. */
+function installLinuxEntry(): void {
+  const directory = path.join(app.getPath("home"), ".local", "share", "applications");
+  const file = path.join(directory, "akunmu.desktop");
+  const entry = [
+    "[Desktop Entry]",
+    "Type=Application",
+    "Name=AkunMu",
+    `Exec="${process.execPath}" %u`,
+    `Icon=${path.join(staticDir, "icon.png")}`,
+    "Categories=Utility;",
+    `MimeType=x-scheme-handler/${PROTOCOL};`,
+    "Terminal=false",
+    "",
+  ].join("\n");
+  try {
+    mkdirSync(directory, { recursive: true });
+    if (existsSync(file) && readFileSync(file, "utf8") === entry) return;
+    writeFileSync(file, entry);
+    spawn("xdg-mime", ["default", "akunmu.desktop", `x-scheme-handler/${PROTOCOL}`], { stdio: "ignore" }).on("error", () => undefined);
+  } catch (error) {
+    write("main", `menu entry not written: ${String(error)}`);
+  }
+}
+
 function buildMenu(): Menu {
   return Menu.buildFromTemplate([
     {
@@ -306,15 +438,24 @@ async function launch(): Promise<void> {
     });
     const serverPort = await freePort();
     const key = randomBytes(32).toString("base64url");
-    await startServer(serverPort, databasePort, key).catch((error: unknown) => {
+    const agentPort = await startAgentPort();
+    if (!agentPort) write("main", `no free port for the browser extension (${AGENT_PORTS.join(", ")})`);
+    await startServer(serverPort, databasePort, key, agentPort).catch((error: unknown) => {
       throw new LaunchError("server", error);
     });
+    appPort = serverPort;
+    appKey = key;
     const origin = `http://${LOCAL_HOST}:${serverPort}`;
     const startUrl = `${origin}/desktop/start?key=${key}`;
     guardNavigation(window, origin, startUrl);
     running = true;
-    write("main", `ready on ${origin}`);
+    write("main", `ready on ${origin}${agentPort ? `; extension port ${agentPort}` : ""}`);
     await window.loadURL(startUrl);
+    if (pendingLink) {
+      const link = pendingLink;
+      pendingLink = null;
+      void openLink(link);
+    }
   } catch (error) {
     write("main", error instanceof Error ? (error.stack ?? error.message) : String(error));
     const part = error instanceof LaunchError ? error.part : "server";
@@ -324,6 +465,7 @@ async function launch(): Promise<void> {
 
 /** Stops the server, then asks the database to close (and ends it if it does not in time). */
 async function stopServices(): Promise<void> {
+  agentServer?.close();
   server?.kill();
   const child = database;
   if (!child || child.pid === undefined) return;
@@ -344,7 +486,17 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.setAppUserModelId(APP_ID);
-  app.on("second-instance", () => {
+  // A copy kept elsewhere (or a test run, AKUNMU_DATA_DIR) leaves the system's akunmu:// links to the installed app.
+  if (!customDataDir) registerProtocol();
+  // Started by an akunmu:// link (Windows and Linux pass it as an argument).
+  pendingLink = process.argv.find(isAppLink) ?? null;
+  app.on("second-instance", (_event, argv) => {
+    const link = argv.find(isAppLink);
+    if (link) {
+      // A link opens a browser profile; the window stays where it is.
+      void openLink(link);
+      return;
+    }
     if (!mainWindow) return;
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();

@@ -1,8 +1,9 @@
 "use client";
 
-import { CheckCheck, Flag, FlagOff, GitBranch, LogOut, Pencil, Trash2 } from "lucide-react";
+import { CheckCheck, ExternalLink, Flag, FlagOff, GitBranch, LogOut, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
+import { OPENABLE_BROWSERS } from "@/modules/connect/types";
 import { api } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { Badge } from "@/shared/ui/badge";
@@ -10,6 +11,7 @@ import { cn } from "@/shared/ui/cn";
 import { ConfirmDialog } from "@/shared/ui/dialog";
 import { Menu } from "@/shared/ui/menu";
 import { useToast } from "@/shared/ui/toast";
+import { useStaff } from "./app-shell";
 import { SignInDrawer } from "./drawers/sign-in-drawer";
 import { needsCheck, placeKeyOf, type MapSignIn } from "./map-types";
 import { AppMark, BrowserMark, Freshness, ProviderAvatar, approvalLabel, placeLabel, shortDate } from "./ui";
@@ -23,9 +25,26 @@ export function PlaceIcon({ row }: { row: Pick<MapSignIn, "profile" | "app" | "a
 
 type Pending = { kind: "signOut" | "delete"; row: MapSignIn } | null;
 
+type OpenTarget = Pick<MapSignIn, "provider" | "device" | "profile">;
+
+/** "Open in profile" applies to a browser profile AkunMu Desktop can open, on a computer it knows by name. */
+export function canOpenInProfile(row: OpenTarget): boolean {
+  return Boolean(row.profile && OPENABLE_BROWSERS.includes(row.profile.browser) && row.device.hostname);
+}
+
+/** The akunmu:// link the web app hands to AkunMu Desktop, which opens the profile only on the computer named here. */
+function desktopLink(row: OpenTarget, url: string | null): string {
+  const params = new URLSearchParams({ browser: row.profile?.browser ?? "chrome", profile: row.profile?.name ?? "" });
+  if (row.profile?.directory) params.set("directory", row.profile.directory);
+  if (row.device.hostname) params.set("host", row.device.hostname);
+  if (url) params.set("url", url);
+  return `akunmu://open?${params.toString()}`;
+}
+
 /** Actions on sign-ins (confirm, sign out, review mark, edit, delete) with their dialogs; `onChanged` reloads. */
 export function useSignInActions(onChanged: () => void) {
   const { t } = useI18n();
+  const { desktop } = useStaff();
   const notify = useToast();
   const [pending, setPending] = useState<Pending>(null);
   const [editing, setEditing] = useState<MapSignIn | null>(null);
@@ -46,7 +65,25 @@ export function useSignInActions(onChanged: () => void) {
     }
   };
 
+  /** Opens the provider's site in the sign-in's browser profile: directly in the desktop app, else through it. */
+  const openInProfile = async (row: MapSignIn) => {
+    if (!row.profile) return;
+    const url = row.provider.domain ? `https://${row.provider.domain}` : null;
+    if (!desktop) {
+      window.location.assign(desktopLink(row, url));
+      notify(t("signIns.openSent"));
+      return;
+    }
+    try {
+      const result = await api("/api/desktop/open", { method: "POST", body: { profileId: row.profile.id, url } });
+      notify(result.message);
+    } catch (error) {
+      notify(error instanceof Error && error.message ? error.message : t("common.saveFailed"), "error");
+    }
+  };
+
   const actions = {
+    openInProfile: (row: MapSignIn) => void openInProfile(row),
     confirm: (row: MapSignIn) => void run(`/api/sign-ins/${row.id}/confirm`, "POST"),
     toggleReview: (row: MapSignIn) => void run(`/api/sign-ins/${row.id}`, "PATCH", { review: !row.review }),
     askSignOut: (row: MapSignIn) => setPending({ kind: "signOut", row }),
@@ -225,6 +262,7 @@ export function SignInLine({
             label={t("common.more")}
             items={[
               { label: t("signIns.confirm"), icon: CheckCheck, hidden: !compact, onSelect: () => actions.confirm(row) },
+              { label: t("signIns.openInProfile"), icon: ExternalLink, hidden: !canOpenInProfile(row), onSelect: () => actions.openInProfile(row) },
               { label: t("signIns.signOut"), icon: LogOut, onSelect: () => actions.askSignOut(row) },
               { label: row.review ? t("signIns.clearReview") : t("signIns.markReview"), icon: row.review ? FlagOff : Flag, onSelect: () => actions.toggleReview(row) },
               { label: t("common.edit"), icon: Pencil, onSelect: () => actions.edit(row) },

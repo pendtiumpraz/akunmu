@@ -55,3 +55,11 @@ export function desktopToken(): string | undefined {
 export function secureCookies(): boolean {
   return isProduction() && !isDesktop();
 }
+
+/**
+ * Where the browser extension reaches AkunMu Desktop: a fixed local port the shell forwards to the app's ingest API
+ * (the app itself runs on a new port every launch). Null outside the desktop, or when the shell could not open it.
+ */
+export function desktopAgentAddress(): string | null {
+  return isDesktop() ? (read("AKUNMU_AGENT_ADDRESS") ?? null) : null;
+}

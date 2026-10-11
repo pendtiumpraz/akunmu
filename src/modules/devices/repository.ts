@@ -26,6 +26,17 @@ export async function findDeviceById(id: number, options: { withTrashed?: boolea
   return row;
 }
 
+/** The workspace's device recorded for a computer's host name (lowercase), if any. */
+export async function findDeviceByHostname(hostname: string, executor?: DbExecutor) {
+  const [row] = await db(executor)
+    .select()
+    .from(devices)
+    .where(and(eq(devices.hostname, hostname), isNull(devices.deletedAt)))
+    .orderBy(asc(devices.id))
+    .limit(1);
+  return row;
+}
+
 export async function insertDevice(values: NewDeviceRecord, executor?: DbExecutor) {
   const [row] = await db(executor).insert(devices).values(values).returning();
   return row;

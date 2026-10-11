@@ -2,6 +2,7 @@
 
 import { Check, ChevronDown, Plus, Search } from "lucide-react";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { newProviderColor } from "@/modules/accounts/colors";
 import { api } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { cn } from "@/shared/ui/cn";
@@ -13,15 +14,6 @@ import { ProviderAvatar } from "../ui";
 export type ProviderChoice = { providerId: number | null; newName: string | null };
 
 type Option = { kind: "provider"; provider: ProviderItem } | { kind: "add" };
-
-/** Colors a provider added from the picker starts with (picked by its name; changed on the Providers page). */
-const NEW_PROVIDER_COLORS = ["#2563eb", "#7c3aed", "#db2777", "#dc2626", "#ea580c", "#ca8a04", "#16a34a", "#0d9488", "#0891b2", "#4f46e5"];
-
-export function newProviderColor(name: string): string {
-  let hash = 0;
-  for (const character of name.trim().toLowerCase()) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
-  return NEW_PROVIDER_COLORS[hash % NEW_PROVIDER_COLORS.length];
-}
 
 /** A listed provider with exactly this name (any case), if there is one. */
 export function providerNamed(providers: ProviderItem[], name: string): ProviderItem | undefined {

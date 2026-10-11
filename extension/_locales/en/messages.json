@@ -1,0 +1,122 @@
+{
+  "extensionName": {
+    "message": "AkunMu"
+  },
+  "extensionDescription": {
+    "message": "Finds the accounts signed in to this browser profile and reports them to your AkunMu trees. Never passwords or cookies."
+  },
+  "checkNow": {
+    "message": "Check now"
+  },
+  "thisProfile": {
+    "message": "This browser profile"
+  },
+  "profileLabel": {
+    "message": "Profile name"
+  },
+  "browserLabel": {
+    "message": "Browser"
+  },
+  "profileEmail": {
+    "message": "Signed in to the browser as $EMAIL$",
+    "placeholders": {
+      "email": {
+        "content": "$1"
+      }
+    }
+  },
+  "profileNoEmail": {
+    "message": "Not signed in to the browser with a Google account."
+  },
+  "connections": {
+    "message": "Connections"
+  },
+  "addConnection": {
+    "message": "Add connection"
+  },
+  "addressLabel": {
+    "message": "Address"
+  },
+  "addressHint": {
+    "message": "Your AkunMu address, or http://127.0.0.1:47821 for AkunMu Desktop."
+  },
+  "keyLabel": {
+    "message": "Key"
+  },
+  "keyHint": {
+    "message": "From Download & connect › Extension keys."
+  },
+  "connectButton": {
+    "message": "Connect"
+  },
+  "connecting": {
+    "message": "Connecting…"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "remove": {
+    "message": "Remove"
+  },
+  "desktopBadge": {
+    "message": "Desktop"
+  },
+  "lastReport": {
+    "message": "Reported $WHEN$",
+    "placeholders": {
+      "when": {
+        "content": "$1"
+      }
+    }
+  },
+  "never": {
+    "message": "Not reported yet."
+  },
+  "resultSummary": {
+    "message": "$CONFIRMED$ confirmed, $FOUND$ new, $REVIEW$ to check",
+    "placeholders": {
+      "confirmed": {
+        "content": "$1"
+      },
+      "found": {
+        "content": "$2"
+      },
+      "review": {
+        "content": "$3"
+      }
+    }
+  },
+  "discoverLabel": {
+    "message": "Also look for other sites"
+  },
+  "discoverHint": {
+    "message": "Sites outside your providers that look signed in are suggested too."
+  },
+  "privacy": {
+    "message": "Only site names and the account names it can read are sent. Never passwords, cookies or page content."
+  },
+  "errorAddress": {
+    "message": "Enter an address such as https://akunmu.example.com."
+  },
+  "errorKey": {
+    "message": "Paste the whole key; it starts with akm_."
+  },
+  "errorNetwork": {
+    "message": "Can't reach this address."
+  },
+  "errorUnauthorized": {
+    "message": "The key was not accepted. It may have been revoked."
+  },
+  "errorBusy": {
+    "message": "Too many reports. Try again in an hour."
+  },
+  "errorServer": {
+    "message": "AkunMu had a problem. Try again later."
+  },
+  "errorInvalid": {
+    "message": "The report was refused."
+  },
+  "errorProfile": {
+    "message": "Enter the profile's name."
+  }
+}

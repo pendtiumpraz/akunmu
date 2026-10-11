@@ -11,9 +11,12 @@ import { useToast } from "@/shared/ui/toast";
 import { cn } from "@/shared/ui/cn";
 import { DeviceIcon, kindLabel, systemLabel } from "../ui";
 
-export type DeviceDraft = { id?: number; name: string; kind: DeviceKind; system: DeviceSystem; location: string | null; notes: string | null };
+export type DeviceDraft = { id?: number; name: string; kind: DeviceKind; system: DeviceSystem; location: string | null; notes: string | null; hostname: string | null };
 
-const EMPTY: DeviceDraft = { name: "", kind: "laptop", system: "windows", location: null, notes: null };
+const EMPTY: DeviceDraft = { name: "", kind: "laptop", system: "windows", location: null, notes: null, hostname: null };
+
+/** Kinds that are computers: only they get a computer name (AkunMu Desktop runs there). */
+const COMPUTER_KINDS: ReadonlySet<DeviceKind> = new Set(["laptop", "desktop", "other"]);
 
 /** Add or edit a device (right-side drawer). Render it only while open, so the form starts from `device`. */
 export function DeviceDrawer({
@@ -37,7 +40,14 @@ export function DeviceDrawer({
     setSaving(true);
     setErrors({});
     try {
-      const body = { name: draft.name, kind: draft.kind, system: draft.system, location: draft.location ?? "", notes: draft.notes ?? "" };
+      const body = {
+        name: draft.name,
+        kind: draft.kind,
+        system: draft.system,
+        location: draft.location ?? "",
+        notes: draft.notes ?? "",
+        hostname: COMPUTER_KINDS.has(draft.kind) ? (draft.hostname ?? "") : "",
+      };
       const result = device?.id
         ? await api<{ id: number; name: string }>(`/api/devices/${device.id}`, { method: "PATCH", body })
         : await api<{ id: number; name: string }>("/api/devices", { method: "POST", body });
@@ -111,6 +121,20 @@ export function DeviceDrawer({
         <Field label={t("devices.fieldLocation")} htmlFor="device-location" optionalLabel={t("common.optional")} error={errors.location} hint={t("devices.locationHint")}>
           <Input id="device-location" value={draft.location ?? ""} maxLength={80} onChange={(event) => set("location", event.target.value)} />
         </Field>
+        {COMPUTER_KINDS.has(draft.kind) ? (
+          <Field label={t("devices.fieldHostname")} htmlFor="device-hostname" optionalLabel={t("common.optional")} error={errors.hostname} hint={t("devices.hostnameHint")}>
+            <Input
+              id="device-hostname"
+              value={draft.hostname ?? ""}
+              maxLength={253}
+              onChange={(event) => set("hostname", event.target.value)}
+              invalid={Boolean(errors.hostname)}
+              autoComplete="off"
+              spellCheck={false}
+              className="font-mono"
+            />
+          </Field>
+        ) : null}
         <Field label={t("devices.fieldNotes")} htmlFor="device-notes" optionalLabel={t("common.optional")} error={errors.notes} hint={t("common.noSecretsHint")}>
           <Textarea id="device-notes" value={draft.notes ?? ""} maxLength={1000} onChange={(event) => set("notes", event.target.value)} />
         </Field>
