@@ -13,6 +13,7 @@ import { useToast } from "@/shared/ui/toast";
 import { useApi } from "@/shared/ui/use-api";
 import type { AccountDetail, AccountListItem, MapData, PlaceKey, ProviderItem } from "../map-types";
 import { APPROVAL_ICONS, AppMark, BrowserMark, ProviderAvatar, browserLabel, placeLabel } from "../ui";
+import { ProviderPicker, providerForSave } from "./provider-picker";
 
 export type FixedAccount = { id: number; identifier: string; label: string | null; provider: { id: number; name: string; color: string; slug?: string } };
 
@@ -87,6 +88,8 @@ export function SignInDrawer({
     review: edit?.review ?? false,
     notes: edit?.notes ?? "",
   }));
+  // The name of a provider to add, typed under the picker; made when the sign-in is recorded.
+  const [newProvider, setNewProvider] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [lookup, setLookup] = useState("");
@@ -101,7 +104,8 @@ export function SignInDrawer({
   const suggestionPath =
     !fixedAccount && draft.providerId ? `/api/accounts?${new URLSearchParams({ provider: String(draft.providerId), per_page: "6", ...(lookup ? { search: lookup } : {}) })}` : null;
   const suggestions = useApi<Paginated<AccountListItem>>(suggestionPath);
-  const exact = suggestions.data?.items.find((item) => item.identifier.toLowerCase() === draft.identifier.trim().toLowerCase()) ?? null;
+  // Only the chosen provider's accounts count: a provider being added has none (older suggestions may linger).
+  const exact = suggestionPath ? (suggestions.data?.items.find((item) => item.identifier.toLowerCase() === draft.identifier.trim().toLowerCase()) ?? null) : null;
 
   const devices = map.data?.devices ?? [];
   const profiles = (map.data?.profiles ?? []).filter((profile) => profile.deviceId === draft.deviceId);
@@ -151,11 +155,29 @@ export function SignInDrawer({
         onSaved(result.data);
         return;
       }
+      let providerId = draft.providerId;
+      if (!fixedAccount && newProvider !== null) {
+        if (!newProvider.trim()) {
+          setErrors({ newProvider: t("validation.required") });
+          return;
+        }
+        try {
+          providerId = await providerForSave({ providerId: null, newName: newProvider }, providers.data ?? []);
+        } catch (error) {
+          const fields = firstFieldErrors(error);
+          setErrors({ newProvider: fields.name ?? (error instanceof Error && error.message ? error.message : t("common.saveFailed")) });
+          return;
+        }
+        // Made (or found) now, so trying again does not make it twice.
+        setNewProvider(null);
+        set("providerId", providerId);
+        providers.reload();
+      }
       const accountPart = fixedAccount
         ? { accountId: fixedAccount.id }
         : exact
           ? { accountId: exact.id }
-          : { providerId: draft.providerId, identifier: draft.identifier };
+          : { providerId, identifier: draft.identifier };
       const result = await api<{ id: number; device: { id: number }; profile: { id: number } | null; app: string | null; account: { id: number } }>("/api/sign-ins", {
         method: "POST",
         body: { ...accountPart, deviceId: draft.deviceId, profileId, app, ...origin, since: draft.since, review: draft.review, notes: draft.notes },
@@ -208,26 +230,24 @@ export function SignInDrawer({
           ) : (
             <>
               <Field label={t("accounts.fieldProvider")} htmlFor="signin-provider" required error={errors.providerId}>
-                <Select
+                <ProviderPicker
                   id="signin-provider"
-                  value={draft.providerId ?? ""}
-                  onChange={(event) => set("providerId", event.target.value ? Number(event.target.value) : null)}
+                  providers={providers.data ?? []}
+                  value={{ providerId: draft.providerId, newName: newProvider }}
+                  onChange={(choice) => {
+                    set("providerId", choice.providerId);
+                    setNewProvider(choice.newName);
+                  }}
                   invalid={Boolean(errors.providerId)}
-                >
-                  <option value="">{t("accounts.chooseProvider")}</option>
-                  {(providers.data ?? []).map((provider) => (
-                    <option key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </option>
-                  ))}
-                </Select>
+                  newNameError={errors.newProvider}
+                />
               </Field>
               <Field
                 label={t("accounts.fieldIdentifier")}
                 htmlFor="signin-identifier"
                 required
                 error={errors.identifier ?? errors.accountId}
-                hint={draft.identifier.trim() && draft.providerId ? (exact ? t("signIns.existingAccount") : t("signIns.newAccount")) : t("accounts.identifierHint")}
+                hint={draft.identifier.trim() && (draft.providerId || newProvider !== null) ? (exact ? t("signIns.existingAccount") : t("signIns.newAccount")) : t("accounts.identifierHint")}
               >
                 <Input
                   id="signin-identifier"
@@ -237,7 +257,7 @@ export function SignInDrawer({
                   invalid={Boolean(errors.identifier)}
                   autoComplete="off"
                   spellCheck={false}
-                  disabled={!draft.providerId}
+                  disabled={!draft.providerId && newProvider === null}
                   className="font-mono text-[13px]"
                 />
               </Field>

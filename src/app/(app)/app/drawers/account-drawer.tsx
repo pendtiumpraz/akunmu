@@ -7,10 +7,11 @@ import { api, firstFieldErrors } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { Button } from "@/shared/ui/button";
 import { Drawer } from "@/shared/ui/drawer";
-import { Field, Input, Segmented, Select, Textarea } from "@/shared/ui/form-controls";
+import { Field, Input, Segmented, Textarea } from "@/shared/ui/form-controls";
 import { useToast } from "@/shared/ui/toast";
 import { useApi } from "@/shared/ui/use-api";
 import type { ProviderItem } from "../map-types";
+import { ProviderPicker, providerForSave } from "./provider-picker";
 
 export type AccountDraft = { id?: number; providerId: number | null; identifier: string; label: string | null; twoFactor: TwoFactorState; notes: string | null };
 
@@ -24,16 +25,40 @@ export function AccountDrawer({ account, onClose, onSaved }: { account: AccountD
   const notify = useToast();
   const providers = useApi<ProviderItem[]>("/api/providers");
   const [draft, setDraft] = useState<AccountDraft>(account ?? EMPTY);
+  // The name of a provider to add, typed under the picker; made when the account is saved.
+  const [newProvider, setNewProvider] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const set = <Key extends keyof AccountDraft>(key: Key, value: AccountDraft[Key]) => setDraft((current) => ({ ...current, [key]: value }));
 
+  /** The provider to save with, making the new one first; null (with the error shown) when it cannot be made. */
+  const resolveProvider = async (): Promise<number | null | false> => {
+    if (newProvider === null) return draft.providerId;
+    if (!newProvider.trim()) {
+      setErrors({ newProvider: t("validation.required") });
+      return false;
+    }
+    try {
+      const providerId = await providerForSave({ providerId: null, newName: newProvider }, providers.data ?? []);
+      setNewProvider(null);
+      set("providerId", providerId);
+      providers.reload();
+      return providerId;
+    } catch (error) {
+      const fields = firstFieldErrors(error);
+      setErrors({ newProvider: fields.name ?? (error instanceof Error && error.message ? error.message : t("common.saveFailed")) });
+      return false;
+    }
+  };
+
   const save = async () => {
     setSaving(true);
     setErrors({});
     try {
-      const body = { providerId: draft.providerId, identifier: draft.identifier, label: draft.label ?? "", twoFactor: draft.twoFactor, notes: draft.notes ?? "" };
+      const providerId = await resolveProvider();
+      if (providerId === false) return;
+      const body = { providerId, identifier: draft.identifier, label: draft.label ?? "", twoFactor: draft.twoFactor, notes: draft.notes ?? "" };
       const result = account?.id
         ? await api<{ id: number }>(`/api/accounts/${account.id}`, { method: "PATCH", body })
         : await api<{ id: number }>("/api/accounts", { method: "POST", body });
@@ -73,19 +98,17 @@ export function AccountDrawer({ account, onClose, onSaved }: { account: AccountD
         }}
       >
         <Field label={t("accounts.fieldProvider")} htmlFor="account-provider" required error={errors.providerId}>
-          <Select
+          <ProviderPicker
             id="account-provider"
-            value={draft.providerId ?? ""}
-            onChange={(event) => set("providerId", event.target.value ? Number(event.target.value) : null)}
+            providers={providers.data ?? []}
+            value={{ providerId: draft.providerId, newName: newProvider }}
+            onChange={(choice) => {
+              set("providerId", choice.providerId);
+              setNewProvider(choice.newName);
+            }}
             invalid={Boolean(errors.providerId)}
-          >
-            <option value="">{t("accounts.chooseProvider")}</option>
-            {(providers.data ?? []).map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name}
-              </option>
-            ))}
-          </Select>
+            newNameError={errors.newProvider}
+          />
         </Field>
         <Field label={t("accounts.fieldIdentifier")} htmlFor="account-identifier" required error={errors.identifier} hint={t("accounts.identifierHint")}>
           <Input
