@@ -122,6 +122,13 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 
 > dan di landing page kasih button download .exe windows, dan untuk app linuxnya dan macnya kalau ada, kalau gak ada cukup windows dan linux juga
 
+> tolong extensionnya di sidebar aja ya 1/4 gitu, jangan menggantung kek sekarang, kl lagi copas jadi ilang soalnya
+
+> update juga rilis desktopnya biar ekstensinya versi panel
+
+> khusus repo apps ini kasih license opensource, MIT
+> lalu push
+
 ---
 
 ## ✅ Approval & Feedback

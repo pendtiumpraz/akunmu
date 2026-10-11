@@ -6,6 +6,7 @@
   "author": {
     "name": "AkunMu"
   },
+  "license": "MIT",
   "private": true,
   "type": "commonjs",
   "main": "dist/main.js",

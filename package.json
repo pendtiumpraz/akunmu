@@ -4,6 +4,7 @@
   "private": true,
   "description": "Where every account is signed in: devices, browser profiles and the accounts on them, with an AI assistant",
   "type": "module",
+  "license": "MIT",
   "engines": {
     "node": ">=22.12.0"
   },

@@ -60,6 +60,10 @@ Every workspace-owned table has a `tenant_id`, and isolation is enforced by **Po
 
 The platform owner sets AkunMu's AI providers and monthly quotas at `/platform/ai`; a workspace admin can switch to its own key at `/app/settings`.
 
+## License
+
+AkunMu is open source under the [MIT License](LICENSE). The third-party logos and libraries keep their own licenses (see Credits); the browser and provider marks belong to their owners and only name them.
+
 ## Credits
 
 - Browser logos: [alrra/browser-logos](https://github.com/alrra/browser-logos) (MIT); the Arc glyph and provider glyphs: [Simple Icons](https://simpleicons.org) (CC0). All served from `public/brands`; the marks belong to their owners and only name the browser or provider.
