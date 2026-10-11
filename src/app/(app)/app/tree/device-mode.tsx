@@ -1,50 +1,69 @@
 "use client";
 
-import { Handle, Position, useReactFlow, type Node, type NodeProps } from "@xyflow/react";
-import { Leaf, Waypoints } from "lucide-react";
+import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { Leaf, MonitorSmartphone, Waypoints } from "lucide-react";
 import {
   DEVICE_TREE_SIZES,
   buildDeviceForest,
   deviceKey,
   layoutDeviceForest,
   relatedSessions,
+  sessionsOf,
   type DeviceForestLayout,
   type DeviceTree,
   type PlacedDevice,
   type PlacedPlace,
+  type PlacedSprout,
   type PlacedTwig,
+  type SessionLeaf,
 } from "@/modules/signins/device-tree";
 import { useI18n } from "@/shared/i18n/client";
 import type { Translator } from "@/shared/i18n/translate";
 import { cn } from "@/shared/ui/cn";
 import { PlaceIcon } from "../sign-in-actions";
-import { DeviceIcon, ProviderAvatar, approvalLabel, systemLabel } from "../ui";
+import { DeviceIcon, ProviderAvatar, approvalLabel, placeLabel, systemLabel } from "../ui";
 import type { SceneView } from "./account-mode";
 import { LeafMark, depthStyle, placeDetail, placeTitle, type Row, type WireFlowEdge } from "./parts";
 
 /**
- * "By device": one tree per device. The device is the trunk, its browser profiles, apps and CLIs are the branches,
- * the providers signed in there are the twigs, and every login session is a leaf noting where it came from. Pointing
- * at a leaf lights the same account's sessions on the other devices and draws the links between them.
+ * "By device": one tree per device where something was signed in directly. The device is the trunk, its browser
+ * profiles, apps and CLIs are the branches, the providers signed in there are the twigs and each login is a leaf. The
+ * sessions a login let in (a CLI with a code, an app with a link, …) hang off it, each naming its device. Pointing at
+ * a session lights its account everywhere, with dashed links to the logins made separately.
  */
 
-export type DeviceScene = { trees: DeviceTree<Row>[]; layout: DeviceForestLayout<Row>; shown: Row[]; twigOf: Map<number, string> };
+/** Where a session's wires attach: its row on a twig, or its own node when it hangs off another session. */
+type Port = { node: string; out: string; in: string };
+export type DeviceScene = {
+  trees: DeviceTree<Row>[];
+  layout: DeviceForestLayout<Row>;
+  /** Every session drawn, grown ones included. */
+  shown: Row[];
+  ports: Map<number, Port>;
+  /** The sessions on or under each node, to light a subtree and dim the rest. */
+  under: Map<string, number[]>;
+  /** The node each grown session's node hangs off. */
+  parentOf: Map<string, string>;
+};
 
-type DeviceData = { placed: PlacedDevice<Row>; dimmed: boolean };
-type PlaceData = { placed: PlacedPlace<Row>; dimmed: boolean };
-type TwigData = {
-  placed: PlacedTwig<Row>;
-  dimmed: boolean;
+type Lighting = {
   /** Sessions lit anywhere (null when nothing is pointed at). */
   lit: Set<number> | null;
-  captions: Map<number, string>;
   selectedId: number | null;
   onHover: (id: number | null) => void;
   onSelect: (id: number) => void;
 };
+type DeviceData = { placed: PlacedDevice<Row>; dimmed: boolean; frame: string[]; onFrame: (nodeIds: string[]) => void };
+type PlaceData = { placed: PlacedPlace<Row>; dimmed: boolean };
+type TwigData = Lighting & { placed: PlacedTwig<Row>; dimmed: boolean; captions: Map<number, string> };
+type SproutData = Lighting & { placed: PlacedSprout<Row>; dimmed: boolean };
 type DeviceFlowNode = Node<DeviceData, "device">;
 type PlaceFlowNode = Node<PlaceData, "place">;
 type TwigFlowNode = Node<TwigData, "twig">;
+type SproutFlowNode = Node<SproutData, "sprout">;
+
+const leavesOf = (tree: DeviceTree<Row>) => tree.places.flatMap((place) => place.twigs.flatMap((twig) => twig.leaves));
+const idsOf = (leaves: SessionLeaf<Row>[]) => sessionsOf(leaves).map((leaf) => leaf.row.id);
 
 function matches(tree: DeviceTree<Row>, needle: string): boolean {
   const words = [tree.device.name];
@@ -52,7 +71,7 @@ function matches(tree: DeviceTree<Row>, needle: string): boolean {
     words.push(place.sample.profile?.name ?? place.sample.app ?? "");
     for (const twig of place.twigs) {
       words.push(twig.provider.name);
-      for (const leaf of twig.leaves) words.push(leaf.row.account.identifier, leaf.row.account.label ?? "");
+      for (const { row } of sessionsOf(twig.leaves)) words.push(row.account.identifier, row.account.label ?? "", row.device.name, row.profile?.name ?? row.app ?? "");
     }
   }
   return words.join(" ").toLowerCase().includes(needle);
@@ -62,115 +81,118 @@ export function deviceScene(rows: Row[], options: { staleBefore: string; history
   const forest = buildDeviceForest(rows, { staleBefore: options.staleBefore, history: options.history });
   const trees = options.needle ? forest.filter((tree) => matches(tree, options.needle)) : forest;
   const layout = layoutDeviceForest(trees, { aspect: options.aspect });
-  const twigOf = new Map<number, string>();
-  for (const node of layout.nodes) if (node.kind === "twig") for (const leaf of node.twig.leaves) twigOf.set(leaf.row.id, node.id);
-  const shown = trees.flatMap((tree) => tree.places.flatMap((place) => place.twigs.flatMap((twig) => twig.leaves.map((leaf) => leaf.row))));
-  return { trees, layout, shown, twigOf };
+  const ports = new Map<number, Port>();
+  const under = new Map<string, number[]>();
+  for (const node of layout.nodes) {
+    if (node.kind === "device") under.set(node.id, idsOf(leavesOf(node.tree)));
+    if (node.kind === "place") under.set(node.id, idsOf(node.place.twigs.flatMap((twig) => twig.leaves)));
+    if (node.kind === "twig") {
+      under.set(node.id, idsOf(node.twig.leaves));
+      for (const leaf of node.twig.leaves) ports.set(leaf.row.id, { node: node.id, out: `out-${leaf.row.id}`, in: `in-${leaf.row.id}` });
+    }
+    if (node.kind === "sprout") {
+      under.set(node.id, idsOf([node.leaf]));
+      ports.set(node.leaf.row.id, { node: node.id, out: "out", in: "in" });
+    }
+  }
+  const parentOf = new Map(layout.wires.filter((wire) => wire.kind === "graft").map((wire) => [wire.target, wire.source]));
+  const shown = trees.flatMap((tree) => sessionsOf(leavesOf(tree)).map((leaf) => leaf.row));
+  return { trees, layout, shown, ports, under, parentOf };
 }
 
 export function deviceStats(scene: DeviceScene) {
   return {
     trees: scene.trees.length,
+    devices: new Set(scene.shown.map((row) => row.device.id)).size,
     sessions: scene.trees.reduce((sum, tree) => sum + tree.stats.sessions, 0),
     wilting: scene.trees.reduce((sum, tree) => sum + tree.stats.wilting, 0),
   };
 }
 
-/** The node ids of one device's tree (to frame it), or null when it is not drawn. */
+/**
+ * The node ids to frame for a device: its tree; for a device without logins of its own, its sessions where they hang
+ * with the nodes they hang off; null when nothing of it is drawn.
+ */
 export function deviceFrame(scene: DeviceScene, deviceId: number): string[] | null {
-  const tree = scene.trees.find((candidate) => candidate.key === deviceKey(deviceId));
-  return tree ? [tree.key, ...tree.places.flatMap((place) => [place.key, ...place.twigs.map((twig) => twig.key)])] : null;
+  const key = deviceKey(deviceId);
+  if (scene.trees.some((tree) => tree.key === key)) return scene.layout.nodes.filter((node) => node.tree.key === key).map((node) => node.id);
+  const sprouts = scene.layout.nodes.filter((node) => node.kind === "sprout" && node.leaf.row.device.id === deviceId).map((node) => node.id);
+  return sprouts.length > 0 ? [...new Set(sprouts.flatMap((id) => [scene.parentOf.get(id) ?? id, id]))] : null;
 }
 
-/** One line under a session: where it was let in from, else on how many other devices its account is signed in. */
+/** The sessions of a device without logins of its own (they hang in other trees), to light when it is asked for. */
+export function deviceSpotlight(scene: DeviceScene, deviceId: number): Set<number> | null {
+  if (scene.trees.some((tree) => tree.key === deviceKey(deviceId))) return null;
+  const ids = scene.shown.filter((row) => row.device.id === deviceId).map((row) => row.id);
+  return ids.length > 0 ? new Set(ids) : null;
+}
+
+/**
+ * One line under each login on a twig: made directly here (and on how many other devices its account has logins of
+ * its own), or let in from a place removed since.
+ */
 function captionsFor(scene: DeviceScene, all: Row[], t: Translator): Map<number, string> {
-  const byId = new Map(all.map((row) => [row.id, row]));
-  const devicesOf = new Map<number, Set<number>>();
-  for (const row of all) {
-    if (row.status !== "signed_in") continue;
-    devicesOf.set(row.account.id, (devicesOf.get(row.account.id) ?? new Set()).add(row.device.id));
-  }
   const captions = new Map<number, string>();
-  for (const row of scene.shown) {
-    const origin = row.approvedFromId !== null ? byId.get(row.approvedFromId) : undefined;
-    if (origin) {
-      captions.set(row.id, t("tree.leafFrom", { device: origin.device.name, how: approvalLabel(row.approvalMethod, t) }));
+  for (const leaf of scene.trees.flatMap(leavesOf)) {
+    const { row } = leaf;
+    if (row.approvedFromId !== null) {
+      captions.set(row.id, t("tree.leafFromRemoved", { how: approvalLabel(row.approvalMethod, t) }));
       continue;
     }
-    const elsewhere = [...(devicesOf.get(row.account.id) ?? [])].filter((id) => id !== row.device.id).length;
+    const family = new Set(idsOf([leaf]));
+    const elsewhere = new Set(
+      all.filter((other) => other.account.id === row.account.id && other.status === "signed_in" && !family.has(other.id) && other.device.id !== row.device.id).map((other) => other.device.id),
+    ).size;
     captions.set(row.id, elsewhere > 0 ? t("tree.leafAlsoOn", { count: elsewhere }) : t("tree.leafDirect"));
   }
   return captions;
 }
 
-/** The sessions under a device, place or twig node (for lighting a subtree under the pointer). */
-function sessionsUnder(scene: DeviceScene, nodeId: string): Set<number> | null {
-  for (const tree of scene.trees) {
-    if (tree.key === nodeId) return new Set(tree.places.flatMap((place) => place.twigs.flatMap((twig) => twig.leaves.map((leaf) => leaf.row.id))));
-    for (const place of tree.places) {
-      if (place.key === nodeId) return new Set(place.twigs.flatMap((twig) => twig.leaves.map((leaf) => leaf.row.id)));
-      const twig = place.twigs.find((candidate) => candidate.key === nodeId);
-      if (twig) return new Set(twig.leaves.map((leaf) => leaf.row.id));
-    }
-  }
-  return null;
-}
-
-export function deviceFlow(scene: DeviceScene, view: SceneView, all: Row[], t: Translator): { nodes: (DeviceFlowNode | PlaceFlowNode | TwigFlowNode)[]; edges: WireFlowEdge[] } {
+export function deviceFlow(scene: DeviceScene, view: SceneView, all: Row[], t: Translator): { nodes: (DeviceFlowNode | PlaceFlowNode | TwigFlowNode | SproutFlowNode)[]; edges: WireFlowEdge[] } {
   const related = view.pointedId !== null ? relatedSessions(scene.shown, view.pointedId) : null;
-  const lit = related && related.signIns.size > 0 ? related.signIns : view.hoveredNode ? sessionsUnder(scene, view.hoveredNode) : null;
-  const hasLit = (ids: number[]) => lit !== null && ids.some((id) => lit.has(id));
+  const hovered = view.hoveredNode !== null ? scene.under.get(view.hoveredNode) : undefined;
+  const lit = related && related.signIns.size > 0 ? related.signIns : hovered ? new Set(hovered) : view.spotlight;
+  const hasLit = (ids: number[] | undefined) => lit !== null && (ids ?? []).some((id) => lit.has(id));
   const captions = captionsFor(scene, all, t);
+  const lighting: Lighting = { lit, selectedId: view.selectedId, onHover: view.onHover, onSelect: view.onSelect };
+  const frames = new Map<string, string[]>();
+  for (const node of scene.layout.nodes) frames.set(node.tree.key, [...(frames.get(node.tree.key) ?? []), node.id]);
 
-  const nodes: (DeviceFlowNode | PlaceFlowNode | TwigFlowNode)[] = scene.layout.nodes.map((placed) => {
+  const nodes = scene.layout.nodes.map((placed): DeviceFlowNode | PlaceFlowNode | TwigFlowNode | SproutFlowNode => {
     // Sizes are fixed by the layout, so the nodes count as measured from the start.
     const base = { id: placed.id, position: { x: placed.x, y: placed.y }, width: placed.width, height: placed.height, measured: { width: placed.width, height: placed.height } };
-    if (placed.kind === "device") {
-      const ids = placed.tree.places.flatMap((place) => place.twigs.flatMap((twig) => twig.leaves.map((leaf) => leaf.row.id)));
-      return { ...base, type: "device", data: { placed, dimmed: lit !== null && !hasLit(ids) } };
-    }
-    if (placed.kind === "place") {
-      const ids = placed.place.twigs.flatMap((twig) => twig.leaves.map((leaf) => leaf.row.id));
-      return { ...base, type: "place", data: { placed, dimmed: lit !== null && !hasLit(ids) } };
-    }
-    const ids = placed.twig.leaves.map((leaf) => leaf.row.id);
-    return {
-      ...base,
-      type: "twig",
-      data: { placed, dimmed: lit !== null && !hasLit(ids), lit, captions, selectedId: view.selectedId, onHover: view.onHover, onSelect: view.onSelect },
-    };
+    const dimmed = lit !== null && !hasLit(scene.under.get(placed.id));
+    if (placed.kind === "device") return { ...base, type: "device", data: { placed, dimmed, frame: frames.get(placed.tree.key) ?? [placed.id], onFrame: view.onFrame } };
+    if (placed.kind === "place") return { ...base, type: "place", data: { placed, dimmed } };
+    if (placed.kind === "twig") return { ...base, type: "twig", data: { ...lighting, placed, dimmed, captions } };
+    return { ...base, type: "sprout", data: { ...lighting, placed, dimmed } };
   });
 
-  const placeIds = new Map<string, number[]>();
-  for (const node of scene.layout.nodes) {
-    if (node.kind === "place") placeIds.set(node.id, node.place.twigs.flatMap((twig) => twig.leaves.map((leaf) => leaf.row.id)));
-    if (node.kind === "twig") placeIds.set(node.id, node.twig.leaves.map((leaf) => leaf.row.id));
-  }
   const edges: WireFlowEdge[] = scene.layout.wires.map((wire) => {
-    const active = hasLit(placeIds.get(wire.target) ?? []);
+    const active = wire.kind === "graft" ? lit !== null && lit.has(wire.fromId ?? -1) && lit.has(wire.toId ?? -1) : hasLit(scene.under.get(wire.target));
     return {
       id: wire.id,
       type: "wire",
       source: wire.source,
-      sourceHandle: "out",
+      sourceHandle: wire.sourceHandle,
       target: wire.target,
-      targetHandle: "in",
-      data: { kind: wire.kind, method: null, depth: wire.depth, dimmed: lit !== null && !active, active },
+      targetHandle: wire.targetHandle,
+      data: { kind: wire.kind, method: wire.method, depth: wire.depth, dimmed: lit !== null && !active, active },
     };
   });
-  // The pointed session's account on the other devices: approvals (solid, with how) and same-account links (dashed).
+  // The pointed session's account, signed in separately elsewhere: dashed links.
   for (const link of related?.links ?? []) {
-    const source = scene.twigOf.get(link.fromId);
-    const target = scene.twigOf.get(link.toId);
-    if (!source || !target || source === target) continue;
+    const from = scene.ports.get(link.fromId);
+    const to = scene.ports.get(link.toId);
+    if (!from || !to || from.node === to.node) continue;
     edges.push({
       id: `link:${link.id}`,
       type: "wire",
-      source,
-      sourceHandle: `out-${link.fromId}`,
-      target,
-      targetHandle: `in-${link.toId}`,
-      data: { kind: link.kind, method: link.method, depth: 3, dimmed: false, active: link.kind === "graft", live: true },
+      source: from.node,
+      sourceHandle: from.out,
+      target: to.node,
+      targetHandle: to.in,
+      data: { kind: "cross", method: null, depth: 3, dimmed: false, active: false, live: true },
     });
   }
   return { nodes, edges };
@@ -179,28 +201,37 @@ export function deviceFlow(scene: DeviceScene, view: SceneView, all: Row[], t: T
 /** The trunk: the device, what it is, and how much grows on it. Click to frame its tree. */
 function DeviceNode({ data }: NodeProps<DeviceFlowNode>) {
   const { t, format } = useI18n();
-  const { fitView } = useReactFlow();
   const { tree } = data.placed;
-  const frame = () =>
-    void fitView({ nodes: [{ id: tree.key }, ...tree.places.flatMap((place) => [{ id: place.key }, ...place.twigs.map((twig) => ({ id: twig.key }))])], padding: 0.2, maxZoom: 1.1, duration: 450 });
+  const frame = () => data.onFrame(data.frame);
   return (
-    <div className={cn("tree-node tree-trunk relative size-full rounded-2xl transition-transform duration-200 hover:-translate-y-0.5", data.dimmed && "tree-dim")} style={depthStyle(0)}>
+    <div className={cn("tree-node tree-trunk relative size-full rounded-2xl transition-[filter,opacity] duration-200 hover:brightness-125", data.dimmed && "tree-dim")} style={depthStyle(0)}>
       <button type="button" onClick={frame} title={t("tree.frameTree")} className="flex size-full items-center gap-3 rounded-2xl px-4 text-left">
         <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white ring-2 ring-white/10">
           <DeviceIcon kind={tree.device.kind} className="size-5" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14px] font-bold text-white">{tree.device.name}</span>
-          <span className="block truncate text-xs text-white/60">{systemLabel(tree.device.system, t)}</span>
-          <span className="mt-1.5 flex items-center gap-2 text-[11px] font-medium text-white/75">
-            <Leaf className="size-3.5 text-[#6ee7b7]" />
-            {t("tree.deviceStats", { places: format.number(tree.stats.places), sessions: format.number(tree.stats.sessions) })}
+          <span className="flex items-center gap-1">
+            <span className="min-w-0 flex-1 truncate text-[14px] font-bold text-white">{tree.device.name}</span>
+            {tree.stats.reach > 0 ? (
+              <span
+                className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-[#6ee7b7]"
+                title={t("tree.deviceReach", { count: format.number(tree.stats.reach) })}
+              >
+                <MonitorSmartphone className="size-3" />
+                {format.number(tree.stats.reach)}
+              </span>
+            ) : null}
             {tree.stats.wilting > 0 ? (
-              <span className="inline-flex items-center gap-0.5 text-[#fcd34d]">
+              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-[#fcd34d]" title={t("tree.leaf_wilting")}>
                 <Leaf className="size-3" />
                 {format.number(tree.stats.wilting)}
               </span>
             ) : null}
+          </span>
+          <span className="block truncate text-xs text-white/60">{systemLabel(tree.device.system, t)}</span>
+          <span className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-white/75">
+            <Leaf className="size-3.5 shrink-0 text-[#6ee7b7]" />
+            <span className="truncate">{t("tree.deviceStats", { places: format.number(tree.stats.places), sessions: format.number(tree.stats.sessions) })}</span>
           </span>
         </span>
       </button>
@@ -226,11 +257,24 @@ function PlaceNode({ data }: NodeProps<PlaceFlowNode>) {
   );
 }
 
-/** A twig: one provider at a place, with a leaf per login session (account) noting where it came from. */
+/** The props a session's button shares, on a twig and on its own node: pointing lights its account, a click opens it. */
+function sessionButton(lighting: Lighting, id: number) {
+  return {
+    type: "button" as const,
+    onMouseEnter: () => lighting.onHover(id),
+    onMouseLeave: () => lighting.onHover(null),
+    onFocus: () => lighting.onHover(id),
+    onBlur: () => lighting.onHover(null),
+    onClick: () => lighting.onSelect(id),
+    "aria-pressed": lighting.selectedId === id,
+  };
+}
+
+/** A twig: one provider at a place, with a leaf per login made there; what each login let in hangs to the right. */
 function TwigNode({ data }: NodeProps<TwigFlowNode>) {
   const { t, format } = useI18n();
   const { twig } = data.placed;
-  const active = twig.leaves.filter((leaf) => leaf.state !== "fallen").length;
+  const active = sessionsOf(twig.leaves).filter((leaf) => leaf.state !== "fallen").length;
   return (
     <div className={cn("tree-node relative flex size-full flex-col rounded-xl border border-line bg-surface shadow-card", data.dimmed && "tree-dim")} style={depthStyle(2)}>
       <header className="relative flex shrink-0 items-center gap-2 border-b border-line px-3" style={{ height: DEVICE_TREE_SIZES.twigHeader }}>
@@ -245,21 +289,14 @@ function TwigNode({ data }: NodeProps<TwigFlowNode>) {
       <ul>
         {twig.leaves.map((leaf) => {
           const id = leaf.row.id;
-          const selected = data.selectedId === id;
           const lit = data.lit?.has(id) ?? false;
           return (
             <li key={id} className="relative" style={{ height: DEVICE_TREE_SIZES.sessionHeight }}>
               <button
-                type="button"
-                onMouseEnter={() => data.onHover(id)}
-                onMouseLeave={() => data.onHover(null)}
-                onFocus={() => data.onHover(id)}
-                onBlur={() => data.onHover(null)}
-                onClick={() => data.onSelect(id)}
-                aria-pressed={selected}
+                {...sessionButton(data, id)}
                 className={cn(
                   "group flex size-full items-center gap-2.5 px-3 text-left transition-[background-color,opacity] duration-150 hover:bg-subtle",
-                  selected && "bg-accent-soft hover:bg-accent-soft",
+                  data.selectedId === id && "bg-accent-soft hover:bg-accent-soft",
                   data.lit !== null && !lit && "opacity-40",
                   leaf.state === "fallen" && "opacity-60",
                 )}
@@ -273,7 +310,7 @@ function TwigNode({ data }: NodeProps<TwigFlowNode>) {
                 <LeafMark state={leaf.state} />
               </button>
               <Handle type="target" position={Position.Left} id={`in-${id}`} isConnectable={false} className={cn("tree-port", !lit && "tree-port-ghost")} />
-              <Handle type="source" position={Position.Right} id={`out-${id}`} isConnectable={false} className={cn("tree-port", !lit && "tree-port-ghost")} />
+              <Handle type="source" position={Position.Right} id={`out-${id}`} isConnectable={false} className={cn("tree-port", leaf.grown.length === 0 && !lit && "tree-port-ghost")} />
             </li>
           );
         })}
@@ -282,4 +319,37 @@ function TwigNode({ data }: NodeProps<TwigFlowNode>) {
   );
 }
 
-export const DEVICE_NODE_TYPES = { device: DeviceNode, place: PlaceNode, twig: TwigNode };
+/** A session let in from the one it hangs off: on which device and where on it. It can let others in in turn. */
+function SproutNode({ data }: NodeProps<SproutFlowNode>) {
+  const { t } = useI18n();
+  const { leaf, level } = data.placed;
+  const { row } = leaf;
+  const fallen = leaf.state === "fallen";
+  const lit = data.lit?.has(row.id) ?? false;
+  return (
+    <div className={cn("tree-node relative size-full", data.dimmed && "tree-dim")} style={depthStyle(2 + level)}>
+      <Handle type="target" position={Position.Left} id="in" isConnectable={false} className="tree-port" />
+      <button
+        {...sessionButton(data, row.id)}
+        title={row.account.identifier}
+        className={cn(
+          "group flex size-full items-center gap-2.5 rounded-xl border bg-surface px-3 text-left shadow-card transition-[background-color,border-color] duration-150 hover:bg-subtle",
+          data.selectedId === row.id ? "border-accent bg-accent-soft hover:bg-accent-soft" : "border-line",
+          fallen && "opacity-60",
+        )}
+      >
+        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-sunken text-ink-2">
+          <DeviceIcon kind={row.device.kind} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className={cn("block truncate text-[13px] font-bold text-ink", fallen && "line-through decoration-faint")}>{row.device.name}</span>
+          <span className="block truncate text-[11px] text-muted">{placeLabel(row, t)}</span>
+        </span>
+        <LeafMark state={leaf.state} />
+      </button>
+      <Handle type="source" position={Position.Right} id="out" isConnectable={false} className={cn("tree-port", leaf.grown.length === 0 && !lit && "tree-port-ghost")} />
+    </div>
+  );
+}
+
+export const DEVICE_NODE_TYPES = { device: DeviceNode, place: PlaceNode, twig: TwigNode, sprout: SproutNode };

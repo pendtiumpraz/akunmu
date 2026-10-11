@@ -1,6 +1,6 @@
 "use client";
 
-import { Handle, Position, useReactFlow, type Node, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { GitBranch, Leaf, Sprout, TreeDeciduous } from "lucide-react";
 import {
   accountKey,
@@ -26,9 +26,19 @@ import { LeafMark, depthStyle, placeDetail, placeTitle, type Row, type WireFlowE
 
 type Lit = { signIns: Set<number>; branches: Set<string>; tree: string } | null;
 export type AccountScene = { trees: AccountTree<Row>[]; layout: ForestLayout<Row> };
-export type SceneView = { pointedId: number | null; hoveredNode: string | null; selectedId: number | null; onHover: (id: number | null) => void; onSelect: (id: number) => void };
+export type SceneView = {
+  pointedId: number | null;
+  hoveredNode: string | null;
+  selectedId: number | null;
+  onHover: (id: number | null) => void;
+  onSelect: (id: number) => void;
+  /** Frames these nodes (a trunk clicked frames its tree). */
+  onFrame: (nodeIds: string[]) => void;
+  /** Sessions lit while nothing is pointed at: a device asked for in the address that has no tree of its own. */
+  spotlight: Set<number> | null;
+};
 
-type TrunkData = { placed: PlacedAccount<Row>; dimmed: boolean };
+type TrunkData = { placed: PlacedAccount<Row>; dimmed: boolean; onFrame: (nodeIds: string[]) => void };
 type BranchData = { placed: PlacedBranch<Row>; dimmed: boolean; lit: Set<number> | null; selectedId: number | null; onHover: (id: number | null) => void; onSelect: (id: number) => void };
 type TrunkFlowNode = Node<TrunkData, "account">;
 type BranchFlowNode = Node<BranchData, "branch">;
@@ -87,7 +97,7 @@ export function accountFlow(scene: AccountScene, view: SceneView): { nodes: (Tru
   const lit = litFor(scene.trees, view.pointedId, view.hoveredNode);
   const nodes: (TrunkFlowNode | BranchFlowNode)[] = scene.layout.nodes.map((placed) =>
     placed.kind === "account"
-      ? { id: placed.id, type: "account", position: { x: placed.x, y: placed.y }, width: placed.width, height: placed.height, measured: { width: placed.width, height: placed.height }, data: { placed, dimmed: lit !== null && lit.tree !== placed.id } }
+      ? { id: placed.id, type: "account", position: { x: placed.x, y: placed.y }, width: placed.width, height: placed.height, measured: { width: placed.width, height: placed.height }, data: { placed, dimmed: lit !== null && lit.tree !== placed.id, onFrame: view.onFrame } }
       : {
           id: placed.id,
           type: "branch",
@@ -125,11 +135,10 @@ export function accountFlow(scene: AccountScene, view: SceneView): { nodes: (Tru
 /** The trunk: the account, its provider and how far it spread. Click to frame its tree. */
 function TrunkNode({ data }: NodeProps<TrunkFlowNode>) {
   const { t, format } = useI18n();
-  const { fitView } = useReactFlow();
   const { tree } = data.placed;
-  const frame = () => void fitView({ nodes: [{ id: tree.key }, ...tree.branches.map((branch) => ({ id: branch.key }))], padding: 0.2, maxZoom: 1.1, duration: 450 });
+  const frame = () => data.onFrame([tree.key, ...tree.branches.map((branch) => branch.key)]);
   return (
-    <div className={cn("tree-node tree-trunk relative size-full rounded-2xl transition-transform duration-200 hover:-translate-y-0.5", data.dimmed && "tree-dim")} style={depthStyle(0)}>
+    <div className={cn("tree-node tree-trunk relative size-full rounded-2xl transition-[filter,opacity] duration-200 hover:brightness-125", data.dimmed && "tree-dim")} style={depthStyle(0)}>
       <button type="button" onClick={frame} title={t("tree.frameTree")} className="flex size-full items-center gap-3 rounded-2xl px-4 text-left">
         <ProviderAvatar provider={tree.provider} size="lg" className="ring-2 ring-white/15" />
         <span className="min-w-0 flex-1">

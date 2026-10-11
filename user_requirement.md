@@ -88,6 +88,9 @@ Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
 **2026-10-11 09:40 WIB**
 > dann di UI pohon, 1 device itu 1 tree, dan chrome profile ada di cabang, profider ada di ranting, sedangkan daunya adalah login session di device mana keterangannya, gitu
 
+**2026-10-11 (setelah push `5f8e5f7`)**
+> harusnya treenya dari claude.ai nyambung ke banyak claude code / claude cli di keterangan device mana gitu karena multi session, bukan berhenti di claude code lalu tree device lain buka claude code langsung,
+
 ---
 
 ## ✅ Approval & Feedback

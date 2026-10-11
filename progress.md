@@ -64,6 +64,10 @@
 - [x] Hero landing: pohon dekoratif digambar ulang dari simpul (garis tepat di titik, diuji), titik tak lagi bergeser (animasi lewat radius, bukan transform)
 - [x] QA: 80 tes; 55 node mode perangkat & 42 node mode akun tanpa tumpang tindih; celah titik-garis hero 0,00 px; 0 galat browser
 - [x] Izin owner ("migrate dan push", 11 Okt): tidak ada migrasi baru (migrator dijalankan ulang, Neon tetap `0000`–`0002`); push `5f8e5f7` → Vercel; owner cek hero live: aman
+- [x] **Sesi menggantung dari login asalnya** (owner: "dari claude.ai nyambung ke banyak claude code / claude cli di keterangan device mana … bukan … tree device lain buka claude code langsung"): sesi yang diizinkan dari sebuah login (CLI pakai kode, aplikasi pakai link, …) kini tumbuh dari daun login itu sebagai kartu bernama perangkatnya, berapa pun banyaknya dan bisa berantai; perangkat yang semua sesinya diizinkan dari perangkat lain tidak lagi punya pohon sendiri ("Lihat pohonnya" membingkai dan menyorot sesinya di pohon asal); garis putus-putus hanya ke login lain akun itu; batang menampilkan jumlah perangkat lain yang dijangkau
+- [x] Garis tepat di port: animasi tumbuh tidak lagi menggeser node (React Flow mengukur port saat node muncul; sebelumnya ujung garis meleset ±13 px); pembingkaian menyisakan ruang legenda; efek hover batang tak lagi menggeser port
+- [x] QA: 82 tes (6 pohon perangkat: 40 hutan acak dengan rantai/kipas izin, tanpa tumpang tindih, tiap sesi digambar sekali); tangkapan layar terang/gelap/en/HP: 44 node, 13 sesi tumbuh, 0 tumpang tindih, 0 garis lepas dari port, 0 galat browser
+- [ ] Izin owner untuk push perubahan ini
 
 ---
 

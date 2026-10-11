@@ -11,12 +11,13 @@ import type { TreeData } from "../map-types";
 import { PlaceIcon, useSignInActions } from "../sign-in-actions";
 import { Freshness, ProviderAvatar, placeLabel, shortDate } from "../ui";
 import { ACCOUNT_NODE_TYPES, accountFlow, accountFrame, accountScene, accountStats, type SceneView } from "./account-mode";
-import { DEVICE_NODE_TYPES, deviceFlow, deviceFrame, deviceScene, deviceStats } from "./device-mode";
+import { DEVICE_NODE_TYPES, deviceFlow, deviceFrame, deviceScene, deviceSpotlight, deviceStats } from "./device-mode";
 import { LeafMark, MethodChip, Wire, type WireFlowEdge } from "./parts";
 
 /**
  * The trees canvas (ComfyUI-like, React Flow). Two ways to grow the forest:
- * - by device (the default): device → browser profiles, apps and CLIs → providers → login sessions;
+ * - by device (the default): device → browser profiles, apps and CLIs → providers → logins, with the sessions each
+ *   login let in hanging off it, on whichever device they are;
  * - by account: account → the devices it was signed in on directly → the devices it reached from there.
  * Pointing at a session lights where else its account is and how it got there; a click opens it.
  */
@@ -40,6 +41,15 @@ function legendStartsOpen(): boolean {
   }
 }
 
+/** Room to keep free around framed trees (pixels): the toolbar on top and, while it shows, the legend on the right. */
+function framePadding(canvas: HTMLElement) {
+  const legend = canvas.querySelector("[data-tree-legend]")?.getBoundingClientRect();
+  const right = legend && legend.width > 0 ? canvas.getBoundingClientRect().right - legend.left + 16 : 40;
+  return { top: 76, right: Math.round(right), bottom: 40, left: 40 };
+}
+
+const inPixels = (padding: ReturnType<typeof framePadding>) => ({ top: `${padding.top}px`, right: `${padding.right}px`, bottom: `${padding.bottom}px`, left: `${padding.left}px` }) as const;
+
 export function TreeCanvas(props: { data: TreeData; reload: () => void; canWrite: boolean; onRecord: () => void; focus?: TreeFocus | null }) {
   return (
     <ReactFlowProvider>
@@ -52,7 +62,8 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
   const { t, format } = useI18n();
   const { fitView, setViewport } = useReactFlow();
   const { actions, dialogs } = useSignInActions(reload);
-  const canvas = useRef<HTMLDivElement>(null);
+  // The canvas element, kept in state (not a ref) since framing reads it from handlers passed to the nodes.
+  const [canvas, setCanvas] = useState<HTMLDivElement | null>(null);
   const [mode, setMode] = useState<TreeMode>(focus?.kind ?? "device");
   // The canvas's width / height, measured once mounted; nothing is framed before (the packing depends on it).
   const [measured, setMeasured] = useState<number | null>(null);
@@ -63,6 +74,7 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
   const [hovered, setHovered] = useState<number | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [spotlight, setSpotlight] = useState<Set<number> | null>(null);
   const pendingFocus = useRef<TreeFocus | null>(focus);
   const initialized = useNodesInitialized();
   const [settled, setSettled] = useState(false);
@@ -76,15 +88,14 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
 
   // The trees are packed into columns that fit the canvas's shape.
   useEffect(() => {
-    const element = canvas.current;
-    if (!element) return;
+    if (!canvas) return;
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       if (width > 0 && height > 0) setMeasured(Math.round((width / height) * 4) / 4);
     });
-    observer.observe(element);
+    observer.observe(canvas);
     return () => observer.disconnect();
-  }, []);
+  }, [canvas]);
 
   const needle = query.trim().toLowerCase();
   const byDevice = useMemo(
@@ -102,26 +113,29 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
   // The focus is used once, as soon as the nodes are measured; kept in a ref so using it does not frame again.
   const drawn = `${mode}|${history}|${needle}|${layout.nodes.length}|${aspect}`;
   useEffect(() => {
-    const element = canvas.current;
+    const element = canvas;
     if (!element || layout.nodes.length === 0 || !initialized || measured === null) return;
     const frame = requestAnimationFrame(() => {
+      const padding = framePadding(element);
       const target = pendingFocus.current;
       if (target) {
         pendingFocus.current = null;
         const ids = target.kind === "device" && byDevice ? deviceFrame(byDevice, target.id) : target.kind === "account" && byAccount ? accountFrame(byAccount, target.id) : null;
         if (ids) {
-          void fitView({ nodes: ids.map((id) => ({ id })), padding: 0.2, maxZoom: 1.1, duration: 300 });
+          // A device without logins of its own: its sessions hang in other trees, so they are lit until the next click.
+          if (target.kind === "device" && byDevice) setSpotlight(deviceSpotlight(byDevice, target.id));
+          void fitView({ nodes: ids.map((id) => ({ id })), padding: inPixels(padding), maxZoom: 1.1, duration: 300 });
           return;
         }
       }
       const { width, height } = element.getBoundingClientRect();
       const readable = width < 640 ? 0.55 : 0.8;
-      const fits = Math.min((width - 96) / layout.width, (height - 140) / layout.height);
-      if (fits >= readable) void fitView({ padding: 0.12, maxZoom: 1, duration: 300 });
+      const fits = Math.min((width - padding.left - padding.right) / layout.width, (height - padding.top - padding.bottom) / layout.height);
+      if (fits >= readable) void fitView({ padding: inPixels(padding), maxZoom: 1, duration: 300 });
       else void setViewport({ ...START, zoom: readable }, { duration: 300 });
     });
     return () => cancelAnimationFrame(frame);
-  }, [drawn, layout, initialized, measured, byDevice, byAccount, fitView, setViewport]);
+  }, [canvas, drawn, layout, initialized, measured, byDevice, byAccount, fitView, setViewport]);
 
   const toggleLegend = (open: boolean) => {
     setLegendOpen(open);
@@ -135,9 +149,18 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
     setMode(next);
     setHovered(null);
     setHoveredNode(null);
+    setSpotlight(null);
+  };
+  const select = (id: number | null) => {
+    setSelectedId(id);
+    setSpotlight(null);
   };
 
-  const view: SceneView = { pointedId: hovered ?? selectedId, hoveredNode, selectedId, onHover: setHovered, onSelect: setSelectedId };
+  // A trunk clicked frames its tree, clear of the toolbar and the legend.
+  const onFrame = (ids: string[]) => {
+    if (canvas) void fitView({ nodes: ids.map((id) => ({ id })), padding: inPixels(framePadding(canvas)), maxZoom: 1.1, duration: 450 });
+  };
+  const view: SceneView = { pointedId: hovered ?? selectedId, hoveredNode, selectedId, onHover: setHovered, onSelect: select, onFrame, spotlight };
   const flow: { nodes: Node[]; edges: WireFlowEdge[] } = byDevice ? deviceFlow(byDevice, view, data.signIns, t) : byAccount ? accountFlow(byAccount, view) : { nodes: [], edges: [] };
   const stats = byDevice ? deviceStats(byDevice) : byAccount ? accountStats(byAccount) : null;
 
@@ -149,7 +172,7 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
 
   return (
     <div
-      ref={canvas}
+      ref={setCanvas}
       className={cn("tree-canvas relative h-[calc(100dvh-15rem)] min-h-[440px] overflow-hidden rounded-panel border border-line sm:h-[calc(100dvh-11.5rem)]", settled && "tree-settled")}
       aria-label={t("tree.title")}
     >
@@ -168,7 +191,7 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
         edgesFocusable={false}
         zoomOnDoubleClick={false}
         attributionPosition="bottom-left"
-        onPaneClick={() => setSelectedId(null)}
+        onPaneClick={() => select(null)}
         onNodeMouseEnter={(_, node) => setHoveredNode(node.id)}
         onNodeMouseLeave={() => setHoveredNode(null)}
       >
@@ -180,7 +203,10 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-faint" />
               <input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setSpotlight(null);
+                }}
                 placeholder={t("tree.search")}
                 className="h-8 w-40 rounded-lg bg-subtle pl-8 pr-2 text-[13px] text-ink outline-none placeholder:text-faint focus:ring-2 focus:ring-accent-line sm:w-48"
               />
@@ -211,7 +237,10 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
             <button
               type="button"
               aria-pressed={history}
-              onClick={() => setHistory((value) => !value)}
+              onClick={() => {
+                setHistory((value) => !value);
+                setSpotlight(null);
+              }}
               className={cn(
                 "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-semibold transition-colors",
                 history ? "bg-accent-soft text-accent" : "text-ink-2 hover:bg-subtle",
@@ -224,7 +253,7 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
               <span className="hidden items-center gap-3 px-2 text-xs text-muted lg:flex">
                 <span className="inline-flex items-center gap-1">
                   <TreeDeciduous className="size-3.5 text-ok" />
-                  {mode === "device" ? t("tree.countDevices", { count: format.number(stats.trees) }) : t("tree.countTrees", { count: format.number(stats.trees) })}
+                  {mode === "device" ? t("tree.countDevices", { count: format.number(stats.devices) }) : t("tree.countTrees", { count: format.number(stats.trees) })}
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <Leaf className="size-3.5 text-ok" />
@@ -263,7 +292,7 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
           style={{ width: 176, height: 116, marginBottom: 124 }}
           bgColor="var(--surface)"
           maskColor="color-mix(in oklab, var(--canvas) 72%, transparent)"
-          nodeColor={(node) => (node.type === "account" || node.type === "device" ? "var(--trunk-bg)" : "var(--line-strong)")}
+          nodeColor={(node) => (node.type === "account" || node.type === "device" ? "var(--trunk-bg)" : node.type === "sprout" ? "var(--accent-line)" : "var(--line-strong)")}
         />
       </ReactFlow>
 
@@ -432,7 +461,7 @@ function Legend({ mode, onClose }: { mode: TreeMode; onClose: () => void }) {
           ...leaves,
         ];
   return (
-    <div className="w-64 rounded-xl border border-line bg-surface/95 p-3 shadow-float backdrop-blur">
+    <div data-tree-legend className="w-64 rounded-xl border border-line bg-surface/95 p-3 shadow-float backdrop-blur">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[10px] font-bold uppercase tracking-wider text-faint">{t("tree.legendTitle")}</p>
         <button type="button" onClick={onClose} aria-label={t("common.close")} title={t("common.close")} className="-m-1 rounded-md p-1 text-faint hover:bg-subtle hover:text-ink">

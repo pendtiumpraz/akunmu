@@ -408,7 +408,8 @@
     opacity: 0.22;
     transition: opacity 200ms ease;
   }
-  /* The trees grow in once: nodes column by column, then the wires draw themselves. */
+  /* The trees grow in once: nodes column by column, then the wires draw themselves. Nodes are wiped in, never moved
+     or scaled: React Flow measures the ports when a node mounts, and a shifted node would leave its wires off them. */
   .tree-node {
     animation: tree-grow 520ms var(--ease-out-quint) backwards;
     animation-delay: calc(var(--depth, 0) * 110ms);
@@ -447,11 +448,11 @@
   @keyframes tree-grow {
     from {
       opacity: 0;
-      transform: translateX(-14px) scale(0.97);
+      clip-path: inset(0 100% 0 0);
     }
     to {
       opacity: 1;
-      transform: none;
+      clip-path: inset(-16px);
     }
   }
   @keyframes tree-draw {
