@@ -3,7 +3,7 @@ import { sweep } from "./sites.js";
 /**
  * The extension's connections (an AkunMu workspace on the web, or AkunMu Desktop on this computer) and its reports:
  * for each connection, the sites of that workspace are looked at in this browser profile and the result is sent with
- * the connection's key. State lives in chrome.storage.local, read by the popup.
+ * the connection's key. State lives in chrome.storage.local, read by the side panel.
  */
 
 const VERSION = chrome.runtime.getManifest().version;
@@ -12,7 +12,7 @@ const KEY_PATTERN = /^akm_[A-Za-z0-9_-]{16,}$/;
 const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost"]);
 const BROWSERS = new Set(["chrome", "edge", "brave", "opera", "vivaldi", "arc"]);
 
-/** A failure the popup can explain: address, key, network, unauthorized, busy, server or invalid. */
+/** A failure the panel can explain: address, key, network, unauthorized, busy, server or invalid. */
 export class AgentError extends Error {
   constructor(code) {
     super(code);
@@ -86,7 +86,7 @@ export async function profileEmail() {
   }
 }
 
-/** This profile as reported: the name the owner confirmed in the popup, or a first guess from its Google account. */
+/** This profile as reported: the name the owner confirmed in the panel, or a first guess from its Google account. */
 async function currentProfile(state) {
   if (state.profile?.name) return state.profile;
   const email = await profileEmail();
@@ -155,7 +155,7 @@ export function reportAll() {
         connection.error = error instanceof AgentError ? error.code : "network";
       }
     }
-    // Connections removed and a profile renamed while this ran stay as the popup left them.
+    // Connections removed and a profile renamed while this ran stay as the panel left them.
     const latest = await loadState();
     const reported = new Map(state.connections.map((connection) => [connection.id, connection]));
     await saveState({ connections: latest.connections.map((connection) => reported.get(connection.id) ?? connection), computer, profile: latest.profile ?? profile });

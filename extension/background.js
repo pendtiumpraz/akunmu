@@ -2,11 +2,26 @@ import { AgentError, connect, disconnect, loadState, reportAll, saveProfile, set
 
 /**
  * The extension's service worker: reports every 6 hours and when the browser starts (if the last report is old),
- * and does what the popup asks (connect, check now, remove, settings), so the work goes on after the popup closes.
+ * and does what the panel asks (connect, check now, remove, settings), so the work goes on after the panel closes.
  */
 
 const ALARM = "report";
 const EVERY_MINUTES = 6 * 60;
+
+/**
+ * The toolbar button opens AkunMu in the browser's side panel, which stays open while the owner copies an address or
+ * a key from another tab; a browser without a side panel gets the same page as a popup.
+ */
+async function configureButton() {
+  if (chrome.sidePanel?.setPanelBehavior) {
+    await chrome.action.setPopup({ popup: "" });
+    await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+  } else {
+    await chrome.action.setPopup({ popup: "panel.html?popup" });
+  }
+}
+
+void configureButton().catch(() => undefined);
 
 async function ensureAlarm() {
   if (!(await chrome.alarms.get(ALARM))) await chrome.alarms.create(ALARM, { delayInMinutes: 1, periodInMinutes: EVERY_MINUTES });

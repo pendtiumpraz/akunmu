@@ -377,7 +377,7 @@
     "revokeTitle": "Revoke “{name}”?",
     "scan": "Scan profiles",
     "seenAgo": "seen {when}",
-    "stepConnect": "Click the AkunMu icon in the toolbar, paste the address and the key, check the profile name, then Connect. Address:",
+    "stepConnect": "Click the AkunMu icon in the toolbar (pin it from the puzzle-piece menu if it is not there). AkunMu opens in the side panel, which stays open while you copy; drag its edge to widen it. Paste the address and the key, check the profile name, then Connect. Address:",
     "stepDeveloper": "Turn on Developer mode (top right).",
     "stepEveryProfile": "Extensions are per browser profile: repeat steps 4 and 6 in every profile you want checked. One key per device is enough.",
     "stepKey": "Create a key above for the device the browser is on.",

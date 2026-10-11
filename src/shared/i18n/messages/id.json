@@ -377,7 +377,7 @@
     "revokeTitle": "Cabut “{name}”?",
     "scan": "Pindai profil",
     "seenAgo": "terlihat {when}",
-    "stepConnect": "Klik ikon AkunMu di bilah alat, tempel alamat dan kunci, periksa nama profilnya, lalu Hubungkan. Alamat:",
+    "stepConnect": "Klik ikon AkunMu di bilah alat (sematkan dulu lewat ikon puzzle bila belum tampak). AkunMu terbuka di panel samping yang tetap terbuka saat kamu menyalin; tarik tepinya untuk melebarkan. Tempel alamat dan kunci, periksa nama profilnya, lalu Hubungkan. Alamat:",
     "stepDeveloper": "Nyalakan Mode pengembang (Developer mode) di kanan atas.",
     "stepEveryProfile": "Ekstensi dipasang per profil browser: ulangi langkah 4 dan 6 di tiap profil yang ingin dicek. Satu kunci per perangkat sudah cukup.",
     "stepKey": "Buat kunci di atas untuk perangkat tempat browser itu.",

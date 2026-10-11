@@ -1,9 +1,13 @@
 import { detectBrowser, loadState, profileEmail } from "./lib/agent.js";
 
 /**
- * The popup: this profile's name and browser, the connections with their last report, adding one (address + key),
- * "Check now", and the discovery switch. The work itself runs in the service worker (background.js).
+ * The side panel (a popup where the browser has none): this profile's name and browser, the connections with their
+ * last report, adding one (address + key), "Check now", and the discovery switch. The panel stays open while the owner
+ * copies an address or a key from another tab. The work itself runs in the service worker (background.js).
  */
+
+// Opened as a popup: popups need a fixed width; the side panel takes the width the browser gives it.
+if (new URLSearchParams(location.search).has("popup")) document.body.classList.add("popup");
 
 const language = chrome.i18n.getUILanguage();
 const t = (key, ...values) => chrome.i18n.getMessage(key, values.map(String)) || key;

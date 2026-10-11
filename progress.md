@@ -106,7 +106,7 @@
 | 1 | Env (Neon, Blob) belum ada; build lokal tetap jalan dengan PGlite | Medium | ✅ `.env` dari owner (11 Okt 00.40) |
 | 2 | Repo GitHub + proyek Vercel untuk AkunMu belum ada | Medium | ⏳ repo GitHub ✅ (11 Okt); proyek Vercel menunggu owner |
 | 3 | Tautan unduh desktop mengarah ke rilis GitHub terbaru, yang belum ada | Medium | ✅ rilis `v0.1.0` + 3 aset (11 Okt) |
-| 4 | Simpan Pengaturan → AI gagal di produksi (AkunMu & EventMu) | High | ⏳ menunggu owner: cek `APP_SECRET` di Vercel AkunMu, kirim teks galat EventMu |
+| 4 | Simpan Pengaturan → AI gagal di produksi (AkunMu & EventMu) | High | ✅ owner mengisi `APP_SECRET` di Vercel AkunMu: "udah kuisi bro aman" (11 Okt) |
 
 ---
 
@@ -129,3 +129,4 @@
 | 2026-10-11 16:35 | 09 | Owner: "migrate dan push" → Neon `0003` diterapkan + diverifikasi; push `main` |
 | 2026-10-11 16:55 | 09 | Asisten: tampilan awal tak perlu digulir lagi (owner: "UI asisten kebesaran … perlu scroll"): sapaan ringkas + saran di tengah, kotak tulis lebih pendek, placeholder & penafian pendek, saran ke-4 disembunyikan di HP pendek; diukur lokal 1366×657, 1536×730, 390×740, 360×640: luber 155/82/367/– px → 0 (360×640: 8 px padding); percakapan tetap normal; commit lokal, menunggu izin push |
 | 2026-10-11 17:05 | 09 | Owner: "ya, push dan buat rilisnya" → push `21c1b07` (asisten); rilis `v0.1.0` dengan 3 aset desktop; tautan unduh terbaru 302, ukuran cocok; deploy Vercel AkunMu & EventMu sukses |
+| 2026-10-11 17:20 | 09 | Ekstensi 0.1.1 di **panel samping** (owner: "di sidebar aja … jangan menggantung … kl lagi copas jadi ilang"), popup hanya cadangan; isu simpan AI ditutup (owner mengisi `APP_SECRET`) |
