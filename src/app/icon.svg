@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .tile { fill: #0f766e; }
+    .leaf { fill: #ffffff; }
+    .twig { stroke: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #2dd4bf; }
+      .leaf { fill: #032622; }
+      .twig { stroke: #032622; }
+    }
+  </style>
+  <rect class="tile" width="32" height="32" rx="9" />
+  <path class="twig" d="M16 24.5V10.5M16 19.5 10.5 13.5M16 16.5l5.5-5.2" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.75" />
+  <circle class="leaf" cx="16" cy="25" r="3" />
+  <circle class="leaf" cx="10" cy="12.8" r="2.8" />
+  <circle class="leaf" cx="22" cy="10.6" r="2.8" />
+  <circle class="leaf" cx="16" cy="8.2" r="2.5" opacity="0.85" />
+</svg>
