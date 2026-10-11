@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CheckCheck, History, MonitorSmartphone, Pencil, Plus, Trash2, Waypoints } from "lucide-react";
+import { ArrowLeft, CheckCheck, History, MonitorSmartphone, Pencil, Plus, Trash2, TreeDeciduous, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -109,6 +109,10 @@ export function DeviceDetailView({ deviceId }: { deviceId: number }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/app?tree=device-${device.id}`} className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-ink-2 hover:bg-subtle">
+            <TreeDeciduous className="size-4" />
+            {t("devices.showTree")}
+          </Link>
           <Link href={`/app?device=${device.id}`} className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-ink-2 hover:bg-subtle">
             <Waypoints className="size-4" />
             {t("devices.openInMap")}

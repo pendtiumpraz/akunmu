@@ -375,9 +375,18 @@
     stroke: var(--bark);
     stroke-width: 3.5;
   }
+  .tree-wire-branch {
+    stroke: var(--bark);
+    stroke-width: 2.25;
+    opacity: 0.85;
+  }
   .tree-wire-graft {
     stroke: var(--accent);
     stroke-width: 2.25;
+  }
+  /* Ports of sessions show only while their links are drawn. */
+  .tree-canvas .tree-port-ghost {
+    opacity: 0;
   }
   .tree-wire-cross {
     stroke: var(--accent);
@@ -406,6 +415,7 @@
     transition: opacity 200ms ease;
   }
   .tree-wire-trunk,
+  .tree-wire-branch,
   .tree-wire-graft {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
@@ -413,10 +423,17 @@
     animation-delay: calc(var(--depth, 1) * 110ms);
   }
   .tree-settled .tree-wire-trunk,
+  .tree-settled .tree-wire-branch,
   .tree-settled .tree-wire-graft,
   .tree-settled .tree-wire-label {
     animation: none;
     stroke-dashoffset: 0;
+  }
+  /* Links that appear while a session is lit draw themselves quickly, every time. */
+  .tree-wire-live,
+  .tree-settled .tree-wire-live {
+    stroke-dashoffset: 1;
+    animation: tree-draw 380ms ease-out forwards;
   }
   .tree-wire-label {
     animation: tree-fade 240ms ease backwards;

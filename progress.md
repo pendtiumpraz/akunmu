@@ -60,6 +60,10 @@
 - [x] Landing baru: tangkapan layar asli (id/en), GSAP (cabang tumbuh, layar 3D, tombol magnetik, etalase menempel), aman untuk reduced motion
 - [x] QA: 73 tes, tsc, lint, build; tangkapan layar terang/gelap/HP tanpa galat; 0 node bertumpuk
 - [x] Izin owner ("migrate dan push", 11 Okt): migrasi `0002` diterapkan di Neon + diverifikasi (3 kolom nullable + indeks, RLS paksa utuh, 3 login owner tak berubah); push `main` → Vercel
+- [x] **Pohon per perangkat** (owner 09.40: "1 device itu 1 tree … chrome profile di cabang, provider di ranting, daunnya login session"): mode bawaan Pohon = batang perangkat → cabang profil/aplikasi/CLI → ranting penyedia → daun sesi (keterangan "dari PC #1 · kode" / "juga di N perangkat lain"); sorot/pilih sesi menyalakan sesi akun yang sama di perangkat lain + kabel izin (berlabel) dan akun sama (putus-putus); mode "Per akun" tetap ada; tautan "Lihat pohonnya" di detail akun/perangkat (`/app?tree=device-<id>`, `account-<id>`); istilah "sesi aktif"
+- [x] Hero landing: pohon dekoratif digambar ulang dari simpul (garis tepat di titik, diuji), titik tak lagi bergeser (animasi lewat radius, bukan transform)
+- [x] QA: 80 tes; 55 node mode perangkat & 42 node mode akun tanpa tumpang tindih; celah titik-garis hero 0,00 px; 0 galat browser
+- [ ] Izin owner untuk push perubahan ini
 
 ---
 
@@ -84,3 +88,4 @@
 | 2026-10-11 07:45 | 06 | Akun: superadmin + 3 ruang kerja (Pribadi, Privasimu, Sainskerta) |
 | 2026-10-11 09:10 | 07 | Pohon akun, asal login, logo asli, dashboard + landing baru; 73 tes; commit lokal |
 | 2026-10-11 09:25 | 07 | Owner: "migrate dan push" → Neon `0002` + push |
+| 2026-10-11 10:10 | 07 | Pohon per perangkat (cabang/ranting/daun), sesi lintas perangkat, perbaikan hero; commit lokal |

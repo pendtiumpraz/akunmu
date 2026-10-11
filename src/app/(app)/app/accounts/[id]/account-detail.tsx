@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, History, Pencil, Plus, Trash2, Waypoints } from "lucide-react";
+import { AlertTriangle, ArrowLeft, History, Pencil, Plus, Trash2, TreeDeciduous, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -123,13 +123,19 @@ export function AccountDetailView({ accountId }: { accountId: number }) {
             ) : null}
           </div>
           {activeRows.length > 0 ? (
-            <Link
-              href={`/app?device=${activeRows[0].device.id}&place=${encodeURIComponent(placeKeyOf(activeRows[0]))}&account=${account.id}`}
-              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent hover:underline"
-            >
-              <Waypoints className="size-4" />
-              {t("accounts.showOnMap")}
-            </Link>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link href={`/app?tree=account-${account.id}`} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent hover:underline">
+                <TreeDeciduous className="size-4" />
+                {t("accounts.showTree")}
+              </Link>
+              <Link
+                href={`/app?device=${activeRows[0].device.id}&place=${encodeURIComponent(placeKeyOf(activeRows[0]))}&account=${account.id}`}
+                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent hover:underline"
+              >
+                <Waypoints className="size-4" />
+                {t("accounts.showOnMap")}
+              </Link>
+            </div>
           ) : null}
         </header>
         {activeRows.length === 0 ? (

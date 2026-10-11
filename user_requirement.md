@@ -79,6 +79,15 @@ Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
 **2026-10-11 09:20 WIB**
 > migrate dan push
 
+**2026-10-11 09:30 WIB**
+> background hero nya masih kurang proper ya penempatan dot nya? kayaknya? coba cek gambaran treenya garis2nya kurang match
+
+**2026-10-11 09:35 WIB**
+> maksudku gini aku mau ada penambahan dimana misal claude.ai itu aku login akun info@esteh.id di PC #1, tapi claude-clinya login info@esteh.id adalah laptop ASUS gitu, kan juga bisa multi session, aku mau cek ini juga bisa di multi login claude-cli laptop acer misal, aku mau lihat sessi yang aktifnya ini lho maksudku, paham gak?, jadi bukan hanya riwayat login, tapi juga login session ada dimana saja, kan bercabang, kayak 1 akun googleku bisa login di banyak device, begitu juga claude yang udah login di 1 device, bisa di autorize dipakai di claude cli device lain aku mau ini tercatat
+
+**2026-10-11 09:40 WIB**
+> dann di UI pohon, 1 device itu 1 tree, dan chrome profile ada di cabang, profider ada di ranting, sedangkan daunya adalah login session di device mana keterangannya, gitu
+
 ---
 
 ## ✅ Approval & Feedback

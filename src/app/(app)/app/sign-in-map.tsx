@@ -36,7 +36,7 @@ import { ProfileDrawer } from "./drawers/profile-drawer";
 import { SignInDrawer, type FixedAccount } from "./drawers/sign-in-drawer";
 import { needsCheck, placeKeyOf, type MapData, type MapDevice, type MapProfile, type PlaceKey, type TreeData } from "./map-types";
 import { SignInLine, useSignInActions } from "./sign-in-actions";
-import { AccountForest } from "./tree/account-forest";
+import { TreeCanvas, type TreeFocus } from "./tree/tree-canvas";
 import { AppMark, BrowserMark, DeviceIcon, ProviderAvatar, browserLabel, systemLabel } from "./ui";
 
 /** Which view the map opens in: the account trees, the columns (device → place → account) or the list to check. */
@@ -149,7 +149,7 @@ function columnVisibility(column: number, depth: number): string {
   return cn(phone ? "flex" : "hidden", laptop ? "lg:flex" : "lg:hidden", wide ? "xl:flex" : "xl:hidden");
 }
 
-export function SignInMap({ initial, startRecording }: { initial: MapSelection; startRecording: boolean }) {
+export function SignInMap({ initial, startRecording, treeFocus = null }: { initial: MapSelection; startRecording: boolean; treeFocus?: TreeFocus | null }) {
   const { t, format } = useI18n();
   const { can } = useStaff();
   const notify = useToast();
@@ -337,7 +337,7 @@ export function SignInMap({ initial, startRecording }: { initial: MapSelection; 
 
       {selection.view === "tree" ? (
         tree.data ? (
-          <AccountForest data={tree.data} reload={reloadAll} canWrite={canWrite} onRecord={() => setDrawer({ kind: "signIn", deviceId: null, place: null, account: null })} />
+          <TreeCanvas data={tree.data} reload={reloadAll} canWrite={canWrite} focus={treeFocus} onRecord={() => setDrawer({ kind: "signIn", deviceId: null, place: null, account: null })} />
         ) : tree.error ? (
           <ErrorState title={t("common.loadFailed")} description={t("common.loadFailedHint")} retryLabel={t("common.retry")} onRetry={tree.reload} />
         ) : (

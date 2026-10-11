@@ -43,7 +43,7 @@ tenants (workspaces)
 ```
 
 - One active sign-in per account and place; signing out keeps the row as history.
-- A sign-in can name the sign-in of the same account that let it in (`approved_from_id`, with `approval_method`: code, link, QR or prompt); loops are refused. The account trees (`src/modules/signins/tree.ts`, pure and tested) grow from these links and never let two nodes overlap.
+- A sign-in can name the sign-in of the same account that let it in (`approved_from_id`, with `approval_method`: code, link, QR or prompt); loops are refused. The trees grow from these links and never let two nodes overlap: by device (`src/modules/signins/device-tree.ts`: device → browser profiles, apps and CLIs → providers → sessions, the default view) or by account (`src/modules/signins/tree.ts`: account → the devices it was signed in on directly → the devices it reached from there). Both are pure and tested.
 - A sign-in not confirmed for 30 days, or marked for review, shows under "To check".
 - Deleting a device trashes its profiles and sign-ins with the same timestamp; restoring brings them back together. The same goes for accounts and their sign-ins.
 - Free text (notes, labels) that looks like a secret (API keys, tokens, private keys, backup codes) is refused.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireStaffPage } from "@/server/staff-page";
 import { getI18n } from "@/shared/i18n/server";
 import { SignInMap, type MapSelection } from "./sign-in-map";
+import type { TreeFocus } from "./tree/tree-canvas";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getI18n();
@@ -24,5 +25,8 @@ export default async function MapPage({ searchParams }: { searchParams: Promise<
   const accountId = idOf(params.account);
   const columns = params.view === "columns" || params.view === "map" || deviceId !== null || place !== null || accountId !== null;
   const initial: MapSelection = { deviceId, place, accountId, view: params.view === "check" ? "check" : columns ? "map" : "tree" };
-  return <SignInMap initial={initial} startRecording={params.record === "1"} />;
+  // ?tree=device-<id> or ?tree=account-<id> opens the trees framed on that device or account.
+  const focus = typeof params.tree === "string" ? /^(device|account)-(\d{1,12})$/.exec(params.tree) : null;
+  const treeFocus: TreeFocus | null = focus ? { kind: focus[1] as TreeFocus["kind"], id: Number(focus[2]) } : null;
+  return <SignInMap initial={treeFocus ? { ...initial, view: "tree" } : initial} startRecording={params.record === "1"} treeFocus={treeFocus} />;
 }

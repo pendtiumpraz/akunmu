@@ -18,10 +18,24 @@ export function LandingMotion() {
     const cleanups: (() => void)[] = [];
 
     media.add("(prefers-reduced-motion: no-preference)", () => {
-      // Branches start hidden in CSS (globals.css, .landing-branch with pathLength 1) and grow from there.
-      gsap.to("[data-branch]", { strokeDashoffset: 0, duration: 2.2, ease: "power2.out", stagger: 0.12, delay: 0.15 });
-      gsap.fromTo("[data-bud]", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, transformOrigin: "50% 50%", duration: 0.5, ease: "back.out(3)", stagger: 0.08, delay: 1.4 });
-      gsap.to("[data-bud]", { y: -4, duration: 2.4, ease: "sine.inOut", yoyo: true, repeat: -1, stagger: { each: 0.3, from: "random" }, delay: 2.2 });
+      // The hero tree grows level by level: wires start hidden in CSS (.landing-branch, pathLength 1) and draw from the
+      // parent's dot; each dot grows (its radius, never a transform, so it cannot drift off the line ends) when the
+      // wire into it arrives, and leaf halos pulse by radius too.
+      const LEVEL = 0.45;
+      for (const wire of gsap.utils.toArray<SVGPathElement>("[data-branch]")) {
+        const depth = Number(wire.dataset.depth ?? 0);
+        gsap.to(wire, { strokeDashoffset: 0, duration: 0.6, ease: "power1.inOut", delay: 0.2 + depth * LEVEL });
+      }
+      for (const bud of gsap.utils.toArray<SVGGElement>("[data-bud]")) {
+        const start = 0.75 + Number(bud.dataset.depth ?? 0) * LEVEL;
+        gsap.to(bud, { opacity: 1, duration: 0.2, delay: start });
+        const core = bud.querySelector<SVGCircleElement>("[data-bud-core]");
+        if (core) gsap.from(core, { attr: { r: 0 }, duration: 0.45, ease: "back.out(2.5)", delay: start });
+      }
+      for (const halo of gsap.utils.toArray<SVGCircleElement>("[data-bud-halo]")) {
+        const radius = Number(halo.getAttribute("r") ?? 14);
+        gsap.fromTo(halo, { attr: { r: radius }, opacity: 0.18 }, { attr: { r: radius * 1.9 }, opacity: 0, duration: 2.4, ease: "sine.out", repeat: -1, delay: 3 + Math.random() * 1.5 });
+      }
 
       // The screenshot starts tilted back (CSS) and stands up as it scrolls into view.
       const shot = document.querySelector<HTMLElement>("[data-hero-shot]");

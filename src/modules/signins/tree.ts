@@ -68,6 +68,26 @@ export function branchKey(accountId: number, deviceId: number): string {
   return `b:${accountId}:${deviceId}`;
 }
 
+/**
+ * The sign-ins a forest shows: the active ones, the places they grew from (even when signed out since, as the trail)
+ * and, with history, every signed out one.
+ */
+export function visibleSignIns<Row extends Pick<TreeSignIn, "id" | "status" | "approvedFromId">>(rows: Row[], options: Pick<ForestOptions, "history">): Row[] {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const visible = new Set(rows.filter((row) => row.status === "signed_in" || options.history).map((row) => row.id));
+  if (!options.history) {
+    for (const row of rows) {
+      if (row.status !== "signed_in") continue;
+      let origin = row.approvedFromId !== null ? byId.get(row.approvedFromId) : undefined;
+      for (let depth = 0; origin && !visible.has(origin.id) && depth < MAX_DEPTH; depth += 1) {
+        visible.add(origin.id);
+        origin = origin.approvedFromId !== null ? byId.get(origin.approvedFromId) : undefined;
+      }
+    }
+  }
+  return rows.filter((row) => visible.has(row.id));
+}
+
 function buildTree<Row extends TreeSignIn>(rows: Row[], options: ForestOptions): AccountTree<Row> | null {
   const byId = new Map(rows.map((row) => [row.id, row]));
   const visible = new Set(rows.filter((row) => row.status === "signed_in" || options.history).map((row) => row.id));
@@ -324,7 +344,7 @@ function layoutTree<Row extends TreeSignIn>(tree: AccountTree<Row>): ForestLayou
 }
 
 /** The trees in `count` columns, each tree going to the shortest column so far (the leftmost on a tie). */
-function packColumns(sizes: { width: number; height: number }[], count: number) {
+export function packColumns(sizes: { width: number; height: number }[], count: number) {
   const columns = Array.from({ length: count }, () => ({ height: 0, width: 0, members: [] as number[] }));
   sizes.forEach((size, index) => {
     const column = columns.reduce((lowest, candidate) => (candidate.height < lowest.height ? candidate : lowest));
@@ -355,16 +375,22 @@ export type ForestLayoutOptions = {
  * Places every tree (see layoutTree) and packs the trees into columns, as many as bring the forest's shape closest to
  * the space it is shown in. Trees never share space: columns sit side by side and trees in a column one under another.
  */
+/** The packing into columns (1 to `maxColumns`) whose overall shape comes closest to `aspect`. */
+export function bestPacking(sizes: { width: number; height: number }[], options: ForestLayoutOptions = {}) {
+  const aspect = options.aspect ?? 1.6;
+  const most = Math.max(1, Math.min(options.maxColumns ?? 6, sizes.length));
+  let best = packColumns(sizes, 1);
+  for (let count = 2; count <= most; count += 1) {
+    const candidate = packColumns(sizes, count);
+    if (Math.abs(Math.log(candidate.width / candidate.height / aspect)) < Math.abs(Math.log(best.width / best.height / aspect))) best = candidate;
+  }
+  return best;
+}
+
 export function layoutForest<Row extends TreeSignIn>(trees: AccountTree<Row>[], options: ForestLayoutOptions = {}): ForestLayout<Row> {
   const local = trees.map((tree) => layoutTree(tree));
   if (local.length === 0) return { nodes: [], wires: [], width: 0, height: 0 };
-  const aspect = options.aspect ?? 1.6;
-  const most = Math.max(1, Math.min(options.maxColumns ?? 6, local.length));
-  let best = packColumns(local, 1);
-  for (let count = 2; count <= most; count += 1) {
-    const candidate = packColumns(local, count);
-    if (Math.abs(Math.log(candidate.width / candidate.height / aspect)) < Math.abs(Math.log(best.width / best.height / aspect))) best = candidate;
-  }
+  const best = bestPacking(local, options);
   const nodes: PlacedNode<Row>[] = [];
   const wires: PlacedWire[] = [];
   local.forEach((tree, index) => {

@@ -23,6 +23,7 @@ import { ButtonLink } from "@/shared/ui/button";
 import { LocaleSwitcher } from "@/shared/ui/locale-switcher";
 import { APP_NAME, Logo } from "@/shared/ui/logo";
 import { ThemeToggle } from "@/shared/ui/theme";
+import { HERO_VIEW, heroTree } from "./_landing/hero-tree";
 import { LandingMotion } from "./_landing/landing-motion";
 import { ScreenFrame } from "./_landing/screen-frame";
 import { Showcase } from "./_landing/showcase";
@@ -38,39 +39,43 @@ const SHOT_LOCALES = new Set(["id", "en"]);
 const delay = (milliseconds: number) => ({ "--delay": `${milliseconds}ms` }) as CSSProperties;
 
 /**
- * Branches growing behind the hero, drawn by landing-motion.tsx: a short trunk under the buttons that splits and
- * climbs both sides like a crown around the text (which stays clear of lines), with buds at the tips.
+ * The account tree behind the hero (hero-tree.ts): the trunk rises out of the screenshot to the root (bark), wires
+ * branch out to junctions (ports, as in the app) and end in leaves; landing-motion.tsx grows it level by level.
+ * Hidden on phones, where the text fills the width.
  */
-function HeroBranches() {
-  const branches = [
-    "M720 660 C720 646 720 632 720 616",
-    "M720 616 C600 610 440 600 344 552 C252 506 206 420 192 326",
-    "M720 616 C840 610 1000 600 1096 552 C1188 506 1234 420 1248 326",
-    "M344 552 C300 526 240 522 156 506",
-    "M1096 552 C1140 526 1200 522 1284 506",
-    "M192 326 C178 262 152 220 108 182",
-    "M1248 326 C1262 262 1288 220 1332 182",
-    "M200 384 C240 334 270 292 298 240",
-    "M1240 384 C1200 334 1170 292 1142 240",
-  ];
-  const buds: [number, number, number][] = [
-    [156, 506, 6],
-    [1284, 506, 6],
-    [108, 182, 7],
-    [1332, 182, 7],
-    [298, 240, 5],
-    [1142, 240, 5],
-    [720, 616, 4],
-  ];
+function HeroTree() {
+  const { nodes, wires } = heroTree();
   return (
-    <svg viewBox="0 0 1440 660" preserveAspectRatio="xMidYMax slice" aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[660px] w-full">
-      {branches.map((path) => (
-        <path key={path} d={path} pathLength={1} data-branch className="landing-branch" fill="none" stroke="rgb(255 255 255 / 0.1)" strokeWidth={2} strokeLinecap="round" />
+    <svg
+      viewBox={`0 0 ${HERO_VIEW.width} ${HERO_VIEW.height}`}
+      preserveAspectRatio="xMidYMax slice"
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-0 hidden h-[660px] w-full md:block"
+    >
+      {wires.map((wire) => (
+        <path
+          key={wire.id}
+          d={wire.d}
+          pathLength={1}
+          data-branch
+          data-depth={wire.depth}
+          className="landing-branch"
+          fill="none"
+          stroke="rgb(255 255 255 / 0.13)"
+          strokeWidth={wire.width}
+          strokeLinecap="round"
+        />
       ))}
-      {buds.map(([cx, cy, r]) => (
-        <g key={`${cx}-${cy}`} data-bud className="landing-bud">
-          <circle cx={cx} cy={cy} r={r * 2.4} fill="var(--primary)" opacity={0.12} />
-          <circle cx={cx} cy={cy} r={r} fill="var(--primary)" opacity={0.75} />
+      {nodes.map((node) => (
+        <g key={node.id} data-bud data-depth={node.depth} className="landing-bud">
+          {node.tip ? <circle data-bud-halo cx={node.x} cy={node.y} r={14} fill="var(--primary)" opacity={0.18} /> : null}
+          <circle
+            data-bud-core
+            cx={node.x}
+            cy={node.y}
+            r={node.tip ? 5.5 : node.depth === 0 ? 5 : 3.5}
+            fill={node.tip ? "var(--primary)" : node.depth === 0 ? "var(--bark)" : "rgb(255 255 255 / 0.45)"}
+          />
         </g>
       ))}
     </svg>
@@ -175,7 +180,7 @@ export default async function LandingPage() {
       </header>
 
       <section className="relative overflow-hidden bg-rail">
-        <HeroBranches />
+        <HeroTree />
         <div className="absolute inset-x-0 bottom-0 h-[26%] bg-canvas sm:h-[34%]" aria-hidden="true" />
         <div className="relative mx-auto max-w-4xl px-4 pt-14 text-center sm:px-6 lg:pt-20">
           <p className="landing-rise inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80" style={delay(0)}>
