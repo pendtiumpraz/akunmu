@@ -50,7 +50,7 @@
 - [x] Repo GitHub `pendtiumpraz/akunmu` (dibuat owner), `main` terpush
 - [x] `APP_SECRET` dibuat di `.env` lokal (tidak dicetak)
 - [ ] Proyek Vercel terhubung ke repo + env `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET`
-- [ ] Akun pemilik platform + ruang kerja pertama (`platform:bootstrap` atau `/signup`)
+- [x] Akun pemilik platform + 3 ruang kerja: `pribadi` (admin = alamat Gmail owner dengan akhiran `+pribadi`, karena email harus unik per akun), `privasimu`, `sainskerta` (masing-masing email kerja owner); alamat email disamarkan atas permintaan owner; kata sandi sementara di `.bootstrap-credentials.txt` (di-gitignore)
 - [ ] Kunci AI di `/platform/ai` (`claude-haiku-5-5`)
 
 ---
