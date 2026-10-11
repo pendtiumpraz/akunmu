@@ -63,7 +63,7 @@
 - [x] **Pohon per perangkat** (owner 09.40: "1 device itu 1 tree … chrome profile di cabang, provider di ranting, daunnya login session"): mode bawaan Pohon = batang perangkat → cabang profil/aplikasi/CLI → ranting penyedia → daun sesi (keterangan "dari PC #1 · kode" / "juga di N perangkat lain"); sorot/pilih sesi menyalakan sesi akun yang sama di perangkat lain + kabel izin (berlabel) dan akun sama (putus-putus); mode "Per akun" tetap ada; tautan "Lihat pohonnya" di detail akun/perangkat (`/app?tree=device-<id>`, `account-<id>`); istilah "sesi aktif"
 - [x] Hero landing: pohon dekoratif digambar ulang dari simpul (garis tepat di titik, diuji), titik tak lagi bergeser (animasi lewat radius, bukan transform)
 - [x] QA: 80 tes; 55 node mode perangkat & 42 node mode akun tanpa tumpang tindih; celah titik-garis hero 0,00 px; 0 galat browser
-- [ ] Izin owner untuk push perubahan ini
+- [x] Izin owner ("migrate dan push", 11 Okt): tidak ada migrasi baru (migrator dijalankan ulang, Neon tetap `0000`–`0002`); push `5f8e5f7` → Vercel; owner cek hero live: aman
 
 ---
 
