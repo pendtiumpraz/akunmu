@@ -52,6 +52,8 @@ Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
 
 ## 💬 Pesan owner (verbatim)
 
+> Catatan (11 Okt): alamat email dan nama profil browser owner di kutipan bawah ini disamarkan (`[email …]`, `[… profil]`) atas permintaan owner, karena repo ini publik.
+
 **2026-10-11 00:15 WIB**
 > oke sekarang setelah bikin event tadi aku mau bikin serupa untuk device management account, Device A, chrome profile A, isinya profider A akun A, chrome porofile B isinya profider A akun B, lalu device C chrome profile B isinya profider D akun D, gitu2 paham gak?? dan aku mau buat ini di D:/AI/privasimu/device jadi ini juga nextjs aku bakal kirim envnya nanti, intinya sama basisnya clone dulu loop v5 tadi kayak yang di folder event, harus ada juga di folder device ini untuk loop-v5 sainskerta, dan perilaku agenticnya harus sama persis bro! bedanya ini device & account management gitu, biar aku gak lupa karena aku punya banyak account google juga, cuma biar tahu aku login akun2 itu dimana gitu karena jarang logout, dan karena aku pakai agentic nama appsnya adalah Device Management Account atau terserah kamu kasih nama apa deh suka2 kamu, technya sama persis seperti event
 
