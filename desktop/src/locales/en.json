@@ -1,0 +1,20 @@
+{
+  "actualSize": "Actual size",
+  "databaseFailed": "The database on this computer could not be opened.",
+  "errorTitle": "AkunMu could not start",
+  "fullScreen": "Full screen",
+  "logsAt": "Details are in the log folder:",
+  "menuHelp": "Help",
+  "menuView": "View",
+  "openData": "Open the data folder",
+  "openLogs": "Open the log folder",
+  "reload": "Reload",
+  "serverFailed": "AkunMu's server did not start.",
+  "signInLoop": "AkunMu could not sign you in.",
+  "starting": "Getting AkunMu ready…",
+  "stopped": "Part of AkunMu stopped unexpectedly.",
+  "stoppedTitle": "AkunMu stopped",
+  "version": "AkunMu {version}",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out"
+}

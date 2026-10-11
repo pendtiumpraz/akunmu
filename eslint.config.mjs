@@ -14,7 +14,21 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "loop-v5/**", "drizzle/**", "coverage/**"]),
+  globalIgnores([
+    ".next/**",
+    ".next-desktop/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "loop-v5/**",
+    "drizzle/**",
+    "coverage/**",
+    // Desktop build output and its own packages (desktop/src and desktop/scripts are linted).
+    "desktop/node_modules/**",
+    "desktop/dist/**",
+    "desktop/app/**",
+    "desktop/release/**",
+  ]),
 ]);
 
 export default eslintConfig;

@@ -211,6 +211,7 @@
     "statusPending": "Awaiting approval",
     "statusRunning": "Running",
     "tenantSubtitle": "The assistant uses AkunMu's AI within your plan's quota, or your own API key.",
+    "tenantSubtitleOwnOnly": "On this computer the assistant uses your own API key from an AI provider.",
     "tenantTitle": "AI",
     "test": "Test connection",
     "testFailed": "Failed: {error}",
@@ -301,6 +302,10 @@
     "search": "Search",
     "trash": "Trash",
     "trashEmpty": "The trash is empty."
+  },
+  "desktop": {
+    "ownerName": "Owner",
+    "workspaceName": "Personal"
   },
   "devices": {
     "addTitle": "Add device",

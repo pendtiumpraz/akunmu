@@ -40,3 +40,23 @@ export function migrationDatabaseUrl(): string {
 export function defaultLocaleSetting(): string | undefined {
   return read("DEFAULT_LOCALE");
 }
+
+/** The desktop app (Electron shell, local database, served on plain http from 127.0.0.1); never set on Vercel. */
+export function isDesktop(): boolean {
+  return read("AKUNMU_DESKTOP") === "1";
+}
+
+/** The key the desktop shell opens the app with; a new one every launch, known only to the shell and the server. */
+export function desktopToken(): string | undefined {
+  return isDesktop() ? read("AKUNMU_DESKTOP_TOKEN") : undefined;
+}
+
+/** The name the desktop owner gets on the first launch (the Windows user name). */
+export function desktopOwnerName(): string | undefined {
+  return read("AKUNMU_DESKTOP_OWNER");
+}
+
+/** Session cookies are Secure everywhere but on the desktop, which is served over http from the same machine. */
+export function secureCookies(): boolean {
+  return isProduction() && !isDesktop();
+}

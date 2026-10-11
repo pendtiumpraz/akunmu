@@ -1,0 +1,73 @@
+{
+  "name": "akunmu-desktop",
+  "productName": "AkunMu",
+  "version": "0.1.0",
+  "description": "AkunMu for Windows: your sign-in trees, kept in a database on this computer.",
+  "author": {
+    "name": "AkunMu"
+  },
+  "private": true,
+  "type": "commonjs",
+  "main": "dist/main.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "compile": "tsc -p .",
+    "start": "tsc -p . && electron .",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-socket": "0.2.11",
+    "drizzle-orm": "0.45.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3",
+    "typescript": "~6.0.3"
+  },
+  "build": {
+    "appId": "app.akunmu.desktop",
+    "productName": "AkunMu",
+    "copyright": "AkunMu",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "static/**/*",
+      "package.json"
+    ],
+    "afterPack": "./scripts/after-pack.cjs",
+    "asar": false,
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "static/icon.png",
+      "artifactName": "AkunMu-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "AkunMu",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "AkunMu-Setup-${version}.exe"
+    }
+  }
+}

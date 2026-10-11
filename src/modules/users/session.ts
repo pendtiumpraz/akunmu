@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { randomToken, sha256Hex } from "../../shared/crypto/tokens";
 import { asPlatform } from "../../shared/db";
-import { isProduction } from "../../shared/env";
+import { secureCookies } from "../../shared/env";
 import { forbidden, unauthorized } from "../../shared/http/errors";
 import { isServing, tenantById } from "../tenants/service";
 import { can, type Permission } from "./permissions";
@@ -27,7 +27,7 @@ export async function startStaffSession(user: User, userAgent: string | null): P
   const cookieStore = await cookies();
   cookieStore.set(STAFF_COOKIE, token, {
     httpOnly: true,
-    secure: isProduction(),
+    secure: secureCookies(),
     sameSite: "lax",
     path: "/",
     expires: expiresAt,

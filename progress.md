@@ -9,7 +9,7 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 07: Improvement` — Pohon akun + UI baru + landing: live (migrasi `0002`, push 11 Okt) |
+| **Fase Aktif** | `Fase 08: Desktop Windows` — versi `.exe` offline dengan PGlite (Fase 07 live) |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
@@ -68,6 +68,16 @@
 - [x] Garis tepat di port: animasi tumbuh tidak lagi menggeser node (React Flow mengukur port saat node muncul; sebelumnya ujung garis meleset ±13 px); pembingkaian menyisakan ruang legenda; efek hover batang tak lagi menggeser port
 - [x] QA: 82 tes (6 pohon perangkat: 40 hutan acak dengan rantai/kipas izin, tanpa tumpang tindih, tiap sesi digambar sekali); tangkapan layar terang/gelap/en/HP: 44 node, 13 sesi tumbuh, 0 tumpang tindih, 0 garis lepas dari port, 0 galat browser
 - [x] Izin owner ("push", 11 Okt): tanpa migrasi baru (Neon tetap `0000`–`0002`); `8a45c46` dipush → Vercel
+### 🔄 Fase 08: Desktop Windows (owner 11 Okt: "bisa buatkan versi desktop exenya kah?")
+- [x] Keputusan owner: database PGlite (bukan SQLite), data terpisah & offline
+- [x] Mode desktop di app (`AKUNMU_DESKTOP`): masuk otomatis lewat `/desktop/start` dengan kunci per peluncuran (404 di web), pemilik + ruang kerja dibuat saat peluncuran pertama dan ditemukan lewat peran, tombol keluar disembunyikan, landing → `/app`, cookie tanpa `Secure` (http lokal), CSP tanpa `upgrade-insecure-requests`
+- [x] Shell Electron 44 (`desktop/`): proses database PGlite + migrasi tiap start, server Next standalone, jendela + layar pembuka, menu id/en (folder data & log), satu instance, berhenti rapi, `secret.json` dilindungi DPAPI
+- [x] Build `desktop/scripts/build.mjs`: `.next-desktop` standalone, nilai palsu untuk database & secret, penjaga `.env`, installer NSIS + zip
+- [x] Bahasa: Indonesia otomatis bila Windows berbahasa Indonesia atau region Indonesia (mesin owner: UI `en-US`, region `en-ID`); pilihan bahasa di app tetap menang. Jendela maksimal di peluncuran pertama
+- [x] Pengaturan AI di desktop: hanya "kunci sendiri" (tidak ada AI AkunMu/kuota di komputer)
+- [x] QA paket (`win-unpacked\AkunMu.exe`, data di folder uji): peluncuran pertama 8 dtk (PGlite dibuat + migrasi), masuk otomatis sebagai pemilik; contoh owner (PC #1 Chrome claude.ai → Claude Code CLI di Laptop ASUS & Acer, kode) tampil sebagai 2 kartu sesi; buka ulang 3,7 dtk, data tetap; kunci salah = 404; landing → `/app`; tanpa tombol keluar; server & database berhenti rapi (kode 0). Rilis dipindai: 0 file `.env`, 0 nilai `.env`. 87 tes, tsc, lint lulus
+- [x] Ditemukan & diperbaiki saat QA: electron-builder membuang `node_modules` dan folder bertitik (`.next-desktop`) dari `extraResources` → disalin lewat hook `afterPack`; `pid` proses belum ada sebelum spawn; server standalone menyebut dirinya `localhost` → redirect relatif + jendela dikembalikan ke 127.0.0.1
+- [ ] Izin owner untuk push perubahan ini (tanpa migrasi Neon; installer tidak masuk git)
 
 ---
 

@@ -86,6 +86,7 @@ export function AppShell({
   homeHref = "/app",
   caption,
   search = true,
+  canSignOut = true,
 }: {
   user: ShellUser;
   permissions: Permission[];
@@ -95,6 +96,8 @@ export function AppShell({
   homeHref?: string;
   caption?: string;
   search?: boolean;
+  /** False in the desktop app, which signs its owner in by itself. */
+  canSignOut?: boolean;
 }) {
   const { t } = useI18n();
   const pathname = usePathname();
@@ -211,10 +214,12 @@ export function AppShell({
                         {t.dynamic(item.labelKey)}
                       </Link>
                     ))}
-                    <button type="button" onClick={signOut} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger-ink hover:bg-danger-soft">
-                      <LogOut className="size-4" />
-                      {t("nav.signOut")}
-                    </button>
+                    {canSignOut ? (
+                      <button type="button" onClick={signOut} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger-ink hover:bg-danger-soft">
+                        <LogOut className="size-4" />
+                        {t("nav.signOut")}
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
               </div>

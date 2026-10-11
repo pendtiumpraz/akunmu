@@ -1,0 +1,20 @@
+{
+  "actualSize": "Ukuran asli",
+  "databaseFailed": "Database di komputer ini tidak bisa dibuka.",
+  "errorTitle": "AkunMu tidak bisa dibuka",
+  "fullScreen": "Layar penuh",
+  "logsAt": "Rinciannya ada di folder log:",
+  "menuHelp": "Bantuan",
+  "menuView": "Tampilan",
+  "openData": "Buka folder data",
+  "openLogs": "Buka folder log",
+  "reload": "Muat ulang",
+  "serverFailed": "Server AkunMu tidak menyala.",
+  "signInLoop": "AkunMu tidak bisa memasukkanmu.",
+  "starting": "Menyiapkan AkunMu…",
+  "stopped": "Sebagian AkunMu berhenti tiba-tiba.",
+  "stoppedTitle": "AkunMu berhenti",
+  "version": "AkunMu {version}",
+  "zoomIn": "Perbesar",
+  "zoomOut": "Perkecil"
+}

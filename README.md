@@ -81,3 +81,25 @@ Code is English only (guarded by `tests/unit/code-language.test.ts`). Every user
 ## Deployment (Vercel)
 
 Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED` and `APP_SECRET` in the project's environment. `vercel-build` runs the migrations, then `next build`.
+
+## Desktop app (Windows)
+
+`desktop/` packages the same app as a Windows program that works offline, with its own database on the computer. It shares nothing with the web version.
+
+- **How it runs.** The Electron shell (`desktop/src/main.ts`) starts two processes:
+  - the database (`desktop/src/db-host.ts`): PGlite, which is PostgreSQL in WebAssembly, migrated with `drizzle/migrations` on every start;
+  - the app's Next.js standalone server, on free ports at `127.0.0.1`.
+
+  It then opens a window on the app with a key made for that launch. The first launch creates the owner and the workspace, and there is no password (`src/modules/desktop`, `src/app/desktop/start`).
+- **Data.** Everything lives in `%APPDATA%\AkunMu`:
+  - `database\`: back this folder up while AkunMu is closed;
+  - `secret.json`: the key that encrypts stored AI keys, itself protected by Windows (DPAPI);
+  - `logs\akunmu.log`.
+
+  Uninstalling keeps this folder. `AKUNMU_DATA_DIR` points the app at another folder.
+- **AI.** Add your own key under Settings → AI.
+- **Build.** From `desktop/`:
+  1. Run `npm install`, then `node node_modules/electron/install.js` once.
+  2. Run `node scripts/build.mjs`.
+
+  The script runs `next build` with `AKUNMU_DESKTOP=1` into `.next-desktop` and stages it in `desktop/app`. It stops if any `.env` file or `.env` value would ship. It then writes the installer and a zip to `desktop/release/`. The program is not code-signed yet, so Windows SmartScreen asks for confirmation on the first run.

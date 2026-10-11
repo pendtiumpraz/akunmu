@@ -91,6 +91,11 @@ Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
 **2026-10-11 (setelah push `5f8e5f7`)**
 > harusnya treenya dari claude.ai nyambung ke banyak claude code / claude cli di keterangan device mana gitu karena multi session, bukan berhenti di claude code lalu tree device lain buka claude code langsung,
 
+**2026-10-11 (setelah push `3bc6277`)**
+> untuk yang akunmu bisa buatkan versi desktop exenya kah? kayaknya menarik pakai sqlite kan yaa dekstopnya??
+
+Pilihan owner atas usulan AI: database desktop **PGlite** (Postgres tertanam; skema, migrasi, dan RLS dipakai apa adanya) — bukan SQLite; data desktop **terpisah dan offline** (tidak sinkron dengan versi web).
+
 ---
 
 ## ✅ Approval & Feedback
@@ -99,3 +104,4 @@ Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
 |---|---|---|
 | 2026-10-11 00:15 | 00–01 Kickoff | Instruksi build langsung (stack sama EventMu, loop-v5, agentic sama persis) |
 | 2026-10-11 00:18 | UI | Harus beda dari EventMu |
+| 2026-10-11 | Fase 08 Desktop | Versi `.exe`: PGlite (bukan SQLite), data terpisah & offline |

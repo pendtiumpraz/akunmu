@@ -129,7 +129,7 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
         }
       }
       const { width, height } = element.getBoundingClientRect();
-      const readable = width < 640 ? 0.55 : 0.8;
+      const readable = width < 640 ? 0.55 : 0.75;
       const fits = Math.min((width - padding.left - padding.right) / layout.width, (height - padding.top - padding.bottom) / layout.height);
       if (fits >= readable) void fitView({ padding: inPixels(padding), maxZoom: 1, duration: 300 });
       else void setViewport({ ...START, zoom: readable }, { duration: 300 });

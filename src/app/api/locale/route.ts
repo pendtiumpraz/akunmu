@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { publicRoute } from "@/server/route";
-import { isProduction } from "@/shared/env";
+import { secureCookies } from "@/shared/env";
 import { readJson } from "@/shared/http/request";
 import { ok } from "@/shared/http/respond";
 import { parseWith } from "@/shared/http/validation";
@@ -16,7 +16,7 @@ export const POST = publicRoute(async ({ request, i18n }) => {
   cookieStore.set(LOCALE_COOKIE, locale, {
     path: "/",
     sameSite: "lax",
-    secure: isProduction(),
+    secure: secureCookies(),
     maxAge: 365 * 86_400,
   });
   return ok({ locale }, i18n.t("api.localeChanged"));

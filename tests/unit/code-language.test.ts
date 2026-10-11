@@ -17,7 +17,7 @@ const INDONESIAN_WORDS = [
 ];
 
 const ROOT = path.resolve(import.meta.dirname, "..", "..");
-const SCANNED = ["src", "scripts", "tests"];
+const SCANNED = ["src", "scripts", "tests", path.join("desktop", "src"), path.join("desktop", "scripts")];
 const ALLOWED = new Set([path.join("tests", "unit", "code-language.test.ts")]);
 
 function sourceFiles(directory: string): string[] {

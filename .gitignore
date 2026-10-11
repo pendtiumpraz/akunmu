@@ -6,6 +6,13 @@ node_modules/
 out/
 next-env.d.ts
 
+# Desktop build (desktop/scripts/build.mjs): the desktop server build, the shell's packages and outputs
+.next-desktop/
+desktop/node_modules/
+desktop/dist/
+desktop/app/
+desktop/release/
+
 # Environment and secrets (never commit)
 .env
 .env.*

@@ -19,6 +19,8 @@ type Loaded = {
   usage: { requests: number; limit: number | null; source: TenantAiMode };
   platformLimit: number;
   presets: AiPreset[];
+  /** The desktop app: no AkunMu AI, only the workspace's own key. */
+  ownOnly: boolean;
 };
 type Draft = ProvidersValue & { mode: TenantAiMode };
 
@@ -37,7 +39,7 @@ export function AiSettings() {
       </Card>
     );
   }
-  const { usage, platformLimit, presets } = loaded.data;
+  const { usage, platformLimit, presets, ownOnly } = loaded.data;
   const value: Draft = draft ?? { ...loaded.data.config, providers: loaded.data.config.providers.map((provider) => ({ ...provider, apiKey: "" })) };
 
   const save = async () => {
@@ -67,9 +69,9 @@ export function AiSettings() {
             <Sparkles className="size-5 text-accent" />
             {t("ai.tenantTitle")}
           </h2>
-          <p className="mt-1 text-sm text-muted">{t("ai.tenantSubtitle")}</p>
+          <p className="mt-1 text-sm text-muted">{ownOnly ? t("ai.tenantSubtitleOwnOnly") : t("ai.tenantSubtitle")}</p>
           <p className="mt-2 text-sm font-medium text-ink">
-            {usage.limit !== null
+            {usage.limit !== null && !ownOnly
               ? t("ai.usage", { used: format.number(usage.requests), limit: format.number(usage.limit) })
               : t("ai.usageOwn", { used: format.number(usage.requests) })}
           </p>
@@ -78,7 +80,7 @@ export function AiSettings() {
           {t("common.save")}
         </Button>
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("ai.tenantTitle")}>
+      <div className={cn("mt-5 grid gap-3 sm:grid-cols-2", ownOnly && "hidden")} role="radiogroup" aria-label={t("ai.tenantTitle")}>
         {modes.map((option) => (
           <button
             key={option.mode}

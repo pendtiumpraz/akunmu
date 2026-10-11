@@ -211,6 +211,7 @@
     "statusPending": "Menunggu persetujuan",
     "statusRunning": "Berjalan",
     "tenantSubtitle": "Asisten memakai AI AkunMu sesuai kuota paketmu, atau kunci API milikmu sendiri.",
+    "tenantSubtitleOwnOnly": "Di komputer ini asisten memakai kunci API milikmu sendiri dari penyedia AI.",
     "tenantTitle": "AI",
     "test": "Uji koneksi",
     "testFailed": "Gagal: {error}",
@@ -301,6 +302,10 @@
     "search": "Cari",
     "trash": "Tempat sampah",
     "trashEmpty": "Tempat sampah kosong."
+  },
+  "desktop": {
+    "ownerName": "Pemilik",
+    "workspaceName": "Pribadi"
   },
   "devices": {
     "addTitle": "Tambah perangkat",

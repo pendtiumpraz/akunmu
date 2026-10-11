@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { readStaffSession } from "@/modules/users/session";
+import { isDesktop } from "@/shared/env";
 import { getI18n } from "@/shared/i18n/server";
 import { ButtonLink } from "@/shared/ui/button";
 import { LocaleSwitcher } from "@/shared/ui/locale-switcher";
@@ -109,6 +111,8 @@ function Feature({ icon: Icon, color, title, body }: { icon: LucideIcon; color: 
 
 /** The public landing page: the account trees, how they grow, a tour of the app, and why it never holds passwords. */
 export default async function LandingPage() {
+  // The desktop app has no public pages: it opens on the trees.
+  if (isDesktop()) redirect("/app");
   const [{ t, locale }, staff] = await Promise.all([getI18n(), readStaffSession()]);
   const home = staff ? (staff.tenantId === null ? "/platform" : "/app") : null;
   const shots = SHOT_LOCALES.has(locale) ? locale : "en";
