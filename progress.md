@@ -13,7 +13,7 @@
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 08 terpush; Fase 09 commit lokal, menunggu "migrate dan push" |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 terpush + Neon `0003`; menunggu rilis GitHub `v0.1.0` untuk tautan unduh desktop |
 
 ---
 
@@ -94,7 +94,7 @@
 - [x] Landing: tombol Windows & Linux di hero, menu "Unduh", bagian unduhan (3 kartu, macOS belum tersedia); catatan hero diperbarui ("Ekstensi browser opsional")
 - [x] Paket desktop: `--win --linux`, nama aset tanpa versi (`AkunMu-Setup-x64.exe`, `AkunMu-win-x64.zip`, `AkunMu-linux-x64.tar.gz`) agar tautan "rilis terbaru" tetap; folder data khusus (`AKUNMU_DATA_DIR`) tidak mengambil alih tautan `akunmu://` sistem
 - [x] QA: build web lokal (PGlite) — kunci dibuat di UI, ekstensi asli (Chromium, unpacked) terhubung: kunci salah ditolak, laporan → 4 temuan (profil, Claude tanpa akun, GitHub `galih-qa`, situs lain), terima semua + isi akun Claude; nama komputer disimpan & duplikat 422; menu "Buka di profil" menyerahkan `akunmu://open?browser=chrome&profile=Kerja&host=…&url=https://github.com`; HP 390 px tanpa gulir samping; 0 galat konsol. Paket desktop: pindai komputer ini → 17 temuan diterima (perangkat + 8 profil + akun Google), port 47821: hello 200 + nama komputer, tanpa kunci 401, jalur lain 404; ekstensi asli melapor ke desktop dan menyimpan nama komputer
-- [ ] Izin owner: migrasi Neon `0003` (dijalankan otomatis oleh `vercel-build` saat push) + push
+- [x] Izin owner ("migrate dan push", 11 Okt): migrasi `0003` diterapkan di Neon + diverifikasi (4 migrasi; `findings` & `ingest_tokens` RLS ENABLE + FORCE + `tenant_isolation`, hak `akunmu_app` lengkap, tanpa scope 0 baris; `devices.hostname` & `browser_profiles.directory` nullable; data lama tetap: 3 ruang kerja, 5 perangkat, 19 profil, 3 akun, 4 login); push `main` → Vercel
 - [ ] Rilis GitHub `v0.1.0` di `pendtiumpraz/akunmu` berisi 3 aset desktop (tautan unduh mengarah ke "latest release")
 
 ---
@@ -126,3 +126,4 @@
 | 2026-10-11 14:50 | Data | Permintaan owner: 16 profil Chrome ditambahkan di Neon, ruang kerja Pribadi (PC #1: 3 profil; laptop Acer: 2 profil; laptop ASUS: 11 profil; nama profil disamarkan atas permintaan owner) lewat service app (RLS + audit), dicek kering dulu |
 | 2026-10-11 15:20 | Isu | Simpan Pengaturan → AI gagal di produksi (AkunMu & EventMu): tidak ada konfigurasi AI tersimpan di kedua Neon; upsert ke `app_settings` diuji (rollback) dan berhasil; di lokal simpan berhasil → dugaan `APP_SECRET` belum dipasang di Vercel AkunMu; menunggu cek owner |
 | 2026-10-11 16:20 | 09 | Unduh & hubungkan: migrasi `0003`, API ingest, temuan, ekstensi MV3, port & tautan desktop, Buka di profil, Linux, landing; QA web + paket desktop + ekstensi asli; commit lokal, menunggu izin "migrate dan push" |
+| 2026-10-11 16:35 | 09 | Owner: "migrate dan push" → Neon `0003` diterapkan + diverifikasi; push `main` |
