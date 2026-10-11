@@ -80,7 +80,7 @@
 - [x] **Mode tanpa login** (owner: "yg local kosongkan dulu jangan ada user, cuma ada default superadmin dan default user", "kasih mode doang aja di local gak usah login"): peluncuran pertama membuat 2 akun bawaan generik (Pengguna `user@akunmu.local` = admin ruang kerja Pribadi/Personal, Superadmin `superadmin@akunmu.local` = konsol platform), tanpa data dan tanpa nama Windows; menu akun punya "Pindah ke mode superadmin/pengguna" (`/desktop/mode`, hanya dari sesi salah satu akun bawaan); QA paket: mulai sebagai Pengguna, pindah ke konsol & kembali, buka ulang tetap Pengguna dengan data tersimpan
 - [x] QA paket (`win-unpacked\AkunMu.exe`, data di folder uji): peluncuran pertama 8 dtk (PGlite dibuat + migrasi), masuk otomatis sebagai pemilik; contoh owner (PC #1 Chrome claude.ai → Claude Code CLI di Laptop ASUS & Acer, kode) tampil sebagai 2 kartu sesi; buka ulang 3,7 dtk, data tetap; kunci salah = 404; landing → `/app`; tanpa tombol keluar; server & database berhenti rapi (kode 0). Rilis dipindai: 0 file `.env`, 0 nilai `.env`. 87 tes, tsc, lint lulus
 - [x] Ditemukan & diperbaiki saat QA: electron-builder membuang `node_modules` dan folder bertitik (`.next-desktop`) dari `extraResources` → disalin lewat hook `afterPack`; `pid` proses belum ada sebelum spawn; server standalone menyebut dirinya `localhost` → redirect relatif + jendela dikembalikan ke 127.0.0.1
-- [ ] Izin owner untuk push perubahan ini (tanpa migrasi Neon; installer tidak masuk git)
+- [x] Izin owner ("push", 11 Okt): desktop, favicon, mode desktop, pemilih penyedia dipush → Vercel; tanpa migrasi Neon; installer tidak masuk git (dibagikan lewat `Downloads\akunmu-desktop`)
 
 ---
 
