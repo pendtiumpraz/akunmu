@@ -14,10 +14,21 @@ const PLATFORM_NAV: ShellNavItem[] = [
   { href: "/platform/ai", labelKey: "platform.navAi", icon: Sparkles, color: "#EC4899" },
 ];
 
-export function PlatformShell({ user, children }: { user: { name: string; email: string; role: StaffRole }; children: ReactNode }) {
+/** In the desktop app the console is the superadmin mode: no sign-out, and a way back to the user mode. */
+export function PlatformShell({ user, desktop = false, children }: { user: { name: string; email: string; role: StaffRole }; desktop?: boolean; children: ReactNode }) {
   const { t } = useI18n();
   return (
-    <AppShell user={user} permissions={[]} nav={PLATFORM_NAV} footerNav={[]} homeHref="/platform" caption={t("platform.consoleCaption")} search={false}>
+    <AppShell
+      user={user}
+      permissions={[]}
+      nav={PLATFORM_NAV}
+      footerNav={[]}
+      homeHref="/platform"
+      caption={t("platform.consoleCaption")}
+      search={false}
+      canSignOut={!desktop}
+      switchMode={desktop ? "user" : undefined}
+    >
       {children}
     </AppShell>
   );

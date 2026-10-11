@@ -24,6 +24,14 @@
     "nowhere": "Tidak login di mana pun",
     "nowhereHint": "Catat di mana akun ini login.",
     "openDetail": "Buka akun",
+    "providerAdd": "Tambah penyedia",
+    "providerAddNamed": "Tambah “{name}”",
+    "providerNew": "Penyedia baru",
+    "providerNewHint": "Dibuat saat kamu menyimpan. Warna dan domainnya bisa diubah di halaman Penyedia.",
+    "providerNewName": "Nama penyedia baru",
+    "providerNewPlaceholder": "mis. Jira, Mailchimp, portal kantor",
+    "providerNoMatch": "Belum ada penyedia dengan nama itu.",
+    "providerSearch": "Cari penyedia…",
     "restoreBody": "{account} kembali beserta login yang ikut terhapus.",
     "restoreTitle": "Pulihkan akun?",
     "searchPlaceholder": "Cari email, username, label…",
@@ -211,7 +219,6 @@
     "statusPending": "Menunggu persetujuan",
     "statusRunning": "Berjalan",
     "tenantSubtitle": "Asisten memakai AI AkunMu sesuai kuota paketmu, atau kunci API milikmu sendiri.",
-    "tenantSubtitleOwnOnly": "Di komputer ini asisten memakai kunci API milikmu sendiri dari penyedia AI.",
     "tenantTitle": "AI",
     "test": "Uji koneksi",
     "testFailed": "Gagal: {error}",
@@ -304,7 +311,10 @@
     "trashEmpty": "Tempat sampah kosong."
   },
   "desktop": {
-    "ownerName": "Pemilik",
+    "superadminName": "Superadmin",
+    "toSuperadmin": "Pindah ke mode superadmin",
+    "toUser": "Pindah ke mode pengguna",
+    "userName": "Pengguna",
     "workspaceName": "Pribadi"
   },
   "devices": {

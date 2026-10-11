@@ -2,7 +2,6 @@ import { BrowserWindow, Menu, app, dialog, nativeTheme, safeStorage, screen, ses
 import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, type WriteStream } from "node:fs";
 import { createServer } from "node:net";
-import { userInfo } from "node:os";
 import path from "node:path";
 import { format, languageFor, messagesFor, type Language, type Messages } from "./messages";
 
@@ -90,15 +89,6 @@ function appSecret(): string {
   return secret;
 }
 
-/** The Windows user name, for the owner made on the first launch. */
-function ownerName(): string | undefined {
-  try {
-    return userInfo().username.trim() || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const probe = createServer();
@@ -149,7 +139,6 @@ async function startServer(port: number, databasePort: number, key: string): Pro
   const databaseUrl = `postgres://postgres:postgres@${LOCAL_HOST}:${databasePort}/postgres`;
   // The user's own environment, without anything that could point the server elsewhere.
   const { NODE_OPTIONS: _options, ...inherited } = process.env;
-  const owner = ownerName();
   const child = utilityProcess.fork(path.join(serverDir, "server.js"), [], {
     cwd: serverDir,
     serviceName: "AkunMu server",
@@ -169,7 +158,6 @@ async function startServer(port: number, databasePort: number, key: string): Pro
       DEFAULT_LOCALE: language,
       AKUNMU_DESKTOP: "1",
       AKUNMU_DESKTOP_TOKEN: key,
-      ...(owner ? { AKUNMU_DESKTOP_OWNER: owner } : {}),
     },
   });
   server = child;

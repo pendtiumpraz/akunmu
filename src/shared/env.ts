@@ -51,11 +51,6 @@ export function desktopToken(): string | undefined {
   return isDesktop() ? read("AKUNMU_DESKTOP_TOKEN") : undefined;
 }
 
-/** The name the desktop owner gets on the first launch (the Windows user name). */
-export function desktopOwnerName(): string | undefined {
-  return read("AKUNMU_DESKTOP_OWNER");
-}
-
 /** Session cookies are Secure everywhere but on the desktop, which is served over http from the same machine. */
 export function secureCookies(): boolean {
   return isProduction() && !isDesktop();

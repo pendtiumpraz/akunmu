@@ -90,14 +90,18 @@ Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED` and `APP_SECRET` in the project's en
   - the database (`desktop/src/db-host.ts`): PGlite, which is PostgreSQL in WebAssembly, migrated with `drizzle/migrations` on every start;
   - the app's Next.js standalone server, on free ports at `127.0.0.1`.
 
-  It then opens a window on the app with a key made for that launch. The first launch creates the owner and the workspace, and there is no password (`src/modules/desktop`, `src/app/desktop/start`).
+  It then opens a window on the app with a key made for that launch, so nobody signs in. The first launch creates an empty workspace and two default people (`src/modules/desktop`):
+  - the user (`user@akunmu.local`, admin of the workspace), which the app opens as;
+  - the superadmin (`superadmin@akunmu.local`, the platform console).
+
+  The user menu switches between these two modes (`src/app/desktop/mode`).
 - **Data.** Everything lives in `%APPDATA%\AkunMu`:
   - `database\`: back this folder up while AkunMu is closed;
   - `secret.json`: the key that encrypts stored AI keys, itself protected by Windows (DPAPI);
   - `logs\akunmu.log`.
 
   Uninstalling keeps this folder. `AKUNMU_DATA_DIR` points the app at another folder.
-- **AI.** Add your own key under Settings → AI.
+- **AI.** Works as on the web: either the superadmin adds providers under Platform → AI, or the user adds their own key under Settings → AI.
 - **Build.** From `desktop/`:
   1. Run `npm install`, then `node node_modules/electron/install.js` once.
   2. Run `node scripts/build.mjs`.

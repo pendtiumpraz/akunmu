@@ -96,6 +96,23 @@ Sama persis dengan EventMu (owner: "technya sama persis seperti event"):
 
 Pilihan owner atas usulan AI: database desktop **PGlite** (Postgres tertanam; skema, migrasi, dan RLS dipakai apa adanya) — bukan SQLite; data desktop **terpisah dan offline** (tidak sinkron dengan versi web).
 
+**2026-10-11 (sore)**
+> untuk eventmu dan akunmu tolong tambahkan favicon ya
+
+> buat penyedia / provider yang di connect itu bisa ditambahkan selain milik kita, yang pilih penyedia itu, dan tolong jadikan dropdown select search, ada + tambah provider di paling bawah select, dan keluar modal untuk tambah profider gitu?
+> atau keluar field baru tambah profider?
+> lebih masuk akal kalau cukup keluar field baru penambahan profider?
+
+> bantu saya menambahkan di [akun] pribadi, di PC #1 ada chrome session [3 profil] (ini udah ada), tambahkan profile chrome, [3 profil], lalu di laptop privasimu acer tambahkan chrome profile [2 profil], lalu tambahkan di asus laptop profile chrome, [11 profil]
+
+> yg local kosongkan dulu jangan ada user, cuma ada default superadmin dan default user aja gpp
+> kasih mode doang aja di local gak usah login kan??
+> yang dekstop maksudku gak perlu login kan?
+
+> aku simpan ini malah terjadi kesalahan [Pengaturan → AI, BYOK Anthropic, Simpan]
+> di eventmu dan di akunmu masih error semua kayaknya
+> coba cek
+
 ---
 
 ## ✅ Approval & Feedback

@@ -24,6 +24,14 @@
     "nowhere": "Not signed in anywhere",
     "nowhereHint": "Record where this account is signed in.",
     "openDetail": "Open account",
+    "providerAdd": "Add a provider",
+    "providerAddNamed": "Add “{name}”",
+    "providerNew": "New provider",
+    "providerNewHint": "Made when you save. Its color and domain can be changed on the Providers page.",
+    "providerNewName": "The new provider's name",
+    "providerNewPlaceholder": "e.g. Jira, Mailchimp, the office portal",
+    "providerNoMatch": "No provider by that name yet.",
+    "providerSearch": "Search providers…",
     "restoreBody": "{account} comes back with the sign-ins deleted with it.",
     "restoreTitle": "Restore account?",
     "searchPlaceholder": "Search email, username, label…",
@@ -211,7 +219,6 @@
     "statusPending": "Awaiting approval",
     "statusRunning": "Running",
     "tenantSubtitle": "The assistant uses AkunMu's AI within your plan's quota, or your own API key.",
-    "tenantSubtitleOwnOnly": "On this computer the assistant uses your own API key from an AI provider.",
     "tenantTitle": "AI",
     "test": "Test connection",
     "testFailed": "Failed: {error}",
@@ -304,7 +311,10 @@
     "trashEmpty": "The trash is empty."
   },
   "desktop": {
-    "ownerName": "Owner",
+    "superadminName": "Superadmin",
+    "toSuperadmin": "Switch to superadmin mode",
+    "toUser": "Switch to user mode",
+    "userName": "User",
     "workspaceName": "Personal"
   },
   "devices": {

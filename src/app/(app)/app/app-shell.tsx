@@ -1,9 +1,10 @@
 "use client";
 
-import { AtSign, Boxes, ChevronDown, Laptop, LogOut, Search, Settings, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AtSign, Boxes, ChevronDown, Laptop, LogOut, Search, Settings, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import type { DesktopMode } from "@/modules/desktop/service";
 import type { Permission } from "@/modules/users/permissions";
 import type { StaffRole } from "@/modules/users/roles";
 import { api } from "@/shared/http/client";
@@ -87,6 +88,7 @@ export function AppShell({
   caption,
   search = true,
   canSignOut = true,
+  switchMode,
 }: {
   user: ShellUser;
   permissions: Permission[];
@@ -96,8 +98,10 @@ export function AppShell({
   homeHref?: string;
   caption?: string;
   search?: boolean;
-  /** False in the desktop app, which signs its owner in by itself. */
+  /** False in the desktop app, which signs its people in by itself. */
   canSignOut?: boolean;
+  /** The desktop app's other mode, offered in the user menu (src/app/desktop/mode). */
+  switchMode?: DesktopMode;
 }) {
   const { t } = useI18n();
   const pathname = usePathname();
@@ -214,6 +218,16 @@ export function AppShell({
                         {t.dynamic(item.labelKey)}
                       </Link>
                     ))}
+                    {switchMode ? (
+                      // A full page load: the route switches the session and redirects.
+                      <a
+                        href={`/desktop/mode?to=${switchMode}`}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-subtle"
+                      >
+                        <ArrowLeftRight className="size-4 text-accent" />
+                        {switchMode === "superadmin" ? t("desktop.toSuperadmin") : t("desktop.toUser")}
+                      </a>
+                    ) : null}
                     {canSignOut ? (
                       <button type="button" onClick={signOut} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-danger-ink hover:bg-danger-soft">
                         <LogOut className="size-4" />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { requirePlatformPage } from "@/server/staff-page";
+import { isDesktop } from "@/shared/env";
 import { getI18n } from "@/shared/i18n/server";
 import { PlatformShell } from "./platform-shell";
 
@@ -11,5 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PlatformLayout({ children }: { children: ReactNode }) {
   const staff = await requirePlatformPage();
-  return <PlatformShell user={{ name: staff.user.name, email: staff.user.email, role: staff.user.role }}>{children}</PlatformShell>;
+  return (
+    <PlatformShell user={{ name: staff.user.name, email: staff.user.email, role: staff.user.role }} desktop={isDesktop()}>
+      {children}
+    </PlatformShell>
+  );
 }

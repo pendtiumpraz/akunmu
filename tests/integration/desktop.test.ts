@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DESKTOP_OWNER_EMAIL, desktopOwner } from "@/modules/desktop/service";
+import { DESKTOP_SUPERADMIN_EMAIL, DESKTOP_USER_EMAIL, desktopHome, desktopPeople } from "@/modules/desktop/service";
 import { findTenantById } from "@/modules/tenants/repository";
 import { updateStaff } from "@/modules/users/service";
 import { asPlatform, inTenant } from "@/shared/db";
@@ -15,22 +15,28 @@ afterEach(async () => {
   await database.close();
 });
 
-describe("the desktop owner", () => {
-  it("is made with an active workspace on the first launch and found again on the next ones", async () => {
-    const owner = await desktopOwner({ name: "galih", workspace: "Personal" });
-    expect(owner).toMatchObject({ name: "galih", email: DESKTOP_OWNER_EMAIL, role: "admin", isActive: true });
-    expect(owner.tenantId).not.toBeNull();
-    const tenant = await asPlatform(() => findTenantById(owner.tenantId as number));
+const DEFAULTS = { userName: "User", superadminName: "Superadmin", workspace: "Personal" };
+
+describe("the desktop app's two people", () => {
+  it("are made on the first launch (the user with an active workspace, the superadmin on the platform), once", async () => {
+    const people = await desktopPeople(DEFAULTS);
+    expect(people.user).toMatchObject({ name: "User", email: DESKTOP_USER_EMAIL, role: "admin", isActive: true });
+    expect(people.user.tenantId).not.toBeNull();
+    expect(people.superadmin).toMatchObject({ name: "Superadmin", email: DESKTOP_SUPERADMIN_EMAIL, role: "admin", tenantId: null });
+    const tenant = await asPlatform(() => findTenantById(people.user.tenantId as number));
     expect(tenant).toMatchObject({ name: "Personal", status: "active" });
 
-    const again = await desktopOwner({ name: "someone else", workspace: "Another" });
-    expect(again.id).toBe(owner.id);
+    const again = await desktopPeople({ userName: "someone", superadminName: "else", workspace: "Another" });
+    expect([again.user.id, again.superadmin.id]).toEqual([people.user.id, people.superadmin.id]);
+    expect([desktopHome("user"), desktopHome("superadmin")]).toEqual(["/app", "/platform"]);
   });
 
-  it("is found by role, so changing the address in Settings keeps the same workspace", async () => {
-    const owner = await desktopOwner({ name: "galih", workspace: "Personal" });
-    await inTenant(owner.tenantId as number, () => updateStaff(owner.id, { email: "galih@example.com" }, owner.id));
-    const again = await desktopOwner({ name: "galih", workspace: "Personal" });
-    expect(again).toMatchObject({ id: owner.id, email: "galih@example.com" });
+  it("are found by role, so changing their addresses in Settings keeps the same people", async () => {
+    const people = await desktopPeople(DEFAULTS);
+    await inTenant(people.user.tenantId as number, () => updateStaff(people.user.id, { email: "galih@example.com" }, people.user.id));
+    await asPlatform(() => updateStaff(people.superadmin.id, { email: "admin@example.com" }, people.superadmin.id));
+    const again = await desktopPeople(DEFAULTS);
+    expect(again.user).toMatchObject({ id: people.user.id, email: "galih@example.com" });
+    expect(again.superadmin).toMatchObject({ id: people.superadmin.id, email: "admin@example.com" });
   });
 });
