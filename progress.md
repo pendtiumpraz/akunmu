@@ -67,7 +67,7 @@
 - [x] **Sesi menggantung dari login asalnya** (owner: "dari claude.ai nyambung ke banyak claude code / claude cli di keterangan device mana … bukan … tree device lain buka claude code langsung"): sesi yang diizinkan dari sebuah login (CLI pakai kode, aplikasi pakai link, …) kini tumbuh dari daun login itu sebagai kartu bernama perangkatnya, berapa pun banyaknya dan bisa berantai; perangkat yang semua sesinya diizinkan dari perangkat lain tidak lagi punya pohon sendiri ("Lihat pohonnya" membingkai dan menyorot sesinya di pohon asal); garis putus-putus hanya ke login lain akun itu; batang menampilkan jumlah perangkat lain yang dijangkau
 - [x] Garis tepat di port: animasi tumbuh tidak lagi menggeser node (React Flow mengukur port saat node muncul; sebelumnya ujung garis meleset ±13 px); pembingkaian menyisakan ruang legenda; efek hover batang tak lagi menggeser port
 - [x] QA: 82 tes (6 pohon perangkat: 40 hutan acak dengan rantai/kipas izin, tanpa tumpang tindih, tiap sesi digambar sekali); tangkapan layar terang/gelap/en/HP: 44 node, 13 sesi tumbuh, 0 tumpang tindih, 0 garis lepas dari port, 0 galat browser
-- [ ] Izin owner untuk push perubahan ini
+- [x] Izin owner ("push", 11 Okt): tanpa migrasi baru (Neon tetap `0000`–`0002`); `8a45c46` dipush → Vercel
 
 ---
 
