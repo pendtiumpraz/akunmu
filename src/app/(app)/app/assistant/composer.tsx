@@ -280,7 +280,7 @@ export function Composer({
           <div
             ref={mirror}
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words px-4 pb-2 pt-3.5 text-[15px] leading-6 text-transparent"
+            className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words px-4 pb-1.5 pt-3 text-[15px] leading-6 text-transparent"
           >
             {highlighted.map((part, index) => (pattern && index % 2 === 1 ? <mark key={index} className="rounded bg-accent-soft text-transparent">{part}</mark> : <span key={index}>{part}</span>))}
             {"​"}
@@ -299,10 +299,10 @@ export function Composer({
             onBlur={() => window.setTimeout(() => setTrigger(null), 120)}
             placeholder={t("ai.placeholder")}
             aria-label={t("ai.placeholder")}
-            className="relative block max-h-[200px] w-full resize-none overflow-hidden bg-transparent px-4 pb-2 pt-3.5 text-[15px] leading-6 text-ink placeholder:text-faint focus:outline-none"
+            className="relative block max-h-[200px] w-full resize-none overflow-hidden bg-transparent px-4 pb-1.5 pt-3 text-[15px] leading-6 text-ink placeholder:text-faint focus:outline-none"
           />
         </div>
-        <div className="flex items-center gap-1 px-2.5 pb-2.5">
+        <div className="flex items-center gap-1 px-2 pb-2">
           <button type="button" onClick={() => openMenu("/")} disabled={disabled} title={t("ai.commandsTitle")} aria-label={t("ai.commandsTitle")} className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-subtle hover:text-ink">
             <Slash className="size-4" />
           </button>

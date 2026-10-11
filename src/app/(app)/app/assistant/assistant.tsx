@@ -304,18 +304,19 @@ export function Assistant({ initialConversationId, initialQuestion }: { initialC
 
       {/* Conversation */}
       <section className="flex min-w-0 flex-1 flex-col bg-canvas">
-        <header className="flex items-center gap-2 border-b border-line bg-surface/85 px-4 py-2.5 backdrop-blur sm:px-6">
+        <header className="flex items-center gap-2 border-b border-line bg-surface/85 px-4 py-2 backdrop-blur sm:px-6">
           <button type="button" onClick={() => setHistoryOpen(true)} aria-label={t("ai.chats")} className="inline-flex size-9 items-center justify-center rounded-lg text-ink-2 hover:bg-sunken lg:hidden">
             <History className="size-5" />
           </button>
-          <p className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink">{active?.title || t("ai.title")}</p>
+          {/* On phones the model picker needs the room; the page's own title stays in the top bar. */}
+          <p className={cn("min-w-0 flex-1 truncate text-[15px] font-semibold text-ink", models.length > 1 && "max-sm:invisible")}>{active?.title || t("ai.title")}</p>
           {models.length > 1 ? (
             <select
               value={model ?? ""}
               onChange={(event) => setModel(event.target.value || null)}
               disabled={busy}
               aria-label={t("ai.model")}
-              className="h-8 max-w-44 rounded-lg border border-line bg-surface px-2 text-xs font-medium text-ink-2 focus:border-accent focus:outline-none"
+              className="h-8 min-w-0 max-w-44 rounded-lg border border-line bg-surface px-2 text-xs font-medium text-ink-2 focus:border-accent focus:outline-none"
             >
               <option value="">{t("ai.modelDefault")}</option>
               {models.map((option) => (
@@ -326,10 +327,10 @@ export function Assistant({ initialConversationId, initialQuestion }: { initialC
             </select>
           ) : null}
           {currentUsage ? (
-            <span className="flex items-center gap-2 rounded-full bg-surface px-2.5 py-1 text-xs font-medium text-ink-2 ring-1 ring-line" title={t("ai.usageTitle")}>
+            <span className="flex shrink-0 items-center gap-2 rounded-full bg-surface px-2.5 py-1 text-xs font-medium text-ink-2 ring-1 ring-line" title={t("ai.usageTitle")}>
               {currentUsage.limit !== null ? (
                 <>
-                  <span className="relative block h-1.5 w-12 overflow-hidden rounded-full bg-sunken">
+                  <span className="relative hidden h-1.5 w-12 overflow-hidden rounded-full bg-sunken sm:block">
                     <span className={cn("absolute inset-y-0 left-0 rounded-full", quotaPercent >= 90 ? "bg-danger" : "bg-primary")} style={{ width: `${quotaPercent}%` }} />
                   </span>
                   <span className="tabular-nums">
@@ -351,21 +352,25 @@ export function Assistant({ initialConversationId, initialQuestion }: { initialC
           }}
           className="flex-1 overflow-y-auto"
         >
-          <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6">
+          {/* At least as tall as the area, so the first view can sit in its middle. */}
+          <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col space-y-6 px-4 py-4 sm:px-6 sm:py-5">
             {loadingChat && messages.length === 0 ? (
               <div className="space-y-4">
                 <Skeleton className="ml-auto h-10 w-2/3 rounded-2xl" />
                 <Skeleton className="h-24 w-4/5 rounded-2xl" />
               </div>
             ) : messages.length === 0 ? (
-              <div className="pt-6 sm:pt-12">
-                <AssistantAvatar className="size-12 rounded-2xl [&_svg]:size-6" />
-                <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
-                  {t("ai.greeting")} <span className="text-accent">{firstName}</span>
-                </h1>
-                <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-muted">{t("ai.greetingHint")}</p>
+              // The first view fits without scrolling: greeting, a short hint (wider screens) and the starters.
+              <div className="my-auto">
+                <div className="flex items-center gap-3">
+                  <AssistantAvatar className="size-10 rounded-xl [&_svg]:size-5" />
+                  <h1 className="text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
+                    {t("ai.greeting")} <span className="text-accent">{firstName}</span>
+                  </h1>
+                </div>
+                <p className="mt-3 hidden max-w-xl text-sm leading-relaxed text-muted sm:block">{t("ai.greetingHint")}</p>
                 {!context.data ? null : !configured ? (
-                  <div className="mt-6 max-w-xl rounded-2xl border border-line bg-surface p-5 shadow-card">
+                  <div className="mt-5 max-w-xl rounded-2xl border border-line bg-surface p-4 shadow-card">
                     <p className="flex items-center gap-2 font-semibold text-ink">
                       <Settings2 className="size-5 text-muted" />
                       {t("ai.notConfigured")}
@@ -378,19 +383,20 @@ export function Assistant({ initialConversationId, initialQuestion }: { initialC
                     ) : null}
                   </div>
                 ) : (
-                  <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-2 sm:mt-5 sm:grid-cols-2 sm:gap-2.5">
                     {starters.map((starter) => (
                       <button
                         key={starter.id}
                         type="button"
                         onClick={() => void ask(t.dynamic(`ai.starters.${starter.id}`))}
                         disabled={busy}
-                        className="group flex items-start gap-3 rounded-2xl border border-line bg-surface p-4 text-left shadow-card transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-float motion-reduce:hover:translate-y-0"
+                        // On short phones the fourth starter would push the first view into scrolling.
+                        className="group flex items-center gap-3 rounded-xl border border-line bg-surface px-3.5 py-3 text-left shadow-card transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-float motion-reduce:hover:translate-y-0 max-sm:[@media(max-height:700px)]:[&:nth-child(4)]:hidden"
                       >
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent transition group-hover:bg-primary group-hover:text-on-primary">
-                          <starter.icon className="size-[18px]" />
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent transition group-hover:bg-primary group-hover:text-on-primary">
+                          <starter.icon className="size-4" />
                         </span>
-                        <span className="text-sm font-medium leading-snug text-ink">{t.dynamic(`ai.starters.${starter.id}`)}</span>
+                        <span className="text-[13px] font-medium leading-snug text-ink">{t.dynamic(`ai.starters.${starter.id}`)}</span>
                       </button>
                     ))}
                   </div>
@@ -430,10 +436,13 @@ export function Assistant({ initialConversationId, initialQuestion }: { initialC
           </div>
         </div>
 
-        <div className="border-t border-line bg-surface/85 px-4 pb-4 pt-3 backdrop-blur sm:px-6">
+        <div className="border-t border-line bg-surface/85 px-4 pb-2.5 pt-2.5 backdrop-blur sm:px-6">
           <div className="mx-auto w-full max-w-3xl">
             <Composer tools={tools} busy={busy} disabled={!configured} initialText={initialQuestion} onSend={ask} />
-            <p className="mt-2 text-center text-[11px] leading-4 text-faint">{t("ai.disclaimer")}</p>
+            <p className="mt-1.5 text-center text-[11px] leading-4 text-faint">
+              <span className="sm:hidden">{t("ai.disclaimerShort")}</span>
+              <span className="hidden sm:inline">{t("ai.disclaimer")}</span>
+            </p>
           </div>
         </div>
       </section>
