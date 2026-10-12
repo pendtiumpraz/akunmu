@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { requireStaffPage } from "@/server/staff-page";
+import { consentState } from "@/modules/privacy/consents";
 import { tenantById } from "@/modules/tenants/service";
 import { PERMISSIONS, can, type Permission } from "@/modules/users/permissions";
 import { isDesktop } from "@/shared/env";
@@ -17,8 +18,19 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const staff = await requireStaffPage();
   const tenant = await tenantById(staff.tenantId);
   const permissions = (Object.keys(PERMISSIONS) as Permission[]).filter((permission) => can(staff.user.role, permission));
+  // The desktop app keeps everything on the user's own computer: there is no operator to consent to.
+  const consentPending = !isDesktop() && (await consentState(staff.user.id)).needsAcceptance;
   return (
-    <AppShell user={{ name: staff.user.name, email: staff.user.email, role: staff.user.role }} permissions={permissions} caption={tenant?.name} canSignOut={!isDesktop()} switchMode={isDesktop() ? "superadmin" : undefined} desktop={isDesktop()}>
+    <AppShell
+      user={{ name: staff.user.name, email: staff.user.email, role: staff.user.role }}
+      permissions={permissions}
+      caption={tenant?.name}
+      canSignOut={!isDesktop()}
+      switchMode={isDesktop() ? "superadmin" : undefined}
+      desktop={isDesktop()}
+      consentPending={consentPending}
+      myDataHref="/app/settings/data"
+    >
       {children}
     </AppShell>
   );

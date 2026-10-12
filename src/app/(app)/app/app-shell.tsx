@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, AtSign, Boxes, ChevronDown, Laptop, LogOut, Plug, Search, Settings, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AtSign, Boxes, ChevronDown, Fingerprint, Laptop, LogOut, Plug, Scale, Search, Settings, ShieldCheck, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -33,7 +33,9 @@ const NAV: ShellNavItem[] = [
 
 const FOOTER_NAV: ShellNavItem[] = [
   { href: "/app/connect", labelKey: "nav.connect", icon: Plug, color: "#22D3EE", permission: "map.read" },
-  { href: "/app/settings", labelKey: "nav.settings", icon: Settings, color: "#94A3B8", permission: "settings.manage" },
+  { href: "/app/privacy", labelKey: "nav.privacy", icon: ShieldCheck, color: "#818CF8", permission: "privacy.read" },
+  // Everyone reaches Settings: non-admins land on "My data".
+  { href: "/app/settings", labelKey: "nav.settings", icon: Settings, color: "#94A3B8" },
 ];
 
 const ROLE_KEYS: Record<StaffRole, string> = { admin: "roles.admin", editor: "roles.editor", viewer: "roles.viewer" };
@@ -93,6 +95,8 @@ export function AppShell({
   canSignOut = true,
   switchMode,
   desktop = false,
+  consentPending = false,
+  myDataHref,
 }: {
   user: ShellUser;
   permissions: Permission[];
@@ -108,6 +112,10 @@ export function AppShell({
   switchMode?: DesktopMode;
   /** The desktop app: it can open browser profiles of its own computer. */
   desktop?: boolean;
+  /** The privacy policy changed since the user last accepted it: a banner asks them to review it. */
+  consentPending?: boolean;
+  /** Where the user reviews their consent and data ("My data"); none in the platform console. */
+  myDataHref?: string;
 }) {
   const { t } = useI18n();
   const pathname = usePathname();
@@ -224,6 +232,24 @@ export function AppShell({
                         {t.dynamic(item.labelKey)}
                       </Link>
                     ))}
+                    {myDataHref ? (
+                      <Link
+                        href={myDataHref}
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-2 hover:bg-subtle"
+                      >
+                        <Fingerprint className="size-4 text-accent" />
+                        {t("nav.myData")}
+                      </Link>
+                    ) : null}
+                    <Link
+                      href="/legal/privacy"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-2 hover:bg-subtle"
+                    >
+                      <Scale className="size-4 text-muted" />
+                      {t("legal.privacy")}
+                    </Link>
                     {switchMode ? (
                       // A full page load: the route switches the session and redirects.
                       <a
@@ -245,6 +271,16 @@ export function AppShell({
               </div>
             </div>
           </header>
+          {consentPending && myDataHref ? (
+            <div className="print-hidden border-b border-warn-line bg-warn-soft px-3 py-2 text-[13px] text-warn-ink sm:px-5 lg:px-8">
+              <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2">
+                <span>{t("nav.consentPending")}</span>
+                <Link href={`${myDataHref}?tab=consent`} className="font-semibold underline underline-offset-2">
+                  {t("nav.consentReview")}
+                </Link>
+              </div>
+            </div>
+          ) : null}
           <main className="mx-auto max-w-[1440px] px-3 pb-24 pt-5 sm:px-5 md:pb-10 lg:px-8">{children}</main>
         </div>
 

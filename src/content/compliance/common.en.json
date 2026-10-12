@@ -1,0 +1,92 @@
+{
+  "infrastructure": {
+    "app": { "name": "Vercel", "role": "AkunMu application hosting (server functions)" },
+    "database": { "name": "Neon (PostgreSQL)", "role": "AkunMu database" },
+    "ai": { "name": "AI provider", "role": "Text processing by AI models for the assistant" },
+    "client": { "name": "User's device", "role": "Browser extension and AkunMu Desktop (AkunMu Desktop data stays on the user's computer)" }
+  },
+  "location": {
+    "detected": "{place} (detected automatically)",
+    "unknown": "Not known yet — complete it in platform Settings",
+    "unknownPublic": "location being confirmed by the operator",
+    "client": "The user's own device (not a transfer)",
+    "aiProvider": "{provider}: {place}",
+    "aiNone": "No AI provider configured yet",
+    "providerHost": "per the provider's address ({host})"
+  },
+  "regions": {
+    "sin1": "Singapore",
+    "iad1": "Washington, D.C., United States",
+    "cle1": "Cleveland, United States",
+    "pdx1": "Portland, United States",
+    "sfo1": "San Francisco, United States",
+    "hnd1": "Tokyo, Japan",
+    "kix1": "Osaka, Japan",
+    "icn1": "Seoul, South Korea",
+    "hkg1": "Hong Kong",
+    "bom1": "Mumbai, India",
+    "syd1": "Sydney, Australia",
+    "fra1": "Frankfurt, Germany",
+    "cdg1": "Paris, France",
+    "lhr1": "London, United Kingdom",
+    "dub1": "Dublin, Ireland",
+    "arn1": "Stockholm, Sweden",
+    "gru1": "São Paulo, Brazil",
+    "yul1": "Montreal, Canada",
+    "cpt1": "Cape Town, South Africa",
+    "dxb1": "Dubai, United Arab Emirates",
+    "ap-southeast-1": "Singapore",
+    "ap-southeast-2": "Sydney, Australia",
+    "ap-southeast-3": "Jakarta, Indonesia",
+    "ap-northeast-1": "Tokyo, Japan",
+    "ap-south-1": "Mumbai, India",
+    "us-east-1": "Virginia, United States",
+    "us-east-2": "Ohio, United States",
+    "us-west-2": "Oregon, United States",
+    "eu-central-1": "Frankfurt, Germany",
+    "eu-west-2": "London, United Kingdom",
+    "sa-east-1": "São Paulo, Brazil",
+    "eastus2": "Virginia, United States (Azure)",
+    "westus3": "Arizona, United States (Azure)",
+    "germanywestcentral": "Frankfurt, Germany (Azure)"
+  },
+  "aiProviders": {
+    "anthropic": "United States",
+    "openai": "United States",
+    "deepseek": "China",
+    "gemini": "United States",
+    "openrouter": "United States",
+    "groq": "United States"
+  },
+  "retention": {
+    "workspace": "While the workspace is active, until the user deletes it; deleted permanently when the workspace is deleted in Settings → My data.",
+    "findingsOff": "Not set: accepted or ignored findings are kept until deleted. Set a findings retention period in Settings → Privacy.",
+    "findingsDays": "Accepted or ignored findings are deleted automatically {days} days after they were processed.",
+    "signInsOff": "Active sessions are kept while valid; the history of signed-out sessions is kept until deleted. Set a history retention period in Settings → Privacy.",
+    "signInsDays": "Active sessions are kept while valid; signed-out sessions are deleted automatically {days} days after sign-out.",
+    "auditOff": "Not set: audit logs are kept until deleted. Expired attempt counters are deleted automatically every day.",
+    "auditDays": "Audit logs are deleted automatically after {days} days. Expired attempt counters are deleted automatically every day.",
+    "aiOff": "Conversations are kept until their owner deletes them.",
+    "aiDays": "Conversations inactive for {days} days are deleted automatically.",
+    "publicUnset": "Kept until the user deletes it or you ask for deletion."
+  },
+  "transfer": {
+    "none": "No transfer outside Indonesian jurisdiction detected.",
+    "intro": "Data is processed at the locations below. Locations outside Indonesia are transfers of personal data outside Indonesian jurisdiction (UU PDP Art. 56; PP 33/2026 Art. 160–174):",
+    "safeguards": "Safeguards: data processing agreements with providers, encryption in transit (TLS), limiting the data sent, and the controller's assessment of the destination's level of protection.",
+    "outside": "Yes, some data is processed outside Indonesia",
+    "inside": "None detected"
+  },
+  "processor": {
+    "scope": "On the instructions of {count} workspaces (controllers), {processor} processes data for the activity \"{activity}\". Each controller sets the purpose and basis of processing; purpose summary: {purpose}",
+    "instructions": "Processing happens only on the controller's instructions as set out in the Terms of Service (UU PDP Art. 51; PP 33/2026 Art. 139).",
+    "subprocessors": "Subprocessors engaged for this activity (UU PDP Art. 51(4) and (5)):",
+    "security": "Per-workspace isolation with row level security, encryption in transit, encrypted integration keys, role-based access and an audit log.",
+    "controllers": "{count} workspaces use this activity",
+    "records": "{count} records across workspaces"
+  },
+  "status": {
+    "inUse": "In use",
+    "notUsed": "Not used yet"
+  }
+}

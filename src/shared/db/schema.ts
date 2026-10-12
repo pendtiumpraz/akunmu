@@ -9,3 +9,5 @@ export * from "../../modules/audit/schema";
 export * from "../../modules/ai/schema";
 export * from "../../modules/security/schema";
 export * from "../../modules/connect/schema";
+export * from "../../modules/compliance/schema";
+export * from "../../modules/privacy/schema";

@@ -426,7 +426,13 @@ export default async function LandingPage() {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-muted sm:px-6">
           <Logo nameClassName="text-sm" />
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Link href="/legal/privacy" className="font-semibold hover:text-ink">
+              {t("legal.privacy")}
+            </Link>
+            <Link href="/legal/terms" className="font-semibold hover:text-ink">
+              {t("legal.terms")}
+            </Link>
             <LocaleSwitcher />
             <p>{t("landing.footer", { year: String(new Date().getFullYear()) })}</p>
           </div>

@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 09: Unduh & hubungkan` — ekstensi browser, AkunMu Desktop Windows + Linux, buka profil dari web/desktop |
+| **Fase Aktif** | `Fase 10: Kepatuhan privasi` — RoPA, DPIA, insiden, permintaan subjek data, persetujuan, data saya, retensi, pengaturan bertab |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 live: Neon `0003`, rilis desktop `v0.1.0`, asisten tanpa gulir di tampilan awal |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 live; Fase 10 selesai lokal (commit lokal), menunggu izin "migrate dan push" untuk Neon `0004` |
 
 ---
 
@@ -97,6 +97,19 @@
 - [x] Izin owner ("migrate dan push", 11 Okt): migrasi `0003` diterapkan di Neon + diverifikasi (4 migrasi; `findings` & `ingest_tokens` RLS ENABLE + FORCE + `tenant_isolation`, hak `akunmu_app` lengkap, tanpa scope 0 baris; `devices.hostname` & `browser_profiles.directory` nullable; data lama tetap: 3 ruang kerja, 5 perangkat, 19 profil, 3 akun, 4 login); push `main` → Vercel
 - [x] Rilis GitHub `v0.1.0` di `pendtiumpraz/akunmu` (izin owner "ya, push dan buat rilisnya", 11 Okt): `AkunMu-Setup-x64.exe`, `AkunMu-win-x64.zip`, `AkunMu-linux-x64.tar.gz` (build ulang dengan perbaikan asisten); tautan `releases/latest/download/…` → 302 ke berkas, ukuran sama dengan berkas lokal; dibuat lewat API dengan login GitHub yang tersimpan di Git (token tidak dicetak)
 
+### 🔄 Fase 10: Kepatuhan privasi UU PDP & PP 33/2026 (owner 12 Okt: "gas lagi cek apa yang bisa di tambah di eventmu dan akunmu! … full ropa … DPIA … download … pdf dan docx … settings harus ber tab tab")
+- [x] RoPA ruang kerja (6 aktivitas: perangkat, akun, peta login, ekstensi & desktop, asisten, permintaan) + RoPA platform (4 aktivitas pengendali + 6 catatan prosesor, PP 33/2026 Pasal 74 ayat (5)); isi dari katalog, angka langsung, lokasi data terdeteksi; koreksi per bahasa, aktivitas buatan sendiri, tandai ditinjau, kembalikan ke bawaan
+- [x] DPIA (threshold 7 kriteria, kebutuhan & proporsionalitas, register risiko 5×5 + kontrol + residual, langkah, saran PPDP, kesimpulan & persetujuan) dan register insiden (tenggat 3 x 24 jam)
+- [x] Unduh per aktivitas RoPA, per DPIA, per insiden, dan seluruh register: PDF + DOCX, bahasa id/en (mesin dokumen sama dengan EventMu, aksen teal AkunMu)
+- [x] Permintaan subjek data: diajukan pengguna di Pengaturan → Data saya ke admin ruang kerja atau operator; dijawab staf di Privasi (atau dicatat dari email); tenggat 3 x 24 jam; hapus hanya bila sudah ditutup
+- [x] Persetujuan: daftar wajib menyetujui Ketentuan & Kebijakan Privasi (`/legal/terms`, `/legal/privacy`, id/en), kabar produk terpisah & dapat ditarik; bukti per versi kebijakan; spanduk minta tinjau ulang bila versi berubah
+- [x] Data saya: unduh JSON, riwayat persetujuan, permintaan, hapus akun (admin terakhir ditolak), hapus seluruh ruang kerja (satu transaksi; ruang kerja lain aman)
+- [x] Retensi: temuan yang sudah diproses, tempat yang sudah logout, percakapan asisten (ruang kerja); log audit (platform); cron harian `/api/cron/retention` (butuh `CRON_SECRET`)
+- [x] Pengaturan bertab (tanpa gulir panjang): Ruang kerja · Privasi · AI asisten · Pengguna · Data saya; konsol platform: Privasi + Pengaturan (Operator · PPDP & retensi · Lokasi data)
+- [x] Migrasi `0004_compliance` (5 tabel; RLS ENABLE + FORCE: `tenant_isolation` untuk 4 tabel, `platform_only` untuk `account_consents`)
+- [x] Tes: 3 berkas baru (kepatuhan, hak subjek data, konten) + terkait; tsc, lint, build lulus; QA visual lokal (PGlite) 39 tangkapan, 0 galat konsol; PDF/DOCX diperiksa
+- [ ] Izin owner "migrate dan push" (Neon `0004`), lalu `CRON_SECRET` di Vercel AkunMu
+
 ---
 
 ## Issue & Blocker
@@ -133,3 +146,4 @@
 | 2026-10-11 18:10 | 09 | Owner: "update juga rilis desktopnya biar ekstensinya versi panel" → build desktop ulang (ekstensi 0.1.1 panel samping dibundel), 3 aset rilis `v0.1.0` diganti (nama sama, tautan tetap), catatan rilis diperbarui; ukuran di tautan terbaru = build baru |
 | 2026-10-11 18:30 | Repo | Lisensi open source **MIT** (owner: "khusus repo apps ini kasih license opensource, MIT" + "lalu push"): `LICENSE` (© 2026 Galih Praz), `license: MIT` di `package.json` & `desktop/package.json`, bagian Lisensi di README (logo pihak ketiga tetap berlisensi masing-masing) |
 | 2026-10-11 18:55 | Repo | Riwayat git ditulis ulang (owner: "bener2 diubah aja"): email & nama profil owner disamarkan di semua commit lama (`progress.md`, `user_requirement.md`), selain itu tidak ada yang berubah (isi commit terakhir, pesan, penulis, tanggal sama); force push `main` + tag `v0.1.0` (rilis & aset tetap); hash commit sejak 11 Okt 07.00 berubah, rujukan hash di dokumen disesuaikan |
+| 2026-10-12 18:30 | 10 | Kepatuhan privasi (port dari EventMu, disesuaikan AkunMu): RoPA/DPIA/insiden + unduh PDF/DOCX, permintaan subjek data, persetujuan + halaman legal, data saya (unduh/hapus akun/hapus ruang kerja), retensi + cron, pengaturan bertab; migrasi `0004`; tes + build + QA lokal lulus; commit lokal, menunggu izin "migrate dan push" |

@@ -1,0 +1,92 @@
+{
+  "infrastructure": {
+    "app": { "name": "Vercel", "role": "Hosting aplikasi AkunMu (fungsi server)" },
+    "database": { "name": "Neon (PostgreSQL)", "role": "Basis data AkunMu" },
+    "ai": { "name": "Penyedia AI", "role": "Pemrosesan teks oleh model AI untuk asisten" },
+    "client": { "name": "Perangkat pengguna", "role": "Ekstensi browser dan AkunMu Desktop (data AkunMu Desktop tersimpan lokal di komputer pengguna)" }
+  },
+  "location": {
+    "detected": "{place} (terdeteksi otomatis)",
+    "unknown": "Belum diketahui — lengkapi di Pengaturan platform",
+    "unknownPublic": "lokasi sedang dikonfirmasi operator",
+    "client": "Perangkat milik pengguna (bukan transfer)",
+    "aiProvider": "{provider}: {place}",
+    "aiNone": "Belum ada penyedia AI yang dikonfigurasi",
+    "providerHost": "sesuai alamat penyedia ({host})"
+  },
+  "regions": {
+    "sin1": "Singapura",
+    "iad1": "Washington, D.C., Amerika Serikat",
+    "cle1": "Cleveland, Amerika Serikat",
+    "pdx1": "Portland, Amerika Serikat",
+    "sfo1": "San Francisco, Amerika Serikat",
+    "hnd1": "Tokyo, Jepang",
+    "kix1": "Osaka, Jepang",
+    "icn1": "Seoul, Korea Selatan",
+    "hkg1": "Hong Kong",
+    "bom1": "Mumbai, India",
+    "syd1": "Sydney, Australia",
+    "fra1": "Frankfurt, Jerman",
+    "cdg1": "Paris, Prancis",
+    "lhr1": "London, Inggris",
+    "dub1": "Dublin, Irlandia",
+    "arn1": "Stockholm, Swedia",
+    "gru1": "São Paulo, Brasil",
+    "yul1": "Montreal, Kanada",
+    "cpt1": "Cape Town, Afrika Selatan",
+    "dxb1": "Dubai, Uni Emirat Arab",
+    "ap-southeast-1": "Singapura",
+    "ap-southeast-2": "Sydney, Australia",
+    "ap-southeast-3": "Jakarta, Indonesia",
+    "ap-northeast-1": "Tokyo, Jepang",
+    "ap-south-1": "Mumbai, India",
+    "us-east-1": "Virginia, Amerika Serikat",
+    "us-east-2": "Ohio, Amerika Serikat",
+    "us-west-2": "Oregon, Amerika Serikat",
+    "eu-central-1": "Frankfurt, Jerman",
+    "eu-west-2": "London, Inggris",
+    "sa-east-1": "São Paulo, Brasil",
+    "eastus2": "Virginia, Amerika Serikat (Azure)",
+    "westus3": "Arizona, Amerika Serikat (Azure)",
+    "germanywestcentral": "Frankfurt, Jerman (Azure)"
+  },
+  "aiProviders": {
+    "anthropic": "Amerika Serikat",
+    "openai": "Amerika Serikat",
+    "deepseek": "Tiongkok",
+    "gemini": "Amerika Serikat",
+    "openrouter": "Amerika Serikat",
+    "groq": "Amerika Serikat"
+  },
+  "retention": {
+    "workspace": "Selama ruang kerja aktif, sampai dihapus pengguna; dihapus permanen bila ruang kerja dihapus di Pengaturan → Data saya.",
+    "findingsOff": "Belum ditetapkan: temuan yang sudah diterima atau diabaikan disimpan sampai dihapus. Tetapkan masa simpan temuan di Pengaturan → Privasi.",
+    "findingsDays": "Temuan yang sudah diterima atau diabaikan dihapus otomatis {days} hari setelah diproses.",
+    "signInsOff": "Sesi aktif disimpan selama berlaku; riwayat sesi yang sudah keluar disimpan sampai dihapus. Tetapkan masa simpan riwayat di Pengaturan → Privasi.",
+    "signInsDays": "Sesi aktif disimpan selama berlaku; riwayat sesi yang sudah keluar dihapus otomatis {days} hari setelah keluar.",
+    "auditOff": "Belum ditetapkan: log audit disimpan sampai dihapus. Penghitung percobaan yang kedaluwarsa dihapus otomatis setiap hari.",
+    "auditDays": "Log audit dihapus otomatis setelah {days} hari. Penghitung percobaan yang kedaluwarsa dihapus otomatis setiap hari.",
+    "aiOff": "Percakapan disimpan sampai dihapus penggunanya.",
+    "aiDays": "Percakapan yang tidak aktif selama {days} hari dihapus otomatis.",
+    "publicUnset": "Disimpan sampai dihapus pengguna atau atas permintaan Anda."
+  },
+  "transfer": {
+    "none": "Tidak ada transfer ke luar wilayah hukum Indonesia yang terdeteksi.",
+    "intro": "Data diproses di lokasi berikut. Lokasi di luar Indonesia merupakan transfer Data Pribadi ke luar wilayah hukum Indonesia (UU PDP Pasal 56; PP 33/2026 Pasal 160–174):",
+    "safeguards": "Pelindungan: perjanjian pemrosesan data dengan penyedia, enkripsi saat transit (TLS), pembatasan data yang dikirim, dan penilaian tingkat pelindungan negara tujuan oleh pengendali.",
+    "outside": "Ya, sebagian data diproses di luar Indonesia",
+    "inside": "Tidak terdeteksi"
+  },
+  "processor": {
+    "scope": "Atas perintah {count} ruang kerja (pengendali), {processor} memproses data untuk kegiatan \"{activity}\". Tujuan dan dasar pemrosesan ditetapkan masing-masing pengendali; ringkasan tujuan: {purpose}",
+    "instructions": "Pemrosesan dilakukan hanya berdasarkan perintah pengendali sebagaimana ditetapkan dalam Syarat Layanan (UU PDP Pasal 51; PP 33/2026 Pasal 139).",
+    "subprocessors": "Subprosesor yang dilibatkan untuk kegiatan ini (UU PDP Pasal 51 ayat (4) dan (5)):",
+    "security": "Isolasi data per ruang kerja dengan row level security, enkripsi saat transit, kunci integrasi tersandi, akses berbasis peran, dan log audit.",
+    "controllers": "{count} ruang kerja menggunakan kegiatan ini",
+    "records": "{count} catatan di seluruh ruang kerja"
+  },
+  "status": {
+    "inUse": "Dipakai",
+    "notUsed": "Belum dipakai"
+  }
+}

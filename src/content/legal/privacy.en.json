@@ -1,0 +1,109 @@
+{
+  "title": "Privacy Policy",
+  "updated": "2026-10-12",
+  "intro": "This policy explains how {operator} processes personal data in AkunMu, the map of where your accounts are signed in: as the controller of account data (people who sign in to AkunMu), and as the processor of the sign-in map on the instructions of each workspace. AkunMu never stores passwords, codes, tokens or recovery keys of the accounts you map.",
+  "sections": [
+    {
+      "heading": "1. Roles",
+      "paragraphs": [
+        "For user accounts, sign-up, consent records, security logs and the AI gateway, {operator} is the controller. For the sign-in map of a workspace (devices, browser profiles, accounts and where they are signed in), the workspace is the controller and {operator} is its processor (UU PDP Art. 51). Both keep records of their processing activities (UU PDP Art. 31; PP 33/2026 Art. 74), and every workspace can download its own records from the Privacy menu.",
+        "When you use AkunMu only for your own accounts, that is processing for personal purposes (UU PDP Art. 2(2)); AkunMu gives you the same protections anyway."
+      ]
+    },
+    {
+      "heading": "2. Data we process",
+      "items": [
+        "Accounts: name, email, password (stored only as a bcrypt hash), role, language, last sign-in, sign-in sessions (token hash, times, browser type), consent records and audit log entries.",
+        "The sign-in map, as entered by the workspace or reported by its extension and desktop app: device names, kinds, systems, locations and host names; browser profile names and folders; account identifiers (email, user name or phone) with their labels, notes and two-step verification state; and where each account is signed in.",
+        "Extension and desktop app: the hash of each workspace key, and findings — the domains of sites a browser profile is signed in to and, for some sites, the account name the site states. Cookie values, passwords and page contents never leave the browser.",
+        "Assistant conversations of each user, visible only to that user.",
+        "Data subject requests and their answers.",
+        "Technical data: IP addresses and emails in short-lived attempt counters that protect sign-in and sign-up."
+      ]
+    },
+    {
+      "heading": "3. Purposes and legal bases",
+      "paragraphs": [
+        "We process account data to provide the service under our agreement with you or your workspace (UU PDP Art. 20(2)(b)), to keep it secure as a legitimate interest (Art. 20(2)(f)), and to meet legal obligations (Art. 20(2)(c)). Product news is only sent with your separate consent, which you can withdraw at any time in Settings → My data.",
+        "The sign-in map is processed only to show the workspace where its accounts are signed in, as the workspace instructs. We do not use it for advertising, profiling or any purpose of our own."
+      ]
+    },
+    {
+      "heading": "4. Browser extension and desktop app",
+      "paragraphs": [
+        "The extension reads which sites a browser profile is signed in to from the names of its cookies, and the profile's own account name, and reports only the site domains and account names to your workspace with a key you create. The desktop app looks at the browser profiles of its own computer the same way. In its local mode, the desktop app keeps every record in a database on that computer; nothing is sent to AkunMu's servers.",
+        "Findings wait for the workspace's yes or no before they change the map. You can revoke a key at any time; revoked keys are deleted 30 days later."
+      ]
+    },
+    {
+      "heading": "5. AI features",
+      "paragraphs": [
+        "The assistant sends your question and the parts of the map it needs to the AI provider configured by the platform, or by your workspace with its own key (for example Anthropic). The assistant never changes the map on its own: every change waits for your confirmation on screen. No decision with legal effect is made by AI."
+      ]
+    },
+    {
+      "heading": "6. Cookies and browser storage",
+      "paragraphs": [
+        "AkunMu only uses necessary cookies: the sign-in session and your language choice. Your theme and a few display choices stay in your browser's storage. We use no advertising or analytics cookies."
+      ]
+    },
+    {
+      "heading": "7. Who helps us (subprocessors)",
+      "items": [
+        "Vercel (application hosting).",
+        "Neon (PostgreSQL database).",
+        "The AI provider configured by the platform or by the workspace, for the assistant.",
+        "GitHub, which hosts the downloads of the desktop app and the extension (no map data passes through it)."
+      ]
+    },
+    {
+      "heading": "8. Transfers abroad",
+      "paragraphs": [
+        "Some subprocessors process data outside Indonesia, for example the hosting region of the database and AI providers based in the United States. Every record of processing activities lists these locations. Transfers are protected with agreements with the providers, encryption in transit and limiting the data sent, in line with UU PDP Art. 56 and PP 33/2026 Art. 160–174."
+      ]
+    },
+    {
+      "heading": "9. Security",
+      "paragraphs": [
+        "Each workspace's data is separated in the database with forced row level security, connections are encrypted, AI keys are stored encrypted, passwords, session tokens and workspace keys are only stored as hashes, access follows roles, and changes are recorded in an audit log."
+      ]
+    },
+    {
+      "heading": "10. Retention",
+      "items": [
+        "Accounts: while active; erasing an account or a workspace deletes its data for good.",
+        "The sign-in map: until the workspace deletes it. A workspace can have processed findings, signed-out places and old assistant conversations deleted automatically after a number of days.",
+        "Audit logs: deleted after the period the platform sets. Expired attempt counters and sessions are deleted every day.",
+        "Data subject requests: kept by whoever answered them as the record of how they were handled."
+      ]
+    },
+    {
+      "heading": "11. Your rights",
+      "items": [
+        "Get information about the processing (UU PDP Art. 5), and access and get a copy of your data (Art. 7): Settings → My data → Download my data.",
+        "Have your data corrected (Art. 6), and end the processing and have your data deleted (Art. 8): change it in AkunMu, or erase your account in Settings → My data.",
+        "Withdraw consent (Art. 9), object to automated decisions (Art. 10), and restrict the processing (Art. 11).",
+        "Get your data in a machine-readable format and pass it on (Art. 13): the download is JSON.",
+        "File a request to your workspace's admins or to {operator} in Settings → My data; it is answered within 3 x 24 hours. You can also write to {contact} and complain to the personal data protection authority."
+      ]
+    },
+    {
+      "heading": "12. Personal data breaches",
+      "paragraphs": [
+        "If a breach affects your data, we notify you and the authority in writing within 3 x 24 hours of finding it, with what happened, which data, and what we are doing about it (UU PDP Art. 46; PP 33/2026 Art. 114–117). For a workspace's map, we inform the workspace so it can notify its data subjects."
+      ]
+    },
+    {
+      "heading": "13. Children",
+      "paragraphs": [
+        "AkunMu is meant for adults. A workspace must not record the accounts of children without the consent of their parent or guardian (UU PDP Art. 25)."
+      ]
+    },
+    {
+      "heading": "14. Changes and contact",
+      "paragraphs": [
+        "When this policy changes, the date above changes and AkunMu asks you to review it the next time you open the app. The previous versions you accepted stay in your consent history. Questions: {contact}."
+      ]
+    }
+  ]
+}

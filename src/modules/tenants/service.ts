@@ -169,7 +169,7 @@ async function freeSlug(name: string): Promise<string> {
   return `${base}-${randomToken(3).toLowerCase().replace(/[^a-z0-9]/g, "0")}`;
 }
 
-export async function signUpTenant(input: SignupInput): Promise<{ tenant: TenantRecord; admin: PublicUser }> {
+export async function signUpTenant(input: Pick<SignupInput, "workspace" | "name" | "email" | "password">): Promise<{ tenant: TenantRecord; admin: PublicUser }> {
   if (await findStaffByEmailAnywhere(input.email)) throw validationError("email", "validation.emailTaken");
   const tenant = await createTenant({ slug: await freeSlug(input.workspace), name: input.workspace, contactEmail: input.email, status: "trial" }, null);
   try {

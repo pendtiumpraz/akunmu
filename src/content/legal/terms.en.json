@@ -1,0 +1,86 @@
+{
+  "title": "Terms of Service",
+  "updated": "2026-10-12",
+  "intro": "These terms apply between {operator} and you, or the workspace you use AkunMu for. By creating a workspace or an account you accept them, together with the Privacy Policy.",
+  "sections": [
+    {
+      "heading": "1. The service",
+      "paragraphs": [
+        "AkunMu maps where accounts are signed in: on which devices, in which browser profiles and apps, and from which other sign-in each one grew. It works in the browser, with an optional browser extension and desktop app. AkunMu is not a password manager: it never asks for or keeps passwords, codes, tokens or recovery keys."
+      ]
+    },
+    {
+      "heading": "2. Workspaces and accounts",
+      "items": [
+        "A workspace belongs to the person or organization that created it; its admins decide who joins and with which role.",
+        "Keep your sign-in details to yourself and tell us at {contact} if you think someone else used your account.",
+        "You must be an adult, or act with the consent of your parent or guardian."
+      ]
+    },
+    {
+      "heading": "3. Acceptable use",
+      "items": [
+        "Only map accounts and devices you are entitled to manage, and only record other people's accounts with a lawful basis, such as the device and account policy of your organization.",
+        "Do not put passwords, codes, keys or other secrets in names or notes; AkunMu refuses values that look like them.",
+        "Do not use AkunMu to monitor people secretly, to break into accounts, or to break the law.",
+        "Do not overload, probe or work around the security of the service."
+      ]
+    },
+    {
+      "heading": "4. Processing on the workspace's behalf",
+      "paragraphs": [
+        "For the sign-in map, the workspace is the controller and {operator} is its processor (UU PDP Art. 51). This section is the agreement between them as required by PP 33/2026:"
+      ],
+      "items": [
+        "{operator} processes the map only to provide AkunMu as the workspace instructs, and not for its own purposes.",
+        "People at {operator} who can reach the data are bound to confidentiality, and access is limited to support and security.",
+        "{operator} uses the subprocessors listed in the Privacy Policy and tells workspaces about changes in that policy.",
+        "{operator} helps the workspace answer data subject requests (the workspace's Privacy menu and Settings → My data), keep its records of processing activities and DPIAs, and handle personal data breaches, which it reports to the workspace without delay.",
+        "When the workspace deletes data or itself, the data is deleted for good; the workspace can download its records before that.",
+        "{operator} keeps the security measures described in the Privacy Policy and can show how it meets this agreement."
+      ]
+    },
+    {
+      "heading": "5. AI features",
+      "paragraphs": [
+        "The assistant can answer questions about the map and propose changes; every change waits for your confirmation. AI answers can be wrong: check them before relying on them. A workspace may use AkunMu's AI within its plan's quota, or its own provider key."
+      ]
+    },
+    {
+      "heading": "6. Extension and desktop app",
+      "paragraphs": [
+        "The extension and the desktop app report only what the Privacy Policy describes, with a key the workspace creates and can revoke. Install them only on browsers and computers you are entitled to manage."
+      ]
+    },
+    {
+      "heading": "7. Availability and changes",
+      "paragraphs": [
+        "We work to keep AkunMu available and secure, but cannot promise that it is never interrupted. We may improve or change features; when a change matters to you, we tell you in the app before it takes effect."
+      ]
+    },
+    {
+      "heading": "8. Plans and fees",
+      "paragraphs": [
+        "New workspaces start on a trial. Paid plans, their prices and quotas are shown before you choose them; nothing is charged without your agreement."
+      ]
+    },
+    {
+      "heading": "9. Ending",
+      "paragraphs": [
+        "You can erase your account, or as an admin the whole workspace, at any time in Settings → My data. We may suspend a workspace that breaks these terms or puts others at risk, after telling its admins where possible."
+      ]
+    },
+    {
+      "heading": "10. Liability",
+      "paragraphs": [
+        "AkunMu helps you see where accounts are signed in; signing them out and securing them stays with you and the services those accounts belong to. To the extent the law allows, {operator} is not liable for indirect losses. Nothing in these terms limits rights you have under consumer and personal data protection law."
+      ]
+    },
+    {
+      "heading": "11. Law and contact",
+      "paragraphs": [
+        "These terms are governed by the laws of the Republic of Indonesia. Disputes are settled amicably first; otherwise by the competent court in Indonesia. Questions: {contact}."
+      ]
+    }
+  ]
+}

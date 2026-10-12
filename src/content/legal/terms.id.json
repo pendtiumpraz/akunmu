@@ -1,0 +1,86 @@
+{
+  "title": "Ketentuan Layanan",
+  "updated": "2026-10-12",
+  "intro": "Ketentuan ini berlaku antara {operator} dan Anda, atau ruang kerja tempat Anda memakai AkunMu. Dengan membuat ruang kerja atau akun, Anda menerima ketentuan ini bersama Kebijakan Privasi.",
+  "sections": [
+    {
+      "heading": "1. Layanan",
+      "paragraphs": [
+        "AkunMu memetakan tempat akun-akun login: di perangkat mana, di profil peramban dan aplikasi mana, dan dari login lain mana masing-masing berasal. AkunMu berjalan di peramban, dengan ekstensi peramban dan aplikasi desktop opsional. AkunMu bukan pengelola kata sandi: AkunMu tidak pernah meminta atau menyimpan kata sandi, kode, token, atau kunci pemulihan."
+      ]
+    },
+    {
+      "heading": "2. Ruang kerja dan akun",
+      "items": [
+        "Ruang kerja milik orang atau organisasi yang membuatnya; admin ruang kerja menentukan siapa yang bergabung dan dengan peran apa.",
+        "Jaga kerahasiaan data login Anda dan beri tahu kami di {contact} jika Anda menduga orang lain memakai akun Anda.",
+        "Anda harus sudah dewasa, atau bertindak dengan persetujuan orang tua atau wali Anda."
+      ]
+    },
+    {
+      "heading": "3. Penggunaan yang diperbolehkan",
+      "items": [
+        "Petakan hanya akun dan perangkat yang berhak Anda kelola, dan catat akun orang lain hanya dengan dasar yang sah, misalnya kebijakan perangkat dan akun organisasi Anda.",
+        "Jangan menaruh kata sandi, kode, kunci, atau rahasia lain di nama atau catatan; AkunMu menolak nilai yang terlihat seperti itu.",
+        "Jangan memakai AkunMu untuk memantau orang secara diam-diam, membobol akun, atau melanggar hukum.",
+        "Jangan membebani, menguji tanpa izin, atau mengakali keamanan layanan."
+      ]
+    },
+    {
+      "heading": "4. Pemrosesan atas nama ruang kerja",
+      "paragraphs": [
+        "Untuk peta login, ruang kerja adalah pengendali dan {operator} adalah prosesornya (UU PDP Pasal 51). Bagian ini adalah perjanjian di antara keduanya sebagaimana diwajibkan PP 33/2026:"
+      ],
+      "items": [
+        "{operator} memproses peta hanya untuk menyediakan AkunMu sesuai instruksi ruang kerja, tidak untuk tujuannya sendiri.",
+        "Orang di {operator} yang dapat menjangkau data terikat kewajiban kerahasiaan, dan aksesnya terbatas untuk dukungan dan keamanan.",
+        "{operator} memakai subprosesor yang tercantum di Kebijakan Privasi dan memberi tahu ruang kerja tentang perubahannya di kebijakan itu.",
+        "{operator} membantu ruang kerja menjawab permintaan subjek data (menu Privasi ruang kerja dan Pengaturan → Data saya), menyusun catatan aktivitas pemrosesan dan DPIA, serta menangani kegagalan pelindungan data pribadi, yang dilaporkannya kepada ruang kerja tanpa penundaan.",
+        "Jika ruang kerja menghapus data atau menghapus dirinya, data dihapus secara permanen; ruang kerja dapat mengunduh catatannya sebelum itu.",
+        "{operator} menjaga langkah keamanan yang dijelaskan di Kebijakan Privasi dan dapat menunjukkan cara memenuhi perjanjian ini."
+      ]
+    },
+    {
+      "heading": "5. Fitur AI",
+      "paragraphs": [
+        "Asisten dapat menjawab pertanyaan tentang peta dan mengusulkan perubahan; setiap perubahan menunggu konfirmasi Anda. Jawaban AI bisa keliru: periksa sebelum mengandalkannya. Ruang kerja dapat memakai AI AkunMu dalam kuota paketnya, atau kunci penyedia miliknya sendiri."
+      ]
+    },
+    {
+      "heading": "6. Ekstensi dan aplikasi desktop",
+      "paragraphs": [
+        "Ekstensi dan aplikasi desktop hanya melaporkan apa yang dijelaskan di Kebijakan Privasi, dengan kunci yang dibuat dan dapat dicabut ruang kerja. Pasang hanya di peramban dan komputer yang berhak Anda kelola."
+      ]
+    },
+    {
+      "heading": "7. Ketersediaan dan perubahan",
+      "paragraphs": [
+        "Kami berupaya menjaga AkunMu tetap tersedia dan aman, tetapi tidak dapat menjamin layanan tidak pernah terganggu. Kami dapat menyempurnakan atau mengubah fitur; jika perubahan penting bagi Anda, kami memberi tahu di aplikasi sebelum berlaku."
+      ]
+    },
+    {
+      "heading": "8. Paket dan biaya",
+      "paragraphs": [
+        "Ruang kerja baru dimulai dengan masa uji coba. Paket berbayar, harga, dan kuotanya ditampilkan sebelum Anda memilih; tidak ada tagihan tanpa persetujuan Anda."
+      ]
+    },
+    {
+      "heading": "9. Berakhirnya layanan",
+      "paragraphs": [
+        "Anda dapat menghapus akun Anda, atau sebagai admin seluruh ruang kerja, kapan saja di Pengaturan → Data saya. Kami dapat menangguhkan ruang kerja yang melanggar ketentuan ini atau membahayakan pihak lain, setelah memberi tahu adminnya bila memungkinkan."
+      ]
+    },
+    {
+      "heading": "10. Tanggung jawab",
+      "paragraphs": [
+        "AkunMu membantu Anda melihat tempat akun login; mengeluarkan dan mengamankan akun tetap menjadi tanggung jawab Anda dan layanan pemilik akun itu. Sejauh diizinkan hukum, {operator} tidak bertanggung jawab atas kerugian tidak langsung. Ketentuan ini tidak membatasi hak Anda berdasarkan hukum perlindungan konsumen dan pelindungan data pribadi."
+      ]
+    },
+    {
+      "heading": "11. Hukum dan kontak",
+      "paragraphs": [
+        "Ketentuan ini tunduk pada hukum Republik Indonesia. Perselisihan diselesaikan secara musyawarah terlebih dahulu; jika tidak berhasil, melalui pengadilan yang berwenang di Indonesia. Pertanyaan: {contact}."
+      ]
+    }
+  ]
+}

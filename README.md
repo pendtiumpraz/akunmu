@@ -41,7 +41,10 @@ tenants (workspaces)
 │   └─ accounts           provider + identifier (email, username or phone)
 ├─ sign_ins           account × device × (browser profile | app on the device)
 ├─ ingest_tokens      one browser-extension key per device (only its hash is kept)
-└─ findings           what the extension or AkunMu Desktop saw that the trees lack, waiting for yes or no
+├─ findings           what the extension or AkunMu Desktop saw that the trees lack, waiting for yes or no
+├─ processing_activities · dpia_assessments · privacy_incidents   the privacy records (also the platform's own, tenant_id null)
+└─ privacy_requests   data subject requests to the workspace (or, tenant_id null, to the operator)
+account_consents      proof of consent per user (platform only)
 ```
 
 - One active sign-in per account and place; signing out keeps the row as history.
@@ -53,6 +56,19 @@ tenants (workspaces)
 ## Multi-tenancy and row level security
 
 Every workspace-owned table has a `tenant_id`, and isolation is enforced by **PostgreSQL row level security** (migration `0001_rls`), not only by application code. Each statement runs in a short transaction that switches to the role `akunmu_app` (no RLS bypass) and sets `app.tenant_id` / `app.platform` (`src/shared/db/scope.ts`); the settings are transaction-local, so they never leak through Neon's pooler. Without a scope no workspace rows are visible.
+
+## Privacy compliance (UU PDP and PP 33/2026)
+
+AkunMu keeps its own privacy records and gives every user their rights in the app.
+
+- **Records of processing activities.** `/app/privacy` (admins edit, editors read) lists the workspace's activities: devices, accounts, sign-ins, extension and desktop, assistant, requests. Each record is filled from a catalog (`src/modules/compliance/catalog.ts`, texts in `src/content/compliance/*.json`), live counts and the detected data locations, and can be corrected per language. Custom activities can be added. Every record downloads as PDF or Word, in Indonesian or English, and the whole register as one document (`src/server/documents`, Privasimu's RoPA format).
+- **DPIA.** Activities that meet a high-risk criterion of UU PDP Art. 34(2) need a DPIA, started from the RoPA and a standard risk register (5×5 matrix, controls, residual risk), with PPDP advice and approval; downloadable as PDF or Word.
+- **Breach register.** Incidents with the 3 x 24 hour notification deadline (UU PDP Art. 46), downloadable as PP 33/2026 Art. 116 documentation.
+- **Data subject requests.** Users file requests in Settings → My data, to their workspace's admins or to the operator; staff answer them in the Privacy area (or record one received by email). Each has a 3 x 24 hour deadline.
+- **Consent.** Sign-up requires accepting the Terms and Privacy Policy (`/legal/terms`, `/legal/privacy`, texts in `src/content/legal`); product news is a separate choice. Each change is recorded with the policy version (`POLICY_VERSION`); when it changes, a banner asks users to review it.
+- **My data.** Every user can download a JSON copy of their data, see their consent history, file requests, erase their account, and (the last admin) erase the whole workspace — after typing a confirmation; erasure deletes the rows for good.
+- **Retention.** Workspaces can have processed findings, signed-out places and inactive assistant chats deleted after a number of days; the platform sets how long audit logs are kept. A daily cron (`/api/cron/retention`, `vercel.json`) applies them; it needs `CRON_SECRET`.
+- **Platform.** `/platform/privacy` holds the operator's own register (as controller, plus one processor record per workspace activity, PP 33/2026 Art. 74(5)); `/platform/settings` sets the operator's identity, PPDP, audit log retention and data locations.
 
 ## AI assistant
 
@@ -87,7 +103,7 @@ Code is English only (guarded by `tests/unit/code-language.test.ts`). Every user
 
 ## Deployment (Vercel)
 
-Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED` and `APP_SECRET` in the project's environment. `vercel-build` runs the migrations, then `next build`.
+Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET` and `CRON_SECRET` in the project's environment (optionally `PLATFORM_OPERATOR_NAME` and `PLATFORM_CONTACT_EMAIL`). `vercel-build` runs the migrations, then `next build`.
 
 ## Download & connect
 

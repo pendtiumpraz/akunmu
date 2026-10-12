@@ -29,6 +29,13 @@
       "when": 1791706525324,
       "tag": "0003_connect",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791802790897,
+      "tag": "0004_compliance",
+      "breakpoints": true
     }
   ]
 }

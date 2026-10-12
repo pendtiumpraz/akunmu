@@ -1,0 +1,109 @@
+{
+  "title": "Kebijakan Privasi",
+  "updated": "2026-10-12",
+  "intro": "Kebijakan ini menjelaskan cara {operator} memproses data pribadi di AkunMu, peta tempat akun Anda login: sebagai pengendali data akun (orang yang masuk ke AkunMu), dan sebagai prosesor peta login atas instruksi masing-masing ruang kerja. AkunMu tidak pernah menyimpan kata sandi, kode, token, atau kunci pemulihan akun yang Anda petakan.",
+  "sections": [
+    {
+      "heading": "1. Peran",
+      "paragraphs": [
+        "Untuk akun pengguna, pendaftaran, catatan persetujuan, log keamanan, dan gerbang AI, {operator} adalah pengendali. Untuk peta login sebuah ruang kerja (perangkat, profil peramban, akun, dan tempat akun itu login), ruang kerja adalah pengendali dan {operator} adalah prosesornya (UU PDP Pasal 51). Keduanya mencatat aktivitas pemrosesannya (UU PDP Pasal 31; PP 33/2026 Pasal 74), dan setiap ruang kerja dapat mengunduh catatannya sendiri dari menu Privasi.",
+        "Jika Anda memakai AkunMu hanya untuk akun Anda sendiri, itu pemrosesan untuk kegiatan pribadi (UU PDP Pasal 2 ayat (2)); AkunMu tetap memberi perlindungan yang sama."
+      ]
+    },
+    {
+      "heading": "2. Data yang kami proses",
+      "items": [
+        "Akun: nama, email, kata sandi (hanya disimpan sebagai hash bcrypt), peran, bahasa, login terakhir, sesi login (hash token, waktu, jenis peramban), catatan persetujuan, dan entri log audit.",
+        "Peta login, sebagaimana diisi ruang kerja atau dilaporkan ekstensi dan aplikasi desktopnya: nama, jenis, sistem, lokasi, dan nama host perangkat; nama dan folder profil peramban; pengenal akun (email, nama pengguna, atau nomor telepon) beserta label, catatan, dan status verifikasi dua langkahnya; serta tempat setiap akun login.",
+        "Ekstensi dan aplikasi desktop: hash setiap kunci ruang kerja, dan temuan — domain situs tempat sebuah profil peramban login dan, untuk beberapa situs, nama akun yang dinyatakan situs itu. Nilai cookie, kata sandi, dan isi halaman tidak pernah keluar dari peramban.",
+        "Percakapan asisten setiap pengguna, yang hanya terlihat oleh pengguna itu.",
+        "Permintaan subjek data beserta jawabannya.",
+        "Data teknis: alamat IP dan email dalam penghitung percobaan berumur pendek yang melindungi login dan pendaftaran."
+      ]
+    },
+    {
+      "heading": "3. Tujuan dan dasar pemrosesan",
+      "paragraphs": [
+        "Kami memproses data akun untuk menyediakan layanan berdasarkan perjanjian dengan Anda atau ruang kerja Anda (UU PDP Pasal 20 ayat (2) huruf b), menjaga keamanannya sebagai kepentingan yang sah (huruf f), dan memenuhi kewajiban hukum (huruf c). Kabar produk hanya dikirim dengan persetujuan terpisah dari Anda, yang dapat Anda tarik kapan saja di Pengaturan → Data saya.",
+        "Peta login hanya diproses untuk menunjukkan kepada ruang kerja di mana akun-akunnya login, sesuai instruksi ruang kerja. Kami tidak memakainya untuk iklan, pemprofilan, atau tujuan kami sendiri."
+      ]
+    },
+    {
+      "heading": "4. Ekstensi peramban dan aplikasi desktop",
+      "paragraphs": [
+        "Ekstensi membaca situs mana saja yang login di sebuah profil peramban dari nama cookie-nya, serta nama akun profil itu sendiri, lalu hanya melaporkan domain situs dan nama akun ke ruang kerja Anda dengan kunci yang Anda buat. Aplikasi desktop melihat profil peramban di komputernya sendiri dengan cara yang sama. Dalam mode lokal, aplikasi desktop menyimpan semua catatan di basis data pada komputer itu; tidak ada yang dikirim ke server AkunMu.",
+        "Temuan menunggu jawaban ya atau tidak dari ruang kerja sebelum mengubah peta. Anda dapat mencabut kunci kapan saja; kunci yang dicabut dihapus 30 hari kemudian."
+      ]
+    },
+    {
+      "heading": "5. Fitur AI",
+      "paragraphs": [
+        "Asisten mengirim pertanyaan Anda dan bagian peta yang diperlukan ke penyedia AI yang diatur platform, atau oleh ruang kerja Anda dengan kuncinya sendiri (misalnya Anthropic). Asisten tidak pernah mengubah peta sendiri: setiap perubahan menunggu konfirmasi Anda di layar. Tidak ada keputusan berakibat hukum yang diambil oleh AI."
+      ]
+    },
+    {
+      "heading": "6. Cookie dan penyimpanan peramban",
+      "paragraphs": [
+        "AkunMu hanya memakai cookie yang diperlukan: sesi login dan pilihan bahasa. Tema dan beberapa pilihan tampilan disimpan di penyimpanan peramban Anda. Kami tidak memakai cookie iklan atau analitik."
+      ]
+    },
+    {
+      "heading": "7. Pihak yang membantu kami (subprosesor)",
+      "items": [
+        "Vercel (hosting aplikasi).",
+        "Neon (basis data PostgreSQL).",
+        "Penyedia AI yang diatur platform atau ruang kerja, untuk asisten.",
+        "GitHub, yang menampung unduhan aplikasi desktop dan ekstensi (tidak ada data peta yang melewatinya)."
+      ]
+    },
+    {
+      "heading": "8. Transfer ke luar negeri",
+      "paragraphs": [
+        "Sebagian subprosesor memproses data di luar Indonesia, misalnya region hosting basis data dan penyedia AI yang berbasis di Amerika Serikat. Setiap catatan aktivitas pemrosesan mencantumkan lokasi ini. Transfer dilindungi dengan perjanjian dengan penyedia, enkripsi saat transit, dan pembatasan data yang dikirim, sesuai UU PDP Pasal 56 dan PP 33/2026 Pasal 160–174."
+      ]
+    },
+    {
+      "heading": "9. Keamanan",
+      "paragraphs": [
+        "Data setiap ruang kerja dipisahkan di basis data dengan row level security yang dipaksakan, koneksi dienkripsi, kunci AI disimpan terenkripsi, kata sandi, token sesi, dan kunci ruang kerja hanya disimpan sebagai hash, akses mengikuti peran, dan perubahan dicatat di log audit."
+      ]
+    },
+    {
+      "heading": "10. Masa simpan",
+      "items": [
+        "Akun: selama aktif; menghapus akun atau ruang kerja menghapus datanya secara permanen.",
+        "Peta login: sampai ruang kerja menghapusnya. Ruang kerja dapat mengatur agar temuan yang sudah diproses, tempat yang sudah logout, dan percakapan asisten lama terhapus otomatis setelah sejumlah hari.",
+        "Log audit: dihapus setelah masa yang diatur platform. Penghitung percobaan dan sesi yang kedaluwarsa dihapus setiap hari.",
+        "Permintaan subjek data: disimpan oleh pihak yang menjawabnya sebagai catatan penanganannya."
+      ]
+    },
+    {
+      "heading": "11. Hak Anda",
+      "items": [
+        "Mendapat informasi tentang pemrosesan (UU PDP Pasal 5), serta mengakses dan mendapat salinan data Anda (Pasal 7): Pengaturan → Data saya → Unduh data saya.",
+        "Memperbaiki data Anda (Pasal 6), serta mengakhiri pemrosesan dan menghapus data Anda (Pasal 8): ubah di AkunMu, atau hapus akun Anda di Pengaturan → Data saya.",
+        "Menarik persetujuan (Pasal 9), mengajukan keberatan atas keputusan otomatis (Pasal 10), dan menunda atau membatasi pemrosesan (Pasal 11).",
+        "Mendapat data Anda dalam format yang dapat dibaca mesin dan meneruskannya (Pasal 13): unduhannya berformat JSON.",
+        "Mengajukan permintaan ke admin ruang kerja Anda atau ke {operator} di Pengaturan → Data saya; permintaan dijawab dalam 3 x 24 jam. Anda juga dapat menulis ke {contact} dan mengadu ke lembaga pelindungan data pribadi."
+      ]
+    },
+    {
+      "heading": "12. Kegagalan pelindungan data pribadi",
+      "paragraphs": [
+        "Jika terjadi kegagalan pelindungan yang mengenai data Anda, kami memberi tahu Anda dan lembaga secara tertulis paling lambat 3 x 24 jam sejak diketahui, berisi apa yang terjadi, data apa, dan langkah yang kami ambil (UU PDP Pasal 46; PP 33/2026 Pasal 114–117). Untuk peta sebuah ruang kerja, kami memberi tahu ruang kerja itu agar dapat memberi tahu subjek datanya."
+      ]
+    },
+    {
+      "heading": "13. Anak",
+      "paragraphs": [
+        "AkunMu ditujukan bagi orang dewasa. Ruang kerja tidak boleh mencatat akun anak tanpa persetujuan orang tua atau walinya (UU PDP Pasal 25)."
+      ]
+    },
+    {
+      "heading": "14. Perubahan dan kontak",
+      "paragraphs": [
+        "Jika kebijakan ini berubah, tanggal di atas ikut berubah dan AkunMu meminta Anda meninjaunya saat Anda membuka aplikasi berikutnya. Versi sebelumnya yang Anda setujui tetap ada di riwayat persetujuan Anda. Pertanyaan: {contact}."
+      ]
+    }
+  ]
+}

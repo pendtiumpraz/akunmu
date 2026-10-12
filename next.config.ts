@@ -39,6 +39,12 @@ const nextConfig: NextConfig = {
   // The app lives inside a larger folder with other lockfiles; pin the project root.
   outputFileTracingRoot: import.meta.dirname,
   turbopack: { root: import.meta.dirname },
+  // RoPA, DPIA and incident documents (PDF) embed the Inter fonts read from assets/fonts at run time.
+  outputFileTracingIncludes: Object.fromEntries(
+    ["", "/platform"].flatMap((prefix) =>
+      ["ropa/[key]/document", "register", "dpia/[key]/document", "incidents/[id]/document"].map((path) => [`/api${prefix}/compliance/${path}`, ["./assets/fonts/*.ttf"]]),
+    ),
+  ),
   ...(isDesktopBuild ? { output: "standalone" as const, distDir: ".next-desktop", images: { unoptimized: true } } : {}),
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

@@ -1,17 +1,19 @@
 "use client";
 
 import { Eye, EyeOff, KeyRound, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { api, ApiClientError } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { Button } from "@/shared/ui/button";
 import { Alert } from "@/shared/ui/feedback";
-import { Field, Input } from "@/shared/ui/form-controls";
+import { Checkbox, Field, Input } from "@/shared/ui/form-controls";
 
-type SignupState = { workspace: string; name: string; email: string; password: string };
+/** Accepting the terms and privacy policy is required; product news is a separate choice (PP 33/2026 Art. 33). */
+type SignupState = { workspace: string; name: string; email: string; password: string; acceptTerms: boolean; marketing: boolean };
 
-const EMPTY: SignupState = { workspace: "", name: "", email: "", password: "" };
+const EMPTY: SignupState = { workspace: "", name: "", email: "", password: "", acceptTerms: false, marketing: false };
 
 /** Workspace sign-up: the workspace's name, then the first admin (who is signed in right away). */
 export function SignupForm() {
@@ -78,12 +80,37 @@ export function SignupForm() {
           </button>
         </div>
       </Field>
+      <div className="space-y-3 rounded-lg border border-line bg-surface p-3">
+        <Checkbox
+          checked={state.acceptTerms}
+          onChange={(event) => set("acceptTerms", event.target.checked)}
+          label={
+            <span className="font-normal text-ink-2">
+              {t("signup.acceptBefore")}{" "}
+              <Link href="/legal/terms" target="_blank" className="font-semibold text-accent hover:underline">
+                {t("legal.terms")}
+              </Link>{" "}
+              {t("signup.acceptAnd")}{" "}
+              <Link href="/legal/privacy" target="_blank" className="font-semibold text-accent hover:underline">
+                {t("legal.privacy")}
+              </Link>
+              {t("signup.acceptAfter")}
+            </span>
+          }
+          description={fieldErrors.acceptTerms ? <span className="text-danger-ink">{fieldErrors.acceptTerms}</span> : undefined}
+        />
+        <Checkbox
+          checked={state.marketing}
+          onChange={(event) => set("marketing", event.target.checked)}
+          label={<span className="font-normal text-ink-2">{t("signup.marketing")}</span>}
+        />
+      </div>
       <p className="flex items-start gap-2 rounded-lg bg-accent-soft px-3 py-2.5 text-xs leading-5 text-accent">
         <KeyRound className="mt-0.5 size-3.5 shrink-0" />
         {t("signup.noPasswordsNote")}
       </p>
       {error ? <Alert tone="danger">{error}</Alert> : null}
-      <Button type="submit" size="lg" className="w-full" loading={loading} icon={loading ? undefined : <UserPlus className="size-5" />}>
+      <Button type="submit" size="lg" className="w-full" loading={loading} disabled={!state.acceptTerms} icon={loading ? undefined : <UserPlus className="size-5" />}>
         {t("signup.submit")}
       </Button>
     </form>

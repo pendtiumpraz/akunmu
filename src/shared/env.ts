@@ -63,3 +63,34 @@ export function secureCookies(): boolean {
 export function desktopAgentAddress(): string | null {
   return isDesktop() ? (read("AKUNMU_AGENT_ADDRESS") ?? null) : null;
 }
+
+/** Name of the company that operates AkunMu, used in the legal documents and compliance records. */
+export function platformOperatorName(): string {
+  return read("PLATFORM_OPERATOR_NAME") ?? "AkunMu";
+}
+
+/** Address for legal and privacy questions shown in the legal documents (null until configured). */
+export function platformContactEmail(): string | null {
+  return read("PLATFORM_CONTACT_EMAIL") ?? null;
+}
+
+/** Shared secret of the daily cron (Vercel sends it as a Bearer token). */
+export function cronSecret(): string | undefined {
+  return read("CRON_SECRET");
+}
+
+/** Region code of the running Vercel function (e.g. "sin1"), used to describe where data is processed. */
+export function vercelRegion(): string | undefined {
+  return read("VERCEL_REGION");
+}
+
+/** Host name of the database connection, used to detect the database region (never the credentials). */
+export function databaseHost(): string | undefined {
+  const url = read("DATABASE_URL") ?? read("POSTGRES_URL");
+  if (!url) return undefined;
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return undefined;
+  }
+}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LOCALE_CODES } from "../../shared/i18n/locales";
 import { blankToNull } from "../../shared/text";
 import { TENANT_STATUSES } from "./types";
 
@@ -39,14 +40,29 @@ export const platformTenantInputSchema = tenantInputSchema.extend({
   adminEmail: z.preprocess(blankToNull, z.email({ error: "validation.email" }).max(200).nullish()),
 });
 
-/** Self-service sign-up of a workspace and its first admin; the workspace address (slug) follows its name. */
+/** A workspace admin's own edits (Settings → Workspace); status and slug stay with the platform. */
+export const workspaceProfileSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  legalName: z.preprocess(blankToNull, z.string().trim().max(200).nullish()),
+  contactEmail: z.email({ error: "validation.email" }).max(200).transform((value) => value.trim().toLowerCase()),
+  locale: z.preprocess(blankToNull, z.enum(LOCALE_CODES as [string, ...string[]]).nullish()),
+});
+
+/**
+ * Self-service sign-up of a workspace and its first admin; the workspace address (slug) follows its name.
+ * Accepting the terms and privacy policy is required; product news is a separate, optional choice
+ * (PP 33/2026 Art. 33: consent per purpose, never bundled).
+ */
 export const signupSchema = z.object({
   workspace: z.string().trim().min(2).max(120),
   name: z.string().trim().min(1).max(120),
   email: z.email({ error: "validation.email" }).max(200).transform((value) => value.trim().toLowerCase()),
   password: z.string().min(10).max(200),
+  acceptTerms: z.literal(true, { error: "validation.acceptTerms" }),
+  marketing: z.boolean().default(false),
 });
 
 export type TenantUpdateInput = z.infer<typeof tenantUpdateSchema>;
 export type PlatformTenantInput = z.infer<typeof platformTenantInputSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
+export type WorkspaceProfileInput = z.infer<typeof workspaceProfileSchema>;

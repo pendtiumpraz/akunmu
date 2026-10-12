@@ -131,6 +131,8 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 > khusus repo apps ini kasih license opensource, MIT
 > lalu push
 
+> gas lagi cek apa yang bisa di tambah di eventmu dan akunmu! apapun! consent, DSR, dan apapun semua harusnya masalah privacy PP & UU PDP pastikan udah comply, kamu bisa buat full ropa nya di superadmin / admin nya complete ropa dan DPIA nya based on apa yang ada di backend dan frontend tuh ada format ropa & DPIA, dan harus bisa di download per activity untuk ropa, dan per dpia jadi pdf dan docx, dan setelah ini semua fitur yg kurang di settingsnya bisa ditambahi, dan settings harus ber tab tab aja biar mudah UI nya jangan scroll kebawah
+
 ---
 
 ## ✅ Approval & Feedback
@@ -141,3 +143,4 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 | 2026-10-11 00:18 | UI | Harus beda dari EventMu |
 | 2026-10-11 | Fase 08 Desktop | Versi `.exe`: PGlite (bukan SQLite), data terpisah & offline |
 | 2026-10-11 | Fase 09 Unduh & hubungkan | Semua sekaligus; temuan = saran yang disetujui; ekstensi zip dipasang manual; landing: Windows + Linux (macOS belum ada) |
+| 2026-10-12 | Fase 10 Kepatuhan privasi | Lengkapi kepatuhan UU PDP & PP 33/2026 (consent, DSR, dll.); RoPA + DPIA lengkap di admin & superadmin dengan unduh PDF + DOCX per aktivitas/DPIA; tambah fitur pengaturan yang kurang; pengaturan bertab tanpa gulir |
