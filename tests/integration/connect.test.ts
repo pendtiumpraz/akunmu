@@ -20,12 +20,16 @@ import { signInRows } from "@/modules/signins/repository";
 import { openTestDatabase, type TestDatabase } from "../helpers/database";
 import { browserProfile, device, signIn, staffUser } from "../helpers/fixtures";
 
-const { LOCAL } = vi.hoisted(() => ({
+const { LOCAL, CLI } = vi.hoisted(() => ({
   LOCAL: [
     { browser: "chrome", directory: "Profile 1", name: "Work", email: "galih@example.com" },
     { browser: "edge", directory: "Default", name: "Person 1", email: null },
   ],
+  // This computer's Claude Code profiles; empty unless a test puts some here (never the real home folder).
+  CLI: [] as { client: "claude-code"; directory: string; name: string; email: string | null }[],
 }));
+
+vi.mock("@/modules/connect/local-cli", () => ({ localCliProfiles: () => CLI }));
 
 vi.mock("@/modules/connect/local-browsers", () => ({
   thisComputer: () => ({ hostname: "test-pc", system: "windows" }),
@@ -46,6 +50,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  CLI.length = 0;
   await database.close();
 });
 
@@ -163,6 +168,45 @@ describe("desktop scan", () => {
     // What "Open in profile" needs comes with the sign-in.
     const [google] = await signInRows({ deviceId: computer!.id });
     expect(google).toMatchObject({ provider: { domain: "google.com" }, device: { hostname: "test-pc" }, profile: { directory: "Profile 1" } });
+  });
+
+  it("records each Claude Code command as a CLI profile with the Claude account signed in to it", async () => {
+    const admin = await staffUser();
+    const pc = await device(admin.id, { name: "PC", hostname: "test-pc" });
+    // Recorded by hand before the scan: matched by its command, it takes the scanned folder.
+    const typed = await browserProfile(pc.id, admin.id, { browser: "claude-code", name: "claude-personal", directory: "~/.claude-personal" });
+    CLI.push(
+      { client: "claude-code", directory: "C:\\Users\\test\\.claude-work", name: "claude-work", email: "work@example.com" },
+      { client: "claude-code", directory: "C:\\Users\\test\\.claude-personal", name: "claude-personal", email: null },
+    );
+
+    // Browser profiles: 2 profiles + the Google account of "Work"; Claude Code: the new profile + its Claude account.
+    expect(await scanThisComputer()).toEqual({ confirmed: 0, findings: 5, review: 0, profiles: 4 });
+    const cliFindings = (await listFindingsView()).filter((finding) => finding.payload.browser === "claude-code");
+    expect(cliFindings.map((finding) => [finding.kind, finding.payload.profile?.name, finding.payload.identifier ?? null]).sort()).toEqual([
+      ["profile", "claude-work", null],
+      ["sign_in", "claude-work", "work@example.com"],
+    ]);
+    expect(cliFindings.find((finding) => finding.kind === "sign_in")?.payload.provider).toMatchObject({ domain: "claude.ai" });
+    expect(await acceptAllFindings(admin.id)).toEqual({ accepted: 5, waiting: 0 });
+
+    const cliProfiles = (await listProfiles({ deviceId: pc.id })).filter((profile) => profile.browser === "claude-code");
+    expect(cliProfiles.map((profile) => [profile.name, profile.directory]).sort()).toEqual([
+      ["claude-personal", "C:\\Users\\test\\.claude-personal"],
+      ["claude-work", "C:\\Users\\test\\.claude-work"],
+    ]);
+    const claude = (await signInRows({ deviceId: pc.id })).filter((row) => row.provider.domain === "claude.ai");
+    expect(claude).toMatchObject([{ account: { identifier: "work@example.com" }, profile: { name: "claude-work", browser: "claude-code" } }]);
+    expect((await thisComputerView()).cliProfiles.map((profile) => [profile.name, profile.recorded])).toEqual([
+      ["claude-work", true],
+      ["claude-personal", true],
+    ]);
+
+    // A recorded account whose command is signed out now is put up for a check (never signed out by the scan).
+    await signIn(admin.id, { deviceId: pc.id, profileId: typed.id }, { provider: "claude", identifier: "personal@example.com" });
+    expect(await scanThisComputer()).toEqual({ confirmed: 2, findings: 0, review: 1, profiles: 4 });
+    const personal = (await signInRows({ deviceId: pc.id, profileId: typed.id }))[0];
+    expect(personal).toMatchObject({ status: "signed_in", review: true });
   });
 });
 

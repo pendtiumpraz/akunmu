@@ -36,7 +36,8 @@ More accounts: `npm run user:create -- --tenant <slug> --email … --name "…" 
 tenants (workspaces)
 ├─ users              admin · editor · viewer
 ├─ devices            laptop, PC, phone, tablet
-│   └─ browser_profiles   one per browser profile on that device
+│   └─ browser_profiles   one per browser profile on that device, and one per CLI profile (`browser` = claude-code:
+│                         each Claude Code account the device runs, by its command and config folder)
 ├─ providers          26 built in (Google, Microsoft, GitHub, …) plus the workspace's own
 │   └─ accounts           provider + identifier (email, username or phone)
 ├─ sign_ins           account × device × (browser profile | app on the device)
@@ -48,6 +49,7 @@ account_consents      proof of consent per user (platform only)
 ```
 
 - One active sign-in per account and place; signing out keeps the row as history.
+- A device can run several Claude Code accounts side by side, each from its own config folder through its own command (`claude-work` → `CLAUDE_CONFIG_DIR=~/.claude-work`). Each is a CLI profile, a place like a browser profile: the device page lists them under "CLI profiles", the trees draw each as a branch with the Claude account signed in to it.
 - A sign-in can name the sign-in of the same account that let it in (`approved_from_id`, with `approval_method`: code, link, QR or prompt); loops are refused. The trees grow from these links and never let two nodes overlap: by device (`src/modules/signins/device-tree.ts`: device → browser profiles, apps and CLIs → providers → logins, each with the sessions it let in hanging off it, on whichever device they are; the default view) or by account (`src/modules/signins/tree.ts`: account → the devices it was signed in on directly → the devices it reached from there). Both are pure and tested.
 - A sign-in not confirmed for 30 days, or marked for review, shows under "To check".
 - Deleting a device trashes its profiles and sign-ins with the same timestamp; restoring brings them back together. The same goes for accounts and their sign-ins.
@@ -132,7 +134,7 @@ Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET` and `CRON_SECRET` in t
   - `logs\akunmu.log`.
 
   Uninstalling keeps this folder. `AKUNMU_DATA_DIR` points the app at another folder (such a run leaves `akunmu://` links to the installed app). On Linux the folder is `~/.config/AkunMu`.
-- **This computer.** The Connect page knows the computer by its name, scans its Chrome, Edge, Brave and Vivaldi profiles (their `Local State` file; new ones become findings) and opens any of them in one click.
+- **This computer.** The Connect page knows the computer by its name, scans its Chrome, Edge, Brave and Vivaldi profiles (their `Local State` file; new ones become findings) and opens any of them in one click. The same scan finds the Claude Code profiles (`~/.claude` and every `~/.claude-<name>` config folder) and the Claude account signed in to each, read from its `.claude.json` (the email only; the login file `.credentials.json` is never opened). A recorded account whose command is no longer signed in is marked for review.
 - **For the browser extension.** The shell opens a fixed port, `http://127.0.0.1:47821` (or the next free one up to 47825), that forwards only `/api/ingest/*` to the app, so the extension can report to the desktop app as it does to the web. The desktop app also tells the extension the computer's name, which the extension then reports to the web too.
 - **`akunmu://` links.** The app registers itself for them on start (on Linux it writes its own menu entry, `~/.local/share/applications/akunmu.desktop`). "Open in profile" on the web uses them.
 - **AI.** Works as on the web: either the superadmin adds providers under Platform → AI, or the user adds their own key under Settings → AI.

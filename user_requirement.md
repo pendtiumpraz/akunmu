@@ -133,6 +133,11 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 
 > gas lagi cek apa yang bisa di tambah di eventmu dan akunmu! apapun! consent, DSR, dan apapun semua harusnya masalah privacy PP & UU PDP pastikan udah comply, kamu bisa buat full ropa nya di superadmin / admin nya complete ropa dan DPIA nya based on apa yang ada di backend dan frontend tuh ada format ropa & DPIA, dan harus bisa di download per activity untuk ropa, dan per dpia jadi pdf dan docx, dan setelah ini semua fitur yg kurang di settingsnya bisa ditambahi, dan settings harus ber tab tab aja biar mudah UI nya jangan scroll kebawah
 
+**2026-10-13 (Fase 11)** — nama orang lain di nama perintah, alamat email, dan nama profil disamarkan (`[nama …]`, `[email …]`, `[profil …]`)
+> tambahkan di akunmu, sekarang 1 device juga bisa multi account claude-cli, masing masing device, laptop privasimu acer, laptop asus, dan PC #1 dan VPS 1 dan VPS 2 itu semua konek .claude ada akun claude-galih claude-[nama 1] claude-[nama 2] claude-[nama 3] claude-info claude-privasimu-1 claude-privasimu-2 claude-privasimu-galih dan khusus PC #1 ada tambahan akun claude-sainskerta,
+
+> untuk device laptop privasimu acer profile chrome [profil 1] dia connect claude.ai ke akun [email 1] lalu konek ke claude desktop dari device laptop privasimu acer, lalu untuk PC 1 profile chrome [profil 2] itu konek ke claude.ai [email 2] dan konek dengan claude dekstop di PC 1, dan untuk di laptop asus profile [profil 3] dia konek dengan claude.ai dari [email 3] konek ke claude desktop di laptop asus
+
 ---
 
 ## ✅ Approval & Feedback

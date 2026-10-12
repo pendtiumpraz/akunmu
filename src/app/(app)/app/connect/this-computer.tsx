@@ -14,11 +14,11 @@ import { useToast } from "@/shared/ui/toast";
 import { useApi } from "@/shared/ui/use-api";
 import { useStaff } from "../app-shell";
 import type { DeviceListItem, ThisComputer } from "../map-types";
-import { BrowserMark, systemLabel } from "../ui";
+import { BrowserMark, ProfileMark, systemLabel } from "../ui";
 
 /**
- * The computer AkunMu Desktop runs on: which recorded device it is, a scan of its browser profiles (new ones become
- * findings), and each profile opened in its browser with one click.
+ * The computer AkunMu Desktop runs on: which recorded device it is, a scan of its browser profiles and Claude Code
+ * profiles (new ones become findings), and each browser profile opened in its browser with one click.
  */
 export function ThisComputerPanel({ onScanned }: { onScanned: () => void }) {
   const { t } = useI18n();
@@ -159,6 +159,26 @@ export function ThisComputerPanel({ onScanned }: { onScanned: () => void }) {
               </ul>
             )}
           </div>
+
+          {data.cliProfiles.length > 0 ? (
+            <div>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-faint">{t("connect.localCliProfiles")}</p>
+              <ul className="space-y-1">
+                {data.cliProfiles.map((profile) => (
+                  <li key={profile.directory} className="flex items-center gap-3 rounded-lg px-1.5 py-1.5 hover:bg-subtle">
+                    <ProfileMark client={profile.client} />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2">
+                        <span className="truncate font-mono text-[13px] font-semibold text-ink">{profile.name}</span>
+                        {profile.recorded ? <Badge tone="ok">{t("connect.recorded")}</Badge> : null}
+                      </span>
+                      <span className="block truncate font-mono text-xs text-muted">{profile.email ?? t("connect.cliSignedOut")}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       )}
     </Card>

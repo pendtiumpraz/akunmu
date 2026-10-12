@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 10: Kepatuhan privasi` — RoPA, DPIA, insiden, permintaan subjek data, persetujuan, data saya, retensi, pengaturan bertab |
+| **Fase Aktif** | `Fase 11: Profil CLI` — banyak akun Claude Code per perangkat (perintah + folder sendiri), pindai desktop |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 live; Fase 10 live: Neon `0004`, kepatuhan privasi (RoPA, DPIA, DSR, persetujuan, data saya); tinggal `CRON_SECRET` di Vercel |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 10 live (Neon `0004`; tinggal `CRON_SECRET` di Vercel); Fase 11 commit lokal, tanpa migrasi, menunggu izin push |
 
 ---
 
@@ -111,6 +111,15 @@
 - [x] Izin owner ("migrate dan push", 12 Okt 19.25): migrasi `0004` diterapkan di Neon + diverifikasi (5 migrasi; 5 tabel baru RLS ENABLE + FORCE, `tenant_isolation` × 4 + `platform_only` di `account_consents`, hak `akunmu_app` lengkap, tanpa scope 0 baris, `account_consents` 0 baris dalam scope ruang kerja; data lama tetap: 3 ruang kerja, 4 pengguna, 5 perangkat, 19 profil, 3 akun, 4 login, 22 temuan); push `main` → Vercel
 - [ ] `CRON_SECRET` di Vercel AkunMu (owner), opsional `PLATFORM_OPERATOR_NAME` / `PLATFORM_CONTACT_EMAIL`
 
+### 🔄 Fase 11: Profil CLI — banyak akun Claude Code per perangkat (owner 13 Okt: "sekarang 1 device juga bisa multi account claude-cli")
+- [x] Profil CLI: satu perangkat menyimpan banyak akun Claude Code, masing-masing satu perintah dengan folder konfigurasinya sendiri (`claude-kerja` → `~/.claude-kerja`, lewat `CLAUDE_CONFIG_DIR`). Disimpan di tabel profil (`browser_profiles.browser = claude-code`, `directory` = folder), **tanpa migrasi**
+- [x] Detail perangkat: bagian "Profil CLI" (yang sudah login dulu; yang belum login ringkas dengan lencana "belum login"), form tambah/ubah profil CLI (alat, perintah, folder terisi dari nama perintah), catat login di profil CLI dengan penyedia Claude terisi otomatis; peta kolom (grup "Profil CLI"), pohon (cabang profil CLI sesudah profil browser), asisten (`add_browser_profile` menerima `claude-code` + folder)
+- [x] AkunMu Desktop: pindai "Komputer ini" juga menemukan profil Claude Code (`~/.claude` dan tiap `~/.claude-<nama>`) beserta akun Claude yang login (email dari `.claude.json`; `.credentials.json` tidak pernah dibuka) → temuan; akun tercatat yang sudah logout ditandai perlu dicek
+- [x] Tes: 55 lulus (8 berkas; baru: pemindai folder, profil CLI per perintah, urutan cabang pohon, pemindaian desktop); tsc, lint lulus; QA visual lokal (build produksi + PGlite): 11 tangkapan terang/gelap/en/HP 390 px, 0 galat, 0 luber samping, pohon 0 tumpang tindih dan 0 garis lepas dari port
+- [x] Data owner (13 Okt, Neon, ruang kerja Pribadi, lewat service app, dicek kering dulu): claude.ai di profil Chrome + Claude Desktop yang masuk lewat link darinya, di Laptop Privasimu Acer (profil Chrome baru), PC #1 dan Laptop ASUS; email dan nama profil disamarkan di sini
+- [ ] Izin owner untuk push (tanpa migrasi Neon), lalu profil CLI dicatat di 5 perangkat: 8 perintah per perangkat, PC #1 tambah 1 (sudah dicek kering)
+- [ ] Rilis desktop baru supaya pemindaian profil Claude Code jalan di perangkat Windows (opsional, izin owner)
+
 ---
 
 ## Issue & Blocker
@@ -149,3 +158,4 @@
 | 2026-10-11 18:55 | Repo | Riwayat git ditulis ulang (owner: "bener2 diubah aja"): email & nama profil owner disamarkan di semua commit lama (`progress.md`, `user_requirement.md`), selain itu tidak ada yang berubah (isi commit terakhir, pesan, penulis, tanggal sama); force push `main` + tag `v0.1.0` (rilis & aset tetap); hash commit sejak 11 Okt 07.00 berubah, rujukan hash di dokumen disesuaikan |
 | 2026-10-12 18:30 | 10 | Kepatuhan privasi (port dari EventMu, disesuaikan AkunMu): RoPA/DPIA/insiden + unduh PDF/DOCX, permintaan subjek data, persetujuan + halaman legal, data saya (unduh/hapus akun/hapus ruang kerja), retensi + cron, pengaturan bertab; migrasi `0004`; tes + build + QA lokal lulus; commit lokal, menunggu izin "migrate dan push" |
 | 2026-10-12 19:30 | 10 | Owner: "migrate dan push" → Neon `0004_compliance` diterapkan + diverifikasi (data lama utuh); push `main` → Vercel |
+| 2026-10-13 06:40 | 11 | Profil CLI (banyak akun Claude Code per perangkat) + pindai desktop; tes, build, QA lokal lulus; data Claude Desktop owner dicatat di Neon; commit lokal, menunggu izin push |

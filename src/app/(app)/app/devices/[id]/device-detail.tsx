@@ -1,12 +1,15 @@
 "use client";
 
-import { ArrowLeft, CheckCheck, History, MonitorSmartphone, Pencil, Plus, Trash2, TreeDeciduous, Waypoints } from "lucide-react";
+import { ArrowLeft, CheckCheck, History, MonitorSmartphone, Pencil, Plus, SquareTerminal, Trash2, TreeDeciduous, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { isCliTool } from "@/modules/devices/types";
 import { api, type ApiClientError } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
+import { Badge } from "@/shared/ui/badge";
 import { Button, IconButton } from "@/shared/ui/button";
+import { cn } from "@/shared/ui/cn";
 import { ConfirmDialog } from "@/shared/ui/dialog";
 import { EmptyState, ErrorState, Skeleton } from "@/shared/ui/feedback";
 import { Menu } from "@/shared/ui/menu";
@@ -18,12 +21,16 @@ import { ProfileDrawer, type ProfileDraft } from "../../drawers/profile-drawer";
 import { SignInDrawer } from "../../drawers/sign-in-drawer";
 import { placeKeyOf, type DeviceDetail, type MapSignIn, type PlaceKey } from "../../map-types";
 import { SignInLine, placeLabel, useSignInActions } from "../../sign-in-actions";
-import { BrowserMark, DeviceIcon, browserLabel, kindLabel, systemLabel } from "../../ui";
+import { DeviceIcon, ProfileMark, kindLabel, profileClientLabel, systemLabel } from "../../ui";
 
-type DrawerState = { kind: "device" } | { kind: "profile"; profile: ProfileDraft | null } | { kind: "signIn"; place: PlaceKey | null } | null;
-type Pending = { kind: "device" } | { kind: "profile"; id: number; name: string } | null;
+type DrawerState = { kind: "device" } | { kind: "profile"; profile: ProfileDraft | null; cli: boolean } | { kind: "signIn"; place: PlaceKey | null } | null;
+type Pending = { kind: "device" } | { kind: "profile"; id: number; name: string; cli: boolean } | null;
+type DeviceProfile = DeviceDetail["profiles"][number];
 
-/** One device: its browser profiles with the accounts in each, what is signed in on the device itself, and history. */
+/**
+ * One device: its browser profiles and command-line profiles (several Claude Code accounts, one folder each) with the
+ * accounts in each, what is signed in on the device itself, and history.
+ */
 export function DeviceDetailView({ deviceId }: { deviceId: number }) {
   const { t, format } = useI18n();
   const { can } = useStaff();
@@ -64,6 +71,83 @@ export function DeviceDetailView({ deviceId }: { deviceId: number }) {
     .sort((a, b) => (b.signedOutAt ?? "").localeCompare(a.signedOutAt ?? ""));
   const onDevice = active(device.onDevice);
   const appGroups = [...new Set(onDevice.map((row) => placeKeyOf(row)))].map((key) => ({ key, rows: onDevice.filter((row) => placeKeyOf(row) === key) }));
+  const browserProfiles = device.profiles.filter((profile) => !isCliTool(profile.browser));
+  // Commands with an account signed in first, then those still waiting for a login (each group by name).
+  const cliProfiles = device.profiles
+    .filter((profile) => isCliTool(profile.browser))
+    .sort((a, b) => Number(active(a.signIns).length === 0) - Number(active(b.signIns).length === 0));
+  // Phones and tablets get the command-line section only once they have such a profile.
+  const showCli = cliProfiles.length > 0 || !["phone", "tablet"].includes(device.kind);
+
+  const profileCard = (profile: DeviceProfile) => {
+    const rows = active(profile.signIns);
+    const cli = isCliTool(profile.browser);
+    // A command nobody signed in to yet is just its header: many of them stay short on one screen.
+    const waiting = cli && rows.length === 0;
+    return (
+      <section key={profile.id} className={cn("min-w-0 rounded-panel border bg-surface", waiting ? "border-dashed border-line-strong" : "border-line")}>
+        <header className={cn("flex items-center gap-3 px-3 py-2.5", !waiting && "border-b border-line")}>
+          <ProfileMark client={profile.browser} color={profile.color} />
+          <div className="min-w-0 flex-1">
+            <p className={cn("truncate text-sm font-bold text-ink", cli && "font-mono")}>{profile.name}</p>
+            <p className="truncate text-xs text-muted">
+              {[profileClientLabel(profile.browser, t), cli ? profile.directory : null, profile.notes].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          {waiting ? (
+            <span title={t("profiles.cliNoAccount")}>
+              <Badge>{t("connect.cliSignedOut")}</Badge>
+            </span>
+          ) : null}
+          {canWrite ? (
+            <>
+              <IconButton label={t("signIns.recordShort")} onClick={() => setDrawer({ kind: "signIn", place: `p:${profile.id}` })}>
+                <Plus className="size-4" />
+              </IconButton>
+              <Menu
+                label={t("common.more")}
+                items={[
+                  {
+                    label: t("common.edit"),
+                    icon: Pencil,
+                    onSelect: () =>
+                      setDrawer({
+                        kind: "profile",
+                        cli,
+                        profile: {
+                          id: profile.id,
+                          browser: profile.browser,
+                          name: profile.name,
+                          color: profile.color,
+                          syncAccountId: profile.syncAccountId,
+                          notes: profile.notes,
+                          directory: profile.directory,
+                        },
+                      }),
+                  },
+                  {
+                    label: cli ? t("profiles.deleteCliTitle") : t("profiles.deleteTitle"),
+                    icon: Trash2,
+                    tone: "danger",
+                    onSelect: () => setPending({ kind: "profile", id: profile.id, name: profile.name, cli }),
+                  },
+                ]}
+              />
+            </>
+          ) : null}
+        </header>
+        {waiting ? null : (
+          <div className="space-y-0.5 p-1.5">
+            {rows.length === 0 ? (
+              <p className="px-2.5 py-3 text-xs text-muted">{t("map.placeEmpty")}</p>
+            ) : (
+              rows.map((row) => <SignInLine key={row.id} row={row} show="account" staleBefore={staleBefore} actions={actions} canWrite={canWrite} href={`/app/accounts/${row.account.id}`} />)
+            )}
+          </div>
+        )}
+      </section>
+    );
+  };
 
   const post = async (path: string, method: "POST" | "DELETE") => {
     setBusy(true);
@@ -148,65 +232,41 @@ export function DeviceDetailView({ deviceId }: { deviceId: number }) {
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-ink">{t("map.groupProfiles")}</h2>
         {canWrite ? (
-          <Button variant="ghost" size="sm" icon={<Plus className="size-4" />} onClick={() => setDrawer({ kind: "profile", profile: null })}>
+          <Button variant="ghost" size="sm" icon={<Plus className="size-4" />} onClick={() => setDrawer({ kind: "profile", profile: null, cli: false })}>
             {t("profiles.addTitle")}
           </Button>
         ) : null}
       </div>
-      {device.profiles.length === 0 ? (
+      {browserProfiles.length === 0 ? (
         <div className="mb-6 rounded-panel border border-dashed border-line-strong bg-surface">
           <EmptyState title={t("map.noProfiles")} description={t("profiles.emptyHint")} />
         </div>
       ) : (
-        <div className="mb-6 grid gap-3 lg:grid-cols-2">
-          {device.profiles.map((profile) => {
-            const rows = active(profile.signIns);
-            return (
-              <section key={profile.id} className="rounded-panel border border-line bg-surface">
-                <header className="flex items-center gap-3 border-b border-line px-3 py-2.5">
-                  <BrowserMark browser={profile.browser} color={profile.color} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-ink">{profile.name}</p>
-                    <p className="truncate text-xs text-muted">
-                      {browserLabel(profile.browser, t)}
-                      {profile.notes ? ` · ${profile.notes}` : ""}
-                    </p>
-                  </div>
-                  {canWrite ? (
-                    <>
-                      <IconButton label={t("signIns.recordShort")} onClick={() => setDrawer({ kind: "signIn", place: `p:${profile.id}` })}>
-                        <Plus className="size-4" />
-                      </IconButton>
-                      <Menu
-                        label={t("common.more")}
-                        items={[
-                          {
-                            label: t("common.edit"),
-                            icon: Pencil,
-                            onSelect: () =>
-                              setDrawer({
-                                kind: "profile",
-                                profile: { id: profile.id, browser: profile.browser, name: profile.name, color: profile.color, syncAccountId: profile.syncAccountId, notes: profile.notes },
-                              }),
-                          },
-                          { label: t("profiles.deleteTitle"), icon: Trash2, tone: "danger", onSelect: () => setPending({ kind: "profile", id: profile.id, name: profile.name }) },
-                        ]}
-                      />
-                    </>
-                  ) : null}
-                </header>
-                <div className="space-y-0.5 p-1.5">
-                  {rows.length === 0 ? (
-                    <p className="px-2.5 py-3 text-xs text-muted">{t("map.placeEmpty")}</p>
-                  ) : (
-                    rows.map((row) => <SignInLine key={row.id} row={row} show="account" staleBefore={staleBefore} actions={actions} canWrite={canWrite} href={`/app/accounts/${row.account.id}`} />)
-                  )}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+        <div className="mb-6 grid grid-cols-1 gap-3 lg:grid-cols-2">{browserProfiles.map(profileCard)}</div>
       )}
+
+      {showCli ? (
+        <>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-sm font-bold text-ink">
+              {t("profiles.groupCli")}
+              {cliProfiles.length > 0 ? <span className="ml-2 text-xs font-semibold text-faint">{cliProfiles.length}</span> : null}
+            </h2>
+            {canWrite ? (
+              <Button variant="ghost" size="sm" icon={<Plus className="size-4" />} onClick={() => setDrawer({ kind: "profile", profile: null, cli: true })}>
+                {t("profiles.addCliTitle")}
+              </Button>
+            ) : null}
+          </div>
+          {cliProfiles.length === 0 ? (
+            <div className="mb-6 rounded-panel border border-dashed border-line-strong bg-surface">
+              <EmptyState icon={<SquareTerminal className="size-5" />} title={t("profiles.cliEmpty")} description={t("profiles.cliEmptyHint")} />
+            </div>
+          ) : (
+            <div className="mb-6 grid grid-cols-1 items-start gap-3 lg:grid-cols-2 2xl:grid-cols-3">{cliProfiles.map(profileCard)}</div>
+          )}
+        </>
+      ) : null}
 
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-ink">{t("map.groupOnDevice")}</h2>
@@ -263,6 +323,7 @@ export function DeviceDetailView({ deviceId }: { deviceId: number }) {
           deviceId={device.id}
           deviceName={device.name}
           profile={drawer.profile}
+          cli={drawer.cli}
           onClose={() => setDrawer(null)}
           onSaved={() => {
             setDrawer(null);
@@ -283,7 +344,7 @@ export function DeviceDetailView({ deviceId }: { deviceId: number }) {
       ) : null}
       <ConfirmDialog
         open={pending !== null}
-        title={pending?.kind === "profile" ? t("profiles.deleteTitle") : t("devices.deleteTitle")}
+        title={pending?.kind === "profile" ? (pending.cli ? t("profiles.deleteCliTitle") : t("profiles.deleteTitle")) : t("devices.deleteTitle")}
         description={pending?.kind === "profile" ? t("profiles.deleteBody", { name: pending.name }) : t("devices.deleteBody", { name: device.name })}
         confirmLabel={t("common.delete")}
         cancelLabel={t("common.cancel")}

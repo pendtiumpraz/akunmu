@@ -14,7 +14,7 @@ import { useToast } from "@/shared/ui/toast";
 import { useApi } from "@/shared/ui/use-api";
 import { useStaff } from "../app-shell";
 import type { FindingItem, ProviderItem } from "../map-types";
-import { BrowserMark, ProviderAvatar, browserLabel, systemLabel } from "../ui";
+import { ProfileMark, ProviderAvatar, profileClientLabel, systemLabel } from "../ui";
 
 type FindingList = ReturnType<typeof useApi<FindingItem[]>>;
 type Group = { key: string; findings: FindingItem[]; head: FindingItem };
@@ -138,7 +138,7 @@ function GroupHead({ finding }: { finding: FindingItem }) {
   }
   return (
     <p className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-faint">
-      <span className="truncate">{[place, payload.browser ? browserLabel(payload.browser, t) : null, payload.profile?.name].filter(Boolean).join(" · ")}</span>
+      <span className="truncate">{[place, payload.browser ? profileClientLabel(payload.browser, t) : null, payload.profile?.name].filter(Boolean).join(" · ")}</span>
     </p>
   );
 }
@@ -175,9 +175,9 @@ function FindingRow({
     title = <span className="font-mono">{payload.hostname}</span>;
     detail = [t("connect.kindDevice"), payload.system ? systemLabel(payload.system, t) : null].filter(Boolean).join(" · ");
   } else if (finding.kind === "profile") {
-    mark = <BrowserMark browser={payload.browser ?? "chrome"} />;
+    mark = <ProfileMark client={payload.browser ?? "chrome"} />;
     title = payload.profile?.name;
-    detail = [t("connect.kindProfile", { browser: payload.browser ? browserLabel(payload.browser, t) : "" }), payload.profile?.email].filter(Boolean).join(" · ");
+    detail = [t("connect.kindProfile", { browser: payload.browser ? profileClientLabel(payload.browser, t) : "" }), payload.profile?.email].filter(Boolean).join(" · ");
   } else {
     const domain = payload.provider?.domain ?? "";
     const provider = providerFor(providers, domain);

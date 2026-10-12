@@ -4,7 +4,7 @@ import { ChevronDown, CircleAlert, CircleCheck, ExternalLink, Flag, KeyRound, Lo
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import type { AgentActionView, AgentMessageView, StoredToolResult } from "@/modules/ai/agent-types";
-import { BROWSER_NAMES, type Browser, type DeviceKind } from "@/modules/devices/types";
+import { PROFILE_CLIENTS, profileClientName, type DeviceKind, type ProfileClient } from "@/modules/devices/types";
 import { useI18n } from "@/shared/i18n/client";
 import type { Translator } from "@/shared/i18n/translate";
 import { Badge, type BadgeTone } from "@/shared/ui/badge";
@@ -42,9 +42,15 @@ function asData(result: StoredToolResult | null | undefined): Data {
   return result?.ok && result.data && typeof result.data === "object" ? (result.data as Data) : {};
 }
 
+/** The browser or command-line tool a tool result names by id ("chrome", "claude-code"), or "Other". */
+function clientText(client: string | undefined, t: Translator): string {
+  const known = client && (PROFILE_CLIENTS as readonly string[]).includes(client) ? profileClientName(client as ProfileClient) : null;
+  return known ?? t("devices.browserOther");
+}
+
 function placeText(place: Place | undefined, t: Translator): string {
   if (!place || typeof place === "string") return t("signIns.deviceItself");
-  if (place.profile) return `${BROWSER_NAMES[place.browser as Exclude<Browser, "other">] ?? t("devices.browserOther")} · ${place.profile}`;
+  if (place.profile) return `${clientText(place.browser, t)} · ${place.profile}`;
   return place.app ?? t("signIns.deviceItself");
 }
 
@@ -300,7 +306,7 @@ function DeviceCard({ device }: { device: DeviceDetailData }) {
       {profiles.map((profile) => (
         <div key={profile.id} className="border-b border-line last:border-b-0">
           <p className="px-4 pb-1 pt-2.5 text-[11px] font-bold uppercase tracking-wider text-faint">
-            {BROWSER_NAMES[profile.browser as Exclude<Browser, "other">] ?? t("devices.browserOther")} · {profile.name}
+            {clientText(profile.browser, t)} · {profile.name}
           </p>
           {profile.signIns.length === 0 ? (
             <p className="px-4 pb-2.5 text-xs text-muted">{t("map.placeEmpty")}</p>

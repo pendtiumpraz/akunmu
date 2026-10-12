@@ -9,7 +9,7 @@ import { useI18n } from "@/shared/i18n/client";
 import type { Translator } from "@/shared/i18n/translate";
 import { cn } from "@/shared/ui/cn";
 import type { MapSignIn } from "../map-types";
-import { APPROVAL_ICONS, approvalLabel, browserLabel, systemLabel } from "../ui";
+import { APPROVAL_ICONS, approvalLabel, profileClientLabel, systemLabel } from "../ui";
 
 /** Pieces both tree views share: the sign-in rows they read, wires, leaf marks and approval chips. */
 
@@ -33,9 +33,9 @@ export function placeTitle(row: Row, t: Translator): string {
   return row.app ?? t("signIns.deviceItself");
 }
 
-/** What a place is: the browser, "App" / "Command line (CLI)", or the device's system. */
+/** What a place is: the browser or command-line tool, "App" / "Command line (CLI)", or the device's system. */
 export function placeDetail(row: Row, t: Translator): string {
-  if (row.profile) return browserLabel(row.profile.browser, t);
+  if (row.profile) return profileClientLabel(row.profile.browser, t);
   if (row.app) return t.dynamic(`signIns.appKind_${row.appKind ?? "app"}`);
   return systemLabel(row.device.system, t);
 }

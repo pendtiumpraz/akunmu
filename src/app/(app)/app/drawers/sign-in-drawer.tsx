@@ -2,6 +2,7 @@
 
 import { CalendarCheck, Check, MonitorSmartphone, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { isCliTool } from "@/modules/devices/types";
 import { APP_KINDS, APPROVAL_METHODS, type AppKind, type ApprovalMethod } from "@/modules/signins/types";
 import { api, firstFieldErrors, type Paginated } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
@@ -12,7 +13,7 @@ import { Checkbox, Field, Input, Select, Textarea } from "@/shared/ui/form-contr
 import { useToast } from "@/shared/ui/toast";
 import { useApi } from "@/shared/ui/use-api";
 import type { AccountDetail, AccountListItem, MapData, PlaceKey, ProviderItem } from "../map-types";
-import { APPROVAL_ICONS, AppMark, BrowserMark, ProviderAvatar, browserLabel, placeLabel } from "../ui";
+import { APPROVAL_ICONS, AppMark, ProfileMark, ProviderAvatar, placeLabel, profileClientLabel } from "../ui";
 import { ProviderPicker, providerForSave } from "./provider-picker";
 
 export type FixedAccount = { id: number; identifier: string; label: string | null; provider: { id: number; name: string; color: string; slug?: string } };
@@ -96,19 +97,28 @@ export function SignInDrawer({
 
   const set = <Key extends keyof Draft>(key: Key, value: Draft[Key]) => setDraft((current) => ({ ...current, [key]: value }));
 
+  // A Claude Code profile signs in to Claude: that provider is chosen until another one is picked.
+  const placeProfile = draft.place?.startsWith("p:") ? (map.data?.profiles ?? []).find((profile) => `p:${profile.id}` === draft.place) : undefined;
+  const defaultProviderId =
+    placeProfile && isCliTool(placeProfile.browser) && newProvider === null ? (providers.data?.find((item) => item.slug === "claude")?.id ?? null) : null;
+  const providerId = draft.providerId ?? defaultProviderId;
+
   // Suggestions follow the identifier as it is typed (debounced).
   useEffect(() => {
     const timer = window.setTimeout(() => setLookup(draft.identifier.trim()), 200);
     return () => window.clearTimeout(timer);
   }, [draft.identifier]);
   const suggestionPath =
-    !fixedAccount && draft.providerId ? `/api/accounts?${new URLSearchParams({ provider: String(draft.providerId), per_page: "6", ...(lookup ? { search: lookup } : {}) })}` : null;
+    !fixedAccount && providerId ? `/api/accounts?${new URLSearchParams({ provider: String(providerId), per_page: "6", ...(lookup ? { search: lookup } : {}) })}` : null;
   const suggestions = useApi<Paginated<AccountListItem>>(suggestionPath);
   // Only the chosen provider's accounts count: a provider being added has none (older suggestions may linger).
   const exact = suggestionPath ? (suggestions.data?.items.find((item) => item.identifier.toLowerCase() === draft.identifier.trim().toLowerCase()) ?? null) : null;
 
   const devices = map.data?.devices ?? [];
-  const profiles = (map.data?.profiles ?? []).filter((profile) => profile.deviceId === draft.deviceId);
+  // Browser profiles first, then command-line profiles.
+  const profiles = (map.data?.profiles ?? [])
+    .filter((profile) => profile.deviceId === draft.deviceId)
+    .sort((a, b) => Number(isCliTool(a.browser)) - Number(isCliTool(b.browser)));
   const apps = [
     ...new Set(
       (map.data?.signIns ?? [])
@@ -155,14 +165,14 @@ export function SignInDrawer({
         onSaved(result.data);
         return;
       }
-      let providerId = draft.providerId;
+      let savedProviderId = providerId;
       if (!fixedAccount && newProvider !== null) {
         if (!newProvider.trim()) {
           setErrors({ newProvider: t("validation.required") });
           return;
         }
         try {
-          providerId = await providerForSave({ providerId: null, newName: newProvider }, providers.data ?? []);
+          savedProviderId = await providerForSave({ providerId: null, newName: newProvider }, providers.data ?? []);
         } catch (error) {
           const fields = firstFieldErrors(error);
           setErrors({ newProvider: fields.name ?? (error instanceof Error && error.message ? error.message : t("common.saveFailed")) });
@@ -170,14 +180,14 @@ export function SignInDrawer({
         }
         // Made (or found) now, so trying again does not make it twice.
         setNewProvider(null);
-        set("providerId", providerId);
+        set("providerId", savedProviderId);
         providers.reload();
       }
       const accountPart = fixedAccount
         ? { accountId: fixedAccount.id }
         : exact
           ? { accountId: exact.id }
-          : { providerId, identifier: draft.identifier };
+          : { providerId: savedProviderId, identifier: draft.identifier };
       const result = await api<{ id: number; device: { id: number }; profile: { id: number } | null; app: string | null; account: { id: number } }>("/api/sign-ins", {
         method: "POST",
         body: { ...accountPart, deviceId: draft.deviceId, profileId, app, ...origin, since: draft.since, review: draft.review, notes: draft.notes },
@@ -233,7 +243,7 @@ export function SignInDrawer({
                 <ProviderPicker
                   id="signin-provider"
                   providers={providers.data ?? []}
-                  value={{ providerId: draft.providerId, newName: newProvider }}
+                  value={{ providerId, newName: newProvider }}
                   onChange={(choice) => {
                     set("providerId", choice.providerId);
                     setNewProvider(choice.newName);
@@ -247,7 +257,7 @@ export function SignInDrawer({
                 htmlFor="signin-identifier"
                 required
                 error={errors.identifier ?? errors.accountId}
-                hint={draft.identifier.trim() && (draft.providerId || newProvider !== null) ? (exact ? t("signIns.existingAccount") : t("signIns.newAccount")) : t("accounts.identifierHint")}
+                hint={draft.identifier.trim() && (providerId || newProvider !== null) ? (exact ? t("signIns.existingAccount") : t("signIns.newAccount")) : t("accounts.identifierHint")}
               >
                 <Input
                   id="signin-identifier"
@@ -257,11 +267,11 @@ export function SignInDrawer({
                   invalid={Boolean(errors.identifier)}
                   autoComplete="off"
                   spellCheck={false}
-                  disabled={!draft.providerId && newProvider === null}
+                  disabled={!providerId && newProvider === null}
                   className="font-mono text-[13px]"
                 />
               </Field>
-              {draft.providerId && (suggestions.data?.items.length ?? 0) > 0 && !exact ? (
+              {providerId && (suggestions.data?.items.length ?? 0) > 0 && !exact ? (
                 <ul className="-mt-1 overflow-hidden rounded-lg border border-line" aria-label={t("signIns.suggestions")}>
                   {suggestions.data?.items.map((item) => (
                     <li key={item.id}>
@@ -320,10 +330,10 @@ export function SignInDrawer({
                       selected ? "border-accent bg-accent-soft" : "border-line hover:bg-subtle",
                     )}
                   >
-                    <BrowserMark browser={profile.browser} color={profile.color} />
+                    <ProfileMark client={profile.browser} color={profile.color} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-ink">{profile.name}</span>
-                      <span className="block text-xs text-muted">{browserLabel(profile.browser, t)}</span>
+                      <span className={cn("block truncate text-sm font-semibold text-ink", isCliTool(profile.browser) && "font-mono")}>{profile.name}</span>
+                      <span className="block text-xs text-muted">{profileClientLabel(profile.browser, t)}</span>
                     </span>
                     {selected ? <Check className="size-4 text-accent" /> : null}
                   </button>
@@ -391,7 +401,7 @@ export function SignInDrawer({
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-faint">{t("signIns.stepOrigin")}</h3>
           {originAccountId === null ? (
             <p className="rounded-lg bg-subtle px-3 py-2 text-xs text-muted">
-              {draft.providerId && draft.identifier.trim() ? t("signIns.originNewAccount") : t("signIns.originPickAccount")}
+              {providerId && draft.identifier.trim() ? t("signIns.originNewAccount") : t("signIns.originPickAccount")}
             </p>
           ) : (
             <>

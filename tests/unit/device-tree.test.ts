@@ -72,6 +72,19 @@ describe("device trees", () => {
     expect(pc.stats).toEqual({ places: 3, sessions: 7, wilting: 0, fallen: 0, reach: 2 });
   });
 
+  it("puts a device's command-line profiles (several Claude Code accounts) after its browser profiles, each a branch", () => {
+    const cli = (id: number, name: string): Place => ({ profile: [id, name] });
+    const rows = [
+      session(1, 20, 2, 100, cli(7, "claude-work")),
+      session(2, 21, 2, 100, cli(8, "claude-alpha")),
+      session(3, 10, 1, 100, work),
+      session(4, 10, 1, 100, { app: "Gmail" }),
+    ].map((row) => (row.profile && row.profile.id > 6 ? { ...row, profile: { ...row.profile, browser: "claude-code" } } : row));
+    const [pc] = buildDeviceForest(rows, options);
+    expect(pc.places.map((place) => place.place)).toEqual(["p:1", "p:8", "p:7", "a:gmail"]);
+    expect(pc.places.find((place) => place.place === "p:7")?.twigs.map((twig) => twig.provider.name)).toEqual(["Claude"]);
+  });
+
   it("hangs the sessions a login let in off it, on whichever device, many at once and in chains", () => {
     // claude.ai in a browser on PC 1; Claude Code on laptops 2 and 3 with a code from it; an app on 4 from laptop 2.
     const rows = [

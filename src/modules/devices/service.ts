@@ -18,6 +18,7 @@ import {
   updateProfile as updateProfileRow,
 } from "./repository";
 import type { BrowserProfileRecord, DeviceRecord } from "./schema";
+import { isCliTool } from "./types";
 import type { DeviceInput, DeviceUpdateInput, ProfileInput, ProfileUpdateInput } from "./validation";
 
 export async function getDevice(id: number): Promise<DeviceRecord> {
@@ -47,7 +48,16 @@ export function deviceView(device: DeviceRecord) {
 }
 
 export function profileView(profile: BrowserProfileRecord) {
-  return { id: profile.id, deviceId: profile.deviceId, browser: profile.browser, name: profile.name, syncAccountId: profile.syncAccountId, color: profile.color, notes: profile.notes };
+  return {
+    id: profile.id,
+    deviceId: profile.deviceId,
+    browser: profile.browser,
+    name: profile.name,
+    syncAccountId: profile.syncAccountId,
+    color: profile.color,
+    notes: profile.notes,
+    directory: profile.directory,
+  };
 }
 
 export async function listDevicesView(options: { trashed?: boolean } = {}) {
@@ -55,7 +65,7 @@ export async function listDevicesView(options: { trashed?: boolean } = {}) {
   return rows.map(({ device, profileCount, signInCount, accountCount, reviewCount }) => ({ ...deviceView(device), profileCount, signInCount, accountCount, reviewCount }));
 }
 
-/** A device with its browser profiles, each with the accounts signed in there, and sign-ins on the device itself. */
+/** A device with its browser and command-line profiles, each with the accounts signed in there, and sign-ins on the device itself. */
 export async function deviceDetail(id: number) {
   const device = await getDevice(id);
   const [profiles, rows] = await Promise.all([listProfiles({ deviceId: device.id }), signInRows({ deviceId: device.id, includeSignedOut: true })]);
@@ -141,7 +151,7 @@ export async function restoreDevice(id: number, actorId: number) {
   return deviceView(restored);
 }
 
-// ----- browser profiles -----
+// ----- browser and command-line profiles -----
 
 async function checkSyncAccount(accountId: number | null | undefined) {
   if (accountId && !(await findAccountById(accountId))) throw validationError("syncAccountId", "validation.choice");
@@ -157,14 +167,23 @@ export async function createProfile(deviceId: number, input: ProfileInput, actor
     syncAccountId: input.syncAccountId ?? null,
     color: input.color ?? null,
     notes: input.notes ?? null,
+    // A browser's folder is only ever read from the browser itself (desktop scan).
+    directory: isCliTool(input.browser) ? (input.directory ?? null) : null,
     createdBy: actorId,
   });
   await recordAudit({ actorType: "staff", actorId, action: "profile.created", subjectType: "browser_profile", subjectId: profile.id, meta: { deviceId: device.id } });
   return profileView(profile);
 }
 
+/** A typed folder applies to command-line profiles; turning a profile into the other kind drops the folder it had. */
+function directoryChange(current: BrowserProfileRecord, input: ProfileUpdateInput): { directory?: string | null } {
+  const client = input.browser ?? current.browser;
+  if (isCliTool(client) !== isCliTool(current.browser)) return { directory: isCliTool(client) ? (input.directory ?? null) : null };
+  return isCliTool(client) && input.directory !== undefined ? { directory: input.directory ?? null } : {};
+}
+
 export async function updateProfile(id: number, input: ProfileUpdateInput, actorId: number) {
-  await getProfile(id);
+  const current = await getProfile(id);
   await checkSyncAccount(input.syncAccountId);
   const updated = await updateProfileRow(id, {
     ...(input.browser !== undefined ? { browser: input.browser } : {}),
@@ -172,12 +191,13 @@ export async function updateProfile(id: number, input: ProfileUpdateInput, actor
     ...(input.syncAccountId !== undefined ? { syncAccountId: input.syncAccountId ?? null } : {}),
     ...(input.color !== undefined ? { color: input.color ?? null } : {}),
     ...(input.notes !== undefined ? { notes: input.notes ?? null } : {}),
+    ...directoryChange(current, input),
   });
   await recordAudit({ actorType: "staff", actorId, action: "profile.updated", subjectType: "browser_profile", subjectId: id });
   return profileView(updated);
 }
 
-/** Removes a browser profile and the sign-ins recorded in it. */
+/** Removes a profile and the sign-ins recorded in it. */
 export async function deleteProfile(id: number, actorId: number) {
   const profile = await getProfile(id);
   const deletedAt = new Date();

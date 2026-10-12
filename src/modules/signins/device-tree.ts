@@ -6,13 +6,15 @@
  * device, as many as there are, and can let others in in turn. A device whose every session came in from elsewhere
  * has no tree of its own: its sessions hang where they grew. Pure functions shared by the screen and the tests.
  */
+import { isCliTool } from "../devices/types";
 import { bestPacking, leafState, visibleSignIns, type ForestLayoutOptions, type ForestOptions, type LeafState, type TreeSignIn } from "./tree";
 import type { AppKind, ApprovalMethod } from "./types";
 
 /** What the device trees read besides TreeSignIn: the place and the provider. */
 export type DeviceTreeSignIn = TreeSignIn & {
   provider: { id: number; name: string };
-  profile: { id: number; name: string } | null;
+  /** `browser` is the browser, or the tool of a command-line profile (claude-code). */
+  profile: { id: number; name: string; browser?: string } | null;
   app: string | null;
   appKind: AppKind | null;
 };
@@ -51,7 +53,11 @@ export function sessionsOf<Row extends DeviceTreeSignIn>(leaves: SessionLeaf<Row
   return leaves.flatMap((leaf) => [leaf, ...sessionsOf(leaf.grown)]);
 }
 
-const placeRank = (place: string) => (place.startsWith("p:") ? 0 : place.startsWith("a:") ? 1 : 2);
+/** Branches in order: browser profiles, command-line profiles, apps and CLIs on the device, the device itself. */
+function branchRank(row: Pick<DeviceTreeSignIn, "profile" | "app">): number {
+  if (row.profile) return row.profile.browser && isCliTool(row.profile.browser) ? 1 : 0;
+  return row.app ? 2 : 3;
+}
 const placeName = (row: Pick<DeviceTreeSignIn, "profile" | "app">) => row.profile?.name ?? row.app ?? "";
 const byText = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase());
 const fallenLast = (a: { state: LeafState }, b: { state: LeafState }) => Number(a.state === "fallen") - Number(b.state === "fallen");
@@ -132,7 +138,7 @@ export function buildDeviceForest<Row extends DeviceTreeSignIn>(rows: Row[], opt
           }))
           .sort((a, b) => byText(a.provider.name, b.provider.name)),
       }))
-      .sort((a, b) => placeRank(a.place) - placeRank(b.place) || byText(placeName(a.sample), placeName(b.sample)));
+      .sort((a, b) => branchRank(a.sample) - branchRank(b.sample) || byText(placeName(a.sample), placeName(b.sample)));
     const sessions = sessionsOf(places.flatMap((place) => place.twigs.flatMap((twig) => twig.leaves)));
     const active = sessions.filter((leaf) => leaf.state !== "fallen");
     trees.push({

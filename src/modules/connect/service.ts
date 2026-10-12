@@ -19,13 +19,14 @@ import {
 } from "../devices/repository";
 import type { BrowserProfileRecord, DeviceRecord } from "../devices/schema";
 import { createDevice, createProfile } from "../devices/service";
-import type { Browser, DeviceSystem } from "../devices/types";
+import { isCliTool, type DeviceSystem, type ProfileClient } from "../devices/types";
 import { deviceInputSchema, profileInputSchema } from "../devices/validation";
 import { signInRows, updateSignIn as updateSignInRow } from "../signins/repository";
 import { recordSignIn } from "../signins/service";
 import { signInInputSchema } from "../signins/validation";
 import { isServing, tenantById } from "../tenants/service";
 import { findLocalProfile, localProfiles, openLocalProfile, thisComputer, type ProfileTarget } from "./local-browsers";
+import { localCliProfiles } from "./local-cli";
 import {
   countFindings,
   findFindingById,
@@ -39,7 +40,7 @@ import {
   upsertFinding,
 } from "./repository";
 import type { FindingRecord, IngestTokenRecord } from "./schema";
-import type { FindingKind, FindingPayload } from "./types";
+import { CLAUDE_DOMAIN, type FindingKind, type FindingPayload } from "./types";
 import type { AcceptFindingInput, IngestReport, IngestTokenInput } from "./validation";
 
 /**
@@ -120,14 +121,15 @@ export type ReportSummary = { confirmed: number; findings: number; review: numbe
 
 /** Where something was seen: a recorded device, or (a desktop scan of an unrecorded computer) its host name. */
 type Where = { device: DeviceRecord | null; hostname: string | null; system: DeviceSystem | null; tokenId: number | null };
-type Observed = Pick<IngestReport, "browser" | "profile" | "sessions" | "checked">;
+/** A profile as seen: a browser profile (extension report or desktop scan) or a command-line profile (desktop scan). */
+type Observed = Pick<IngestReport, "profile" | "sessions" | "checked"> & { browser: ProfileClient };
 
 function providerForDomain(providers: ProviderRecord[], domain: string): ProviderRecord | undefined {
   const host = lower(domain);
   return providers.find((provider) => provider.domain && (host === provider.domain || host.endsWith(`.${provider.domain}`)));
 }
 
-function matchProfile(profiles: BrowserProfileRecord[], observed: { name: string; directory?: string | null }, browser: Browser) {
+function matchProfile(profiles: BrowserProfileRecord[], observed: { name: string; directory?: string | null }, browser: ProfileClient) {
   const candidates = profiles.filter((profile) => profile.browser === browser);
   return candidates.find((profile) => observed.directory && profile.directory === observed.directory) ?? candidates.find((profile) => lower(profile.name) === lower(observed.name));
 }
@@ -234,7 +236,10 @@ export async function applyReport(token: IngestTokenRecord, received: IngestRepo
   return summary;
 }
 
-/** The desktop app looks at its own computer's browser profiles: the profiles and their Google accounts. */
+/**
+ * The desktop app looks at its own computer: the browser profiles with their Google accounts, and the Claude Code
+ * profiles with the Claude account signed in to each (one not signed in any more puts its recorded sign-in up for a check).
+ */
 export async function scanThisComputer(): Promise<ReportSummary & { profiles: number }> {
   const { hostname, system } = thisComputer();
   const device = (await findDeviceByHostname(hostname)) ?? null;
@@ -243,19 +248,28 @@ export async function scanThisComputer(): Promise<ReportSummary & { profiles: nu
     await upsertFinding({ kind: "device", fingerprint: `device:${hostname}`, payload: { hostname, system }, deviceId: null, tokenId: null });
     summary.findings += 1;
   }
+  const where: Where = { device, hostname, system, tokenId: null };
   const profiles = localProfiles();
-  for (const local of profiles) {
-    const result = await reconcile(
-      { device, hostname, system, tokenId: null },
-      { browser: local.browser, profile: { name: local.name, directory: local.directory, email: local.email }, sessions: [], checked: [] },
-    );
+  const cliProfiles = localCliProfiles();
+  const observed: Observed[] = [
+    ...profiles.map((local) => ({ browser: local.browser, profile: { name: local.name, directory: local.directory, email: local.email }, sessions: [], checked: [] })),
+    ...cliProfiles.map((local) => ({
+      browser: local.client,
+      profile: { name: local.name, directory: local.directory },
+      sessions: local.email ? [{ domain: CLAUDE_DOMAIN, identifier: local.email }] : [],
+      checked: [CLAUDE_DOMAIN],
+    })),
+  ];
+  for (const profile of observed) {
+    const result = await reconcile(where, profile);
     summary.confirmed += result.confirmed;
     summary.findings += result.findings;
+    summary.review += result.review;
   }
-  return { ...summary, profiles: profiles.length };
+  return { ...summary, profiles: observed.length };
 }
 
-/** This computer in the desktop app: its host name, the device recorded for it, and its browser profiles. */
+/** This computer in the desktop app: its host name, the device recorded for it, its browser and Claude Code profiles. */
 export async function thisComputerView() {
   const computer = thisComputer();
   const device = (await findDeviceByHostname(computer.hostname)) ?? null;
@@ -264,6 +278,7 @@ export async function thisComputerView() {
     ...computer,
     device: device ? { id: device.id, name: device.name } : null,
     profiles: localProfiles().map((profile) => ({ ...profile, recorded: matchProfile(recorded, profile, profile.browser) !== undefined })),
+    cliProfiles: localCliProfiles().map((profile) => ({ ...profile, recorded: matchProfile(recorded, profile, profile.client) !== undefined })),
   };
 }
 
@@ -275,12 +290,15 @@ export async function linkThisComputer(deviceId: number, actorId: number) {
   await recordAudit({ actorType: "staff", actorId, action: "device.linked", subjectType: "device", subjectId: device.id });
 }
 
-/** Opens a recorded profile in its browser on this computer (desktop app); false when it is not on this computer. */
+/**
+ * Opens a recorded profile in its browser on this computer (desktop app); false when it is not on this computer, or
+ * is a command-line profile (no browser to open).
+ */
 export async function openRecordedProfile(profileId: number, url: string | null): Promise<boolean> {
   const profile = await findProfileById(profileId);
   if (!profile) throw notFound();
   const device = await findDeviceById(profile.deviceId);
-  if (!device || device.hostname !== thisComputer().hostname) return false;
+  if (!device || device.hostname !== thisComputer().hostname || isCliTool(profile.browser)) return false;
   return openLocalProfile({ browser: profile.browser, directory: profile.directory, name: profile.name }, url);
 }
 

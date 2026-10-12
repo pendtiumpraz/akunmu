@@ -3,7 +3,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { db, type DbExecutor } from "../../shared/db";
 import { accounts, providers } from "../accounts/schema";
 import { browserProfiles, devices } from "../devices/schema";
-import type { Browser, DeviceKind, DeviceSystem } from "../devices/types";
+import type { DeviceKind, DeviceSystem, ProfileClient } from "../devices/types";
 import { signIns, type NewSignInRecord } from "./schema";
 import type { AppKind, ApprovalMethod } from "./types";
 
@@ -27,7 +27,8 @@ export type SignInRow = {
   provider: { id: number; slug: string; name: string; color: string; domain: string | null };
   /** `hostname` and the profile's `directory` let the desktop app open the profile ("Open in profile"). */
   device: { id: number; name: string; kind: DeviceKind; system: DeviceSystem; hostname: string | null };
-  profile: { id: number; name: string; browser: Browser; color: string | null; directory: string | null } | null;
+  /** A browser profile, or a command-line profile (`browser` is then the tool, e.g. claude-code). */
+  profile: { id: number; name: string; browser: ProfileClient; color: string | null; directory: string | null } | null;
 };
 
 export type SignInFilter = { ids?: number[]; accountId?: number; deviceId?: number; profileId?: number; includeSignedOut?: boolean };

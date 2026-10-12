@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { accountDetail, createProvider, deleteAccount, deleteProvider, findOrCreateAccount, listProvidersView, restoreAccount, restoreProvider } from "@/modules/accounts/service";
 import { providerInputSchema } from "@/modules/accounts/validation";
-import { deleteDevice, deleteProfile, deviceDetail, listDevicesView, markDeviceChecked, restoreDevice } from "@/modules/devices/service";
-import { deviceInputSchema } from "@/modules/devices/validation";
+import { deleteDevice, deleteProfile, deviceDetail, listDevicesView, markDeviceChecked, restoreDevice, updateProfile } from "@/modules/devices/service";
+import { deviceInputSchema, profileUpdateSchema } from "@/modules/devices/validation";
 import { signIns } from "@/modules/signins/schema";
 import { confirmSignIn, mapView, overview, recordSignIn, signOut, updateSignIn } from "@/modules/signins/service";
 import { signInInputSchema } from "@/modules/signins/validation";
@@ -37,6 +37,31 @@ describe("recording sign-ins", () => {
     expect(second.profile).toMatchObject({ id: personal.id, name: "Personal", browser: "chrome" });
     const account = await accountDetail(first.account.id);
     expect(account.signIns.map((row) => row.profile?.name).sort()).toEqual(["Personal", "Work"]);
+  });
+
+  it("keeps several Claude Code accounts on one device apart: one CLI profile per command, each with its own folder", async () => {
+    const admin = await staffUser();
+    const server = await device(admin.id, { name: "VPS", kind: "other", system: "linux" });
+    const work = await browserProfile(server.id, admin.id, { browser: "claude-code", name: "claude-work", directory: "~/.claude-work" });
+    const team = await browserProfile(server.id, admin.id, { browser: "claude-code", name: "claude-team", directory: "~/.claude-team" });
+    // A browser's folder is only ever taken from the browser itself.
+    const chrome = await browserProfile(server.id, admin.id, { name: "Default", directory: "Profile 9" });
+    expect([work.directory, chrome.directory]).toEqual(["~/.claude-work", null]);
+
+    // The same Claude account may be signed in to two commands; another account to a third place.
+    await signIn(admin.id, { deviceId: server.id, profileId: work.id }, { provider: "claude", identifier: "me@example.com" });
+    await signIn(admin.id, { deviceId: server.id, profileId: team.id }, { provider: "claude", identifier: "me@example.com" });
+    await signIn(admin.id, { deviceId: server.id, profileId: team.id }, { provider: "claude", identifier: "team@example.com" });
+    const detail = await deviceDetail(server.id);
+    const byName = Object.fromEntries(detail.profiles.map((profile) => [profile.name, profile.signIns.map((row) => row.account.identifier).sort()]));
+    expect(byName).toEqual({ "claude-team": ["me@example.com", "team@example.com"], "claude-work": ["me@example.com"], Default: [] });
+    expect(detail.profiles.find((profile) => profile.name === "claude-work")).toMatchObject({ browser: "claude-code", directory: "~/.claude-work" });
+
+    // Turning a CLI profile into a browser profile drops the config folder; back again takes the typed one.
+    expect((await updateProfile(work.id, parseWith(profileUpdateSchema, { browser: "chrome" }), admin.id)).directory).toBeNull();
+    expect((await updateProfile(work.id, parseWith(profileUpdateSchema, { browser: "claude-code", directory: "/root/.claude-work" }), admin.id)).directory).toBe(
+      "/root/.claude-work",
+    );
   });
 
   it("keeps one active sign-in per account and place, and keeps signed-out ones as history", async () => {

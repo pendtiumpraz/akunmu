@@ -2,7 +2,7 @@ import { z } from "zod";
 import { patchSchema } from "../../shared/patch-schema";
 import { safeText } from "../../shared/secrets";
 import { blankToNull } from "../../shared/text";
-import { BROWSERS, DEVICE_KINDS, DEVICE_SYSTEMS } from "./types";
+import { DEVICE_KINDS, DEVICE_SYSTEMS, PROFILE_CLIENTS } from "./types";
 
 export const deviceInputSchema = z.object({
   name: z.string().trim().min(1).max(80),
@@ -26,11 +26,14 @@ export const deviceInputSchema = z.object({
 export const deviceUpdateSchema = patchSchema(deviceInputSchema);
 
 export const profileInputSchema = z.object({
-  browser: z.enum(BROWSERS).default("chrome"),
+  /** The browser, or the command-line tool of a command-line profile. */
+  browser: z.enum(PROFILE_CLIENTS).default("chrome"),
   name: z.string().trim().min(1).max(60),
   syncAccountId: z.number().int().positive().nullish(),
   color: z.preprocess(blankToNull, z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: "validation.color" }).nullish()),
   notes: safeText(1000),
+  /** A command-line profile's config folder (~/.claude-work); a browser's own folders come from desktop scans only. */
+  directory: z.preprocess(blankToNull, z.string().trim().max(260).nullish()),
 });
 
 export const profileUpdateSchema = patchSchema(profileInputSchema);

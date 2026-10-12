@@ -7,7 +7,18 @@ import { createProvider, getAccount, getProvider, listAccountsView, providerView
 import { TWO_FACTOR_STATES, type TwoFactorState } from "@/modules/accounts/types";
 import { accountUpdateSchema, providerInputSchema } from "@/modules/accounts/validation";
 import { createDevice, createProfile, deviceDetail, getDevice, getProfile, listDevicesView, markDeviceChecked } from "@/modules/devices/service";
-import { BROWSER_NAMES, BROWSERS, DEVICE_KINDS, DEVICE_SYSTEMS, SYSTEM_NAMES, type Browser, type DeviceKind, type DeviceSystem } from "@/modules/devices/types";
+import {
+  DEVICE_KINDS,
+  DEVICE_SYSTEMS,
+  PROFILE_CLIENTS,
+  SYSTEM_NAMES,
+  claudeConfigFolder,
+  isCliTool,
+  profileClientName,
+  type DeviceKind,
+  type DeviceSystem,
+  type ProfileClient,
+} from "@/modules/devices/types";
 import { deviceInputSchema, profileInputSchema } from "@/modules/devices/validation";
 import type { SignInRow } from "@/modules/signins/repository";
 import { confirmSignIn, listSignIns, overview, recordSignIn, signOut, updateSignIn } from "@/modules/signins/service";
@@ -91,8 +102,9 @@ function field(label: string, value: string | null | undefined, before?: string 
   return [{ label, value, ...(before !== undefined && before !== null && before !== value ? { before } : {}) }];
 }
 
-export function browserName(browser: Browser, t: Translator): string {
-  return browser === "other" ? t("devices.browserOther") : BROWSER_NAMES[browser];
+/** A browser's or command-line tool's name: "Chrome", "Claude Code". */
+export function browserName(browser: ProfileClient, t: Translator): string {
+  return profileClientName(browser) ?? t("devices.browserOther");
 }
 
 export function systemName(system: DeviceSystem, t: Translator): string {
@@ -198,7 +210,8 @@ const findAccountTool = readTool({
 
 const listDevicesTool = readTool({
   name: "list_devices",
-  description: "Devices of this workspace (laptops, PCs, phones, tablets) with how many browser profiles, sign-ins and accounts each has, and when each was last checked.",
+  description:
+    "Devices of this workspace (laptops, PCs, phones, tablets) with how many profiles (browser and command-line), sign-ins and accounts each has, and when each was last checked.",
   permission: "map.read",
   input: z.object({}),
   run: async (_input, context) => {
@@ -222,7 +235,8 @@ const listDevicesTool = readTool({
 
 const getDeviceTool = readTool({
   name: "get_device",
-  description: "One device: its browser profiles with the accounts signed in to each, and the accounts signed in on the device itself (system and apps).",
+  description:
+    "One device: its profiles with the accounts signed in to each (browser profiles, and command-line profiles: browser claude-code, one per Claude Code account the device runs), and the accounts signed in on the device itself (system and apps).",
   permission: "map.read",
   input: z.object({ deviceId, includeSignedOut: z.boolean().optional().describe("Also list sign-ins that ended.") }),
   run: async (input, context) => {
@@ -237,7 +251,13 @@ const getDeviceTool = readTool({
       location: device.location,
       notes: device.notes ? clip(device.notes, 300) : null,
       lastChecked: device.lastCheckedAt ? localDay(device.lastCheckedAt) : null,
-      browserProfiles: device.profiles.map((profile) => ({ id: profile.id, browser: profile.browser, name: profile.name, signIns: keep(profile.signIns) })),
+      browserProfiles: device.profiles.map((profile) => ({
+        id: profile.id,
+        browser: profile.browser,
+        name: profile.name,
+        ...(isCliTool(profile.browser) ? { commandLine: true, folder: profile.directory } : {}),
+        signIns: keep(profile.signIns),
+      })),
       onTheDevice: keep(device.onDevice),
       url: `/app/devices/${device.id}`,
     };
@@ -337,27 +357,39 @@ const addDeviceAction = actionTool({
 
 const addProfileInput = z.object({
   deviceId,
-  browser: z.enum(BROWSERS).optional().describe("Default chrome."),
-  name: z.string().min(1).max(60).describe("The profile's name as the browser shows it, e.g. Work or Personal."),
+  browser: z
+    .enum(PROFILE_CLIENTS)
+    .optional()
+    .describe("Default chrome. claude-code for a command-line profile: one Claude Code account run by its own command from its own config folder."),
+  name: z.string().min(1).max(60).describe("The profile's name as the browser shows it (Work, Personal), or a command-line profile's command (claude-work)."),
+  directory: z.string().max(260).optional().describe("Only for a command-line profile: its config folder, e.g. ~/.claude-work."),
 });
 
 const addProfileAction = actionTool({
   name: "add_browser_profile",
-  description: "Add a browser profile (Chrome's Work, Edge's Personal, …) to a device. Accounts are then recorded in it with record_sign_ins.",
+  description:
+    "Add a profile to a device: a browser profile (Chrome's Work, Edge's Personal, …) or a command-line profile (browser claude-code: each Claude Code account a device runs, e.g. claude-work with ~/.claude-work). Accounts are then recorded in it with record_sign_ins.",
   permission: "map.write",
   input: addProfileInput,
   preview: async (input, context) => {
     const device = await getDevice(input.deviceId);
-    const parsed = parseWith(profileInputSchema, { browser: input.browser, name: input.name });
+    const parsed = parseWith(profileInputSchema, { browser: input.browser, name: input.name, directory: input.directory });
     const { t } = context.i18n;
+    const cli = isCliTool(parsed.browser);
     return {
-      title: t("ai.action.addProfile", { device: device.name }),
-      fields: [...field(t("profiles.fieldBrowser"), browserName(parsed.browser, t)), ...field(t("profiles.fieldName"), parsed.name)],
+      title: t(cli ? "ai.action.addCliProfile" : "ai.action.addProfile", { device: device.name }),
+      fields: [
+        ...field(cli ? t("profiles.fieldTool") : t("profiles.fieldBrowser"), browserName(parsed.browser, t)),
+        ...field(cli ? t("profiles.fieldCommand") : t("profiles.fieldName"), parsed.name),
+        ...(cli ? field(t("profiles.fieldFolder"), parsed.directory ?? claudeConfigFolder(parsed.name)) : []),
+      ],
     };
   },
   run: async (input, context) => {
-    const profile = await createProfile(input.deviceId, parseWith(profileInputSchema, { browser: input.browser, name: input.name }), context.staff.id);
-    return { id: profile.id, deviceId: profile.deviceId, browser: profile.browser, name: profile.name };
+    const parsed = parseWith(profileInputSchema, { browser: input.browser, name: input.name, directory: input.directory });
+    const directory = isCliTool(parsed.browser) ? (parsed.directory ?? claudeConfigFolder(parsed.name)) : null;
+    const profile = await createProfile(input.deviceId, { ...parsed, directory }, context.staff.id);
+    return { id: profile.id, deviceId: profile.deviceId, browser: profile.browser, name: profile.name, directory: profile.directory };
   },
 });
 
@@ -390,7 +422,12 @@ const addProviderAction = actionTool({
 
 const recordSignInsInput = z.object({
   deviceId,
-  browserProfileId: z.number().int().min(1).optional().describe("Browser profile id from get_device. Leave out for sign-ins on the device itself (its system or an app)."),
+  browserProfileId: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe("Profile id from get_device: a browser profile, or a command-line profile (a Claude Code account the device runs). Leave out for sign-ins on the device itself (its system or an app)."),
   app: z.string().max(60).optional().describe("Only without a browser profile: the app or system signed in, e.g. Windows, Gmail app or WhatsApp."),
   appKind: z.enum(APP_KINDS).optional().describe("With app: 'cli' for a command-line tool (gh, claude, gcloud, vercel), otherwise 'app'."),
   accounts: z
@@ -466,7 +503,7 @@ async function planSignIns(input: RecordInput) {
 const recordSignInsAction = actionTool({
   name: "record_sign_ins",
   description:
-    "Record accounts as signed in at one place: a browser profile of a device, or the device itself (with an optional app name). Accounts are given by id, or by provider and identifier (missing accounts are added).",
+    "Record accounts as signed in at one place: a browser profile or command-line profile of a device, or the device itself (with an optional app name). Accounts are given by id, or by provider and identifier (missing accounts are added).",
   permission: "map.write",
   input: recordSignInsInput,
   preview: async (input, context) => {

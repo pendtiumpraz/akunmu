@@ -18,7 +18,17 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import type { Translator } from "@/shared/i18n/translate";
-import { BROWSER_NAMES, SYSTEM_NAMES, type Browser, type DeviceKind, type DeviceSystem } from "@/modules/devices/types";
+import {
+  BROWSER_NAMES,
+  SYSTEM_NAMES,
+  isCliTool,
+  profileClientName,
+  type Browser,
+  type CliTool,
+  type DeviceKind,
+  type DeviceSystem,
+  type ProfileClient,
+} from "@/modules/devices/types";
 import type { AppKind, ApprovalMethod } from "@/modules/signins/types";
 import { useI18n } from "@/shared/i18n/client";
 import { cn } from "@/shared/ui/cn";
@@ -66,9 +76,14 @@ export function browserLabel(browser: Browser, t: Translator): string {
   return browser === "other" ? t("devices.browserOther") : BROWSER_NAMES[browser];
 }
 
-/** Where a sign-in is, short: "Chrome · Work", "Gmail app", "Claude Code (CLI)" or "On the device". */
+/** What a profile belongs to: the browser, or the command-line tool ("Claude Code"). */
+export function profileClientLabel(client: ProfileClient, t: Translator): string {
+  return profileClientName(client) ?? t("devices.browserOther");
+}
+
+/** Where a sign-in is, short: "Chrome · Work", "Claude Code · claude-work", "Gmail app", "Claude Code (CLI)" or "On the device". */
 export function placeLabel(row: Pick<MapSignIn, "profile" | "app" | "appKind">, t: Translator): string {
-  if (row.profile) return `${browserLabel(row.profile.browser, t)} · ${row.profile.name}`;
+  if (row.profile) return `${profileClientLabel(row.profile.browser, t)} · ${row.profile.name}`;
   if (row.app) return row.appKind === "cli" ? t("signIns.cliPlace", { app: row.app }) : row.app;
   return t("signIns.deviceItself");
 }
@@ -145,6 +160,25 @@ export function BrowserMark({ browser, color, className }: { browser: Browser; c
       ) : (
         <Image src={`/brands/browsers/${browser}.svg`} alt="" width={20} height={20} unoptimized draggable={false} className="size-5" />
       )}
+      {color ? <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-surface" style={{ backgroundColor: color }} /> : null}
+    </span>
+  );
+}
+
+/** Command-line tools drawn with their maker's glyph (public/brands/providers) in its color, on a terminal tile. */
+const CLI_GLYPHS: Record<CliTool, { src: string; color: string }> = { "claude-code": { src: "/brands/providers/claude.svg", color: "#D97757" } };
+
+/** A profile's mark: its browser's logo, or for a command-line profile a terminal tile with the tool's glyph. */
+export function ProfileMark({ client, color, className }: { client: ProfileClient; color?: string | null; className?: string }) {
+  if (!isCliTool(client)) return <BrowserMark browser={client} color={color} className={className} />;
+  const glyph = CLI_GLYPHS[client];
+  const mask = `url(${glyph.src})`;
+  return (
+    <span aria-hidden="true" className={cn("relative inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-ink", className)}>
+      <span
+        className="size-4"
+        style={{ backgroundColor: glyph.color, maskImage: mask, WebkitMaskImage: mask, maskSize: "contain", WebkitMaskSize: "contain", maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat", maskPosition: "center", WebkitMaskPosition: "center" }}
+      />
       {color ? <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-surface" style={{ backgroundColor: color }} /> : null}
     </span>
   );

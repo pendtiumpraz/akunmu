@@ -1,4 +1,4 @@
-import type { Browser, DeviceSystem } from "../devices/types";
+import type { Browser, DeviceSystem, ProfileClient } from "../devices/types";
 
 /**
  * Findings: what the browser extension or the desktop app saw that is not in the map yet. Each waits for the owner to
@@ -20,8 +20,12 @@ export type LastReport = { agent: AgentKind; version: string; browser: Browser; 
 export type FindingPayload = {
   hostname?: string | null;
   system?: DeviceSystem | null;
-  browser?: Browser | null;
-  /** The browser profile as the browser shows it; its folder when known (desktop scan) and its Google account. */
+  /** The browser, or the command-line tool of a command-line profile (desktop scan). */
+  browser?: ProfileClient | null;
+  /**
+   * The profile as the browser shows it (or a command-line profile's command); its folder when known (desktop scan)
+   * and a browser profile's Google account.
+   */
   profile?: { name: string; directory?: string | null; email?: string | null } | null;
   /** The site an account is signed in to, by domain (matched to a provider when the finding is accepted). */
   provider?: { domain: string; name?: string | null } | null;
@@ -31,3 +35,10 @@ export type FindingPayload = {
 
 /** Browsers whose profiles AkunMu Desktop can open by folder (Chromium browsers; see local-browsers.ts). */
 export const OPENABLE_BROWSERS: readonly Browser[] = ["chrome", "edge", "brave", "vivaldi"];
+
+export function isOpenableClient(client: ProfileClient): boolean {
+  return (OPENABLE_BROWSERS as readonly string[]).includes(client);
+}
+
+/** The site a Claude Code profile signs in to: its account is a sign-in to the Claude provider there. */
+export const CLAUDE_DOMAIN = "claude.ai";

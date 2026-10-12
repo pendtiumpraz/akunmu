@@ -3,7 +3,7 @@
 import { CheckCheck, ExternalLink, Flag, FlagOff, GitBranch, LogOut, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { OPENABLE_BROWSERS } from "@/modules/connect/types";
+import { isOpenableClient } from "@/modules/connect/types";
 import { api } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { Badge } from "@/shared/ui/badge";
@@ -14,12 +14,12 @@ import { useToast } from "@/shared/ui/toast";
 import { useStaff } from "./app-shell";
 import { SignInDrawer } from "./drawers/sign-in-drawer";
 import { needsCheck, placeKeyOf, type MapSignIn } from "./map-types";
-import { AppMark, BrowserMark, Freshness, ProviderAvatar, approvalLabel, placeLabel, shortDate } from "./ui";
+import { AppMark, Freshness, ProfileMark, ProviderAvatar, approvalLabel, placeLabel, shortDate } from "./ui";
 
 export { approvalLabel, placeLabel } from "./ui";
 
 export function PlaceIcon({ row }: { row: Pick<MapSignIn, "profile" | "app" | "appKind"> }) {
-  if (row.profile) return <BrowserMark browser={row.profile.browser} color={row.profile.color} />;
+  if (row.profile) return <ProfileMark client={row.profile.browser} color={row.profile.color} />;
   return <AppMark kind={row.app ? row.appKind : null} />;
 }
 
@@ -29,7 +29,7 @@ type OpenTarget = Pick<MapSignIn, "provider" | "device" | "profile">;
 
 /** "Open in profile" applies to a browser profile AkunMu Desktop can open, on a computer it knows by name. */
 export function canOpenInProfile(row: OpenTarget): boolean {
-  return Boolean(row.profile && OPENABLE_BROWSERS.includes(row.profile.browser) && row.device.hostname);
+  return Boolean(row.profile && isOpenableClient(row.profile.browser) && row.device.hostname);
 }
 
 /** The akunmu:// link the web app hands to AkunMu Desktop, which opens the profile only on the computer named here. */

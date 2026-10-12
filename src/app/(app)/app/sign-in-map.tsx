@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
+import { isCliTool } from "@/modules/devices/types";
 import type { AppKind } from "@/modules/signins/types";
 import { api } from "@/shared/http/client";
 import type { Translator } from "@/shared/i18n/translate";
@@ -37,7 +38,7 @@ import { SignInDrawer, type FixedAccount } from "./drawers/sign-in-drawer";
 import { needsCheck, placeKeyOf, type MapData, type MapDevice, type MapProfile, type PlaceKey, type TreeData } from "./map-types";
 import { SignInLine, useSignInActions } from "./sign-in-actions";
 import { TreeCanvas, type TreeFocus } from "./tree/tree-canvas";
-import { AppMark, BrowserMark, DeviceIcon, ProviderAvatar, browserLabel, systemLabel } from "./ui";
+import { AppMark, DeviceIcon, ProfileMark, ProviderAvatar, profileClientLabel, systemLabel } from "./ui";
 
 /** Which view the map opens in: the account trees, the columns (device → place → account) or the list to check. */
 export type MapView = "tree" | "map" | "check";
@@ -65,18 +66,24 @@ function urlFor(selection: MapSelection): string {
   return query ? `/app?${query}` : "/app";
 }
 
-/** The places of a device: its browser profiles, then the apps (and the system) signed in on the device itself. */
+const isCliPlace = (place: Pick<Place, "profile">) => Boolean(place.profile && isCliTool(place.profile.browser));
+
+/**
+ * The places of a device: its browser profiles, its command-line profiles, then the apps (and the system) signed in
+ * on the device itself.
+ */
 function placesOf(device: MapDevice, data: MapData, staleBefore: string, t: Translator): Place[] {
   const rows = data.signIns.filter((row) => row.device.id === device.id);
   const count = (key: PlaceKey) => rows.filter((row) => placeKeyOf(row) === key);
   const profiles: Place[] = data.profiles
     .filter((profile) => profile.deviceId === device.id)
+    .sort((a, b) => Number(isCliTool(a.browser)) - Number(isCliTool(b.browser)))
     .map((profile) => {
       const inside = count(`p:${profile.id}`);
       return {
         key: `p:${profile.id}`,
         label: profile.name,
-        detail: browserLabel(profile.browser, t),
+        detail: profileClientLabel(profile.browser, t),
         profile,
         appKind: null,
         count: inside.length,
@@ -449,21 +456,34 @@ export function SignInMap({ initial, startRecording, treeFocus = null }: { initi
                 />
                 <div className="scroll-thin flex-1 overflow-y-auto p-1.5">
                   <p className="px-2.5 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-faint">{t("map.groupProfiles")}</p>
-                  {places.filter((candidate) => candidate.profile).length === 0 ? (
+                  {places.filter((candidate) => candidate.profile && !isCliPlace(candidate)).length === 0 ? (
                     <p className="px-2.5 py-2 text-xs text-muted">{t("map.noProfiles")}</p>
                   ) : null}
-                  {places
-                    .filter((candidate) => candidate.profile)
-                    .map((candidate) => (
-                      <button key={candidate.key} type="button" onClick={() => select({ place: candidate.key, accountId: null })} className={rowClass(candidate.key === place?.key)} aria-pressed={candidate.key === place?.key}>
-                        {candidate.profile ? <BrowserMark browser={candidate.profile.browser} color={candidate.profile.color} /> : null}
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-ink">{candidate.label}</span>
-                          <span className="block truncate text-xs text-muted">{candidate.detail}</span>
-                        </span>
-                        <CountPill count={candidate.count} toCheck={candidate.toCheck} />
-                      </button>
-                    ))}
+                  {[false, true].map((cli) => (
+                    <Fragment key={String(cli)}>
+                      {cli && places.some(isCliPlace) ? (
+                        <p className="px-2.5 pb-1 pt-4 text-[11px] font-bold uppercase tracking-wider text-faint">{t("profiles.groupCli")}</p>
+                      ) : null}
+                      {places
+                        .filter((candidate) => candidate.profile && isCliPlace(candidate) === cli)
+                        .map((candidate) => (
+                          <button
+                            key={candidate.key}
+                            type="button"
+                            onClick={() => select({ place: candidate.key, accountId: null })}
+                            className={rowClass(candidate.key === place?.key)}
+                            aria-pressed={candidate.key === place?.key}
+                          >
+                            {candidate.profile ? <ProfileMark client={candidate.profile.browser} color={candidate.profile.color} /> : null}
+                            <span className="min-w-0 flex-1">
+                              <span className={cn("block truncate text-sm font-semibold text-ink", cli && "font-mono text-[13px]")}>{candidate.label}</span>
+                              <span className="block truncate text-xs text-muted">{candidate.detail}</span>
+                            </span>
+                            <CountPill count={candidate.count} toCheck={candidate.toCheck} />
+                          </button>
+                        ))}
+                    </Fragment>
+                  ))}
                   <p className="px-2.5 pb-1 pt-4 text-[11px] font-bold uppercase tracking-wider text-faint">{t("map.groupOnDevice")}</p>
                   {places.filter((candidate) => !candidate.profile).length === 0 ? <p className="px-2.5 py-2 text-xs text-muted">{t("map.noApps")}</p> : null}
                   {places
@@ -492,7 +512,7 @@ export function SignInMap({ initial, startRecording, treeFocus = null }: { initi
                 <ColumnHeader
                   title={
                     <span className="flex items-center gap-2">
-                      {place.profile ? <BrowserMark browser={place.profile.browser} color={place.profile.color} className="size-5 rounded-md text-[9px]" /> : null}
+                      {place.profile ? <ProfileMark client={place.profile.browser} color={place.profile.color} className="size-5 rounded-md text-[9px]" /> : null}
                       <span className="truncate">{place.profile ? `${place.detail} · ${place.label}` : place.label}</span>
                     </span>
                   }
