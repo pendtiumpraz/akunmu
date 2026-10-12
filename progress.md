@@ -13,7 +13,7 @@
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 live; Fase 10 selesai lokal (commit lokal), menunggu izin "migrate dan push" untuk Neon `0004` |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 09 live; Fase 10 live: Neon `0004`, kepatuhan privasi (RoPA, DPIA, DSR, persetujuan, data saya); tinggal `CRON_SECRET` di Vercel |
 
 ---
 
@@ -108,7 +108,8 @@
 - [x] Pengaturan bertab (tanpa gulir panjang): Ruang kerja · Privasi · AI asisten · Pengguna · Data saya; konsol platform: Privasi + Pengaturan (Operator · PPDP & retensi · Lokasi data)
 - [x] Migrasi `0004_compliance` (5 tabel; RLS ENABLE + FORCE: `tenant_isolation` untuk 4 tabel, `platform_only` untuk `account_consents`)
 - [x] Tes: 3 berkas baru (kepatuhan, hak subjek data, konten) + terkait; tsc, lint, build lulus; QA visual lokal (PGlite) 39 tangkapan, 0 galat konsol; PDF/DOCX diperiksa
-- [ ] Izin owner "migrate dan push" (Neon `0004`), lalu `CRON_SECRET` di Vercel AkunMu
+- [x] Izin owner ("migrate dan push", 12 Okt 19.25): migrasi `0004` diterapkan di Neon + diverifikasi (5 migrasi; 5 tabel baru RLS ENABLE + FORCE, `tenant_isolation` × 4 + `platform_only` di `account_consents`, hak `akunmu_app` lengkap, tanpa scope 0 baris, `account_consents` 0 baris dalam scope ruang kerja; data lama tetap: 3 ruang kerja, 4 pengguna, 5 perangkat, 19 profil, 3 akun, 4 login, 22 temuan); push `main` → Vercel
+- [ ] `CRON_SECRET` di Vercel AkunMu (owner), opsional `PLATFORM_OPERATOR_NAME` / `PLATFORM_CONTACT_EMAIL`
 
 ---
 
@@ -147,3 +148,4 @@
 | 2026-10-11 18:30 | Repo | Lisensi open source **MIT** (owner: "khusus repo apps ini kasih license opensource, MIT" + "lalu push"): `LICENSE` (© 2026 Galih Praz), `license: MIT` di `package.json` & `desktop/package.json`, bagian Lisensi di README (logo pihak ketiga tetap berlisensi masing-masing) |
 | 2026-10-11 18:55 | Repo | Riwayat git ditulis ulang (owner: "bener2 diubah aja"): email & nama profil owner disamarkan di semua commit lama (`progress.md`, `user_requirement.md`), selain itu tidak ada yang berubah (isi commit terakhir, pesan, penulis, tanggal sama); force push `main` + tag `v0.1.0` (rilis & aset tetap); hash commit sejak 11 Okt 07.00 berubah, rujukan hash di dokumen disesuaikan |
 | 2026-10-12 18:30 | 10 | Kepatuhan privasi (port dari EventMu, disesuaikan AkunMu): RoPA/DPIA/insiden + unduh PDF/DOCX, permintaan subjek data, persetujuan + halaman legal, data saya (unduh/hapus akun/hapus ruang kerja), retensi + cron, pengaturan bertab; migrasi `0004`; tes + build + QA lokal lulus; commit lokal, menunggu izin "migrate dan push" |
+| 2026-10-12 19:30 | 10 | Owner: "migrate dan push" → Neon `0004_compliance` diterapkan + diverifikasi (data lama utuh); push `main` → Vercel |

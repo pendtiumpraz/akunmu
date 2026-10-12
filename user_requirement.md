@@ -144,3 +144,4 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 | 2026-10-11 | Fase 08 Desktop | Versi `.exe`: PGlite (bukan SQLite), data terpisah & offline |
 | 2026-10-11 | Fase 09 Unduh & hubungkan | Semua sekaligus; temuan = saran yang disetujui; ekstensi zip dipasang manual; landing: Windows + Linux (macOS belum ada) |
 | 2026-10-12 | Fase 10 Kepatuhan privasi | Lengkapi kepatuhan UU PDP & PP 33/2026 (consent, DSR, dll.); RoPA + DPIA lengkap di admin & superadmin dengan unduh PDF + DOCX per aktivitas/DPIA; tambah fitur pengaturan yang kurang; pengaturan bertab tanpa gulir |
+| 2026-10-12 19:25 | Fase 10 deploy | "migrate dan push" (Neon `0004` + push `main`) |
