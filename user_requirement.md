@@ -141,6 +141,9 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 **2026-10-13 (Fase 12)** — alamat email disamarkan (`[email …]`); situs proyek adalah situs publik
 > [email 3] di dalam laptop privasimu acer claude-cli mengerjakan avara.aisac.id kamu screenshot lalu pasang sscreenshotnya di sana masukkan ke blob dan tampilan di workflownya, lalu [email 1] di laptop privasimu acer claude desktop mengerjakan ai-fluencer.sainskerta.net lalu pasang screenshotnya, lalu di laptop yg sama privasimu acer claude-cli akun [email 1] mengerjakan RAG nalar.sainskerta.net, lalu [email 4] dilaptop yg sama mengerjakan sainskerta.net, [email 5] claude-cli mengerjakan motion series video, [email 2] claude-cli mengerjakan privasimu knowledge orbir regulasi.privasimu.com, lalu [email 6] mengerjakan extension AI HUB automation & WAN & Telegram automation extension
 
+**2026-10-13 11:00 WIB**
+> migrate dan push
+
 ---
 
 ## ✅ Approval & Feedback
@@ -153,3 +156,4 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 | 2026-10-11 | Fase 09 Unduh & hubungkan | Semua sekaligus; temuan = saran yang disetujui; ekstensi zip dipasang manual; landing: Windows + Linux (macOS belum ada) |
 | 2026-10-12 | Fase 10 Kepatuhan privasi | Lengkapi kepatuhan UU PDP & PP 33/2026 (consent, DSR, dll.); RoPA + DPIA lengkap di admin & superadmin dengan unduh PDF + DOCX per aktivitas/DPIA; tambah fitur pengaturan yang kurang; pengaturan bertab tanpa gulir |
 | 2026-10-12 19:25 | Fase 10 deploy | "migrate dan push" (Neon `0004` + push `main`) |
+| 2026-10-13 11:00 | Fase 11 + 12 deploy | "migrate dan push" (Neon `0005` + push `main`; profil CLI dan proyek owner dicatat) |
