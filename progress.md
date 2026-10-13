@@ -13,7 +13,7 @@
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 10 live (Neon `0004`; tinggal `CRON_SECRET` di Vercel); Fase 11 (profil CLI) dan Fase 12 (proyek, Neon `0005`) live 13 Okt; tinggal owner cek `BLOB_READ_WRITE_TOKEN` di Vercel |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 10 live (Neon `0004`; tinggal `CRON_SECRET` di Vercel); Fase 11 (profil CLI) dan Fase 12 (proyek, Neon `0005`) live 13 Okt, rilis desktop diperbarui; tinggal owner cek `BLOB_READ_WRITE_TOKEN` di Vercel |
 
 ---
 
@@ -118,7 +118,7 @@
 - [x] Tes: 55 lulus (8 berkas; baru: pemindai folder, profil CLI per perintah, urutan cabang pohon, pemindaian desktop); tsc, lint lulus; QA visual lokal (build produksi + PGlite): 11 tangkapan terang/gelap/en/HP 390 px, 0 galat, 0 luber samping, pohon 0 tumpang tindih dan 0 garis lepas dari port
 - [x] Data owner (13 Okt, Neon, ruang kerja Pribadi, lewat service app, dicek kering dulu): claude.ai di profil Chrome + Claude Desktop yang masuk lewat link darinya, di Laptop Privasimu Acer (profil Chrome baru), PC #1 dan Laptop ASUS; email dan nama profil disamarkan di sini
 - [x] Izin owner ("migrate dan push", 13 Okt): push `main`; 41 profil CLI dicatat di 5 perangkat lewat service app (8 perintah per perangkat, PC #1 tambah 1), dicek kering dulu, dijalankan ulang tanpa perubahan
-- [ ] Rilis desktop baru supaya pemindaian profil Claude Code jalan di perangkat Windows (opsional, izin owner)
+- [x] Rilis desktop diperbarui (owner 13 Okt: "update juga rilis desktopnya"): build ulang dari `main` (`379db5b`, membawa Fase 10–12 + migrasi `0004`/`0005`), 3 aset rilis `v0.1.0` diganti (nama sama, tautan tetap; diunggah dengan nama sementara dulu sehingga tautan tak pernah putus), catatan rilis diperbarui. QA paket Windows: data buatan rilis lama (migrasi `0000`–`0003`) di-upgrade tanpa hilang, pindai komputer menemukan 10 profil Claude Code dan semuanya tercatat, tangkapan layar proyek disimpan di folder data dan tampil, PDF/DOCX RoPA dibuat offline, dibuka ulang tetap sehat, 0 galat; paket Linux berisi berkas yang sama
 
 ### 🔄 Fase 12: Proyek — buah di pohon (owner 13 Okt: "… mengerjakan [situs] kamu screenshot lalu pasang screenshotnya di sana masukkan ke blob dan tampilan di workflownya")
 - [x] Proyek (`projects` + `project_sessions`, migrasi `0005`, hanya tambah tabel; RLS ENABLE + FORCE + `tenant_isolation` di keduanya): nama, alamat situs, catatan, tangkapan layar; dihubungkan ke sesi login yang mengerjakannya
@@ -172,3 +172,4 @@
 | 2026-10-13 06:40 | 11 | Profil CLI (banyak akun Claude Code per perangkat) + pindai desktop; tes, build, QA lokal lulus; data Claude Desktop owner dicatat di Neon; commit lokal, menunggu izin push |
 | 2026-10-13 07:45 | 12 | Proyek sebagai buah di pohon + tangkapan layar (Blob/lokal), halaman Proyek, migrasi `0005`; tes, build, QA lokal lulus; commit lokal, menunggu izin "migrate dan push" |
 | 2026-10-13 11:05 | 11–12 | Owner: "migrate dan push" → Neon `0005_projects` diterapkan + diverifikasi (data lama utuh); 41 profil CLI + data proyek Acer dicatat (5 tangkapan layar di Vercel Blob); push `main` → Vercel |
+| 2026-10-13 12:45 | Rilis | Owner: "update juga rilis desktopnya" → desktop dibuild ulang dari `main` (`379db5b`), QA paket (upgrade data rilis lama, pindai Claude Code, tangkapan layar lokal, PDF/DOCX offline, buka ulang), 3 aset rilis `v0.1.0` diganti (nama sama, tautan tetap) + catatan rilis diperbarui; tautan unduh terbaru = build baru |
