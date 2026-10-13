@@ -12,6 +12,8 @@
   "openLogs": "Buka folder log",
   "profileNotHere": "Profil browser itu tidak ada di komputer ini, atau browsernya belum terpasang.",
   "reload": "Muat ulang",
+  "secretReplaced": "Kunci yang tersimpan tidak bisa dibaca di komputer ini (folder data berasal dari komputer atau pengguna Windows lain), jadi AkunMu membuat kunci baru. Pohonmu aman. Kalau kamu pernah menyimpan kunci AI, masukkan lagi di pengaturan AI.",
+  "secretReplacedTitle": "AkunMu membuat kunci baru",
   "serverFailed": "Server AkunMu tidak menyala.",
   "signInLoop": "AkunMu tidak bisa memasukkanmu.",
   "starting": "Menyiapkan AkunMu…",

@@ -12,6 +12,8 @@
   "openLogs": "Open the log folder",
   "profileNotHere": "That browser profile isn't on this computer, or its browser isn't installed.",
   "reload": "Reload",
+  "secretReplaced": "The saved key could not be read on this computer (the data folder came from another computer or Windows user), so AkunMu made a new one. Your trees are safe. If you had saved an AI key, enter it again in the AI settings.",
+  "secretReplacedTitle": "AkunMu made a new key",
   "serverFailed": "AkunMu's server did not start.",
   "signInLoop": "AkunMu could not sign you in.",
   "starting": "Getting AkunMu ready…",

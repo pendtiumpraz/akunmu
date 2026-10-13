@@ -6,6 +6,7 @@ import { createServer as createHttpServer, request as httpRequest, type Incoming
 import { createServer } from "node:net";
 import path from "node:path";
 import { format, languageFor, messagesFor, type Language, type Messages } from "./messages";
+import { loadAppSecret } from "./secret";
 
 /**
  * AkunMu for Windows and Linux. The shell starts two processes and opens a window on them:
@@ -54,6 +55,8 @@ let appPort = 0;
 let appKey = "";
 /** An akunmu:// link that arrived before the app was up (it started the app). */
 let pendingLink: string | null = null;
+/** The stored key could not be read at this launch and a new one was made (the AI keys need entering again). */
+let secretReplaced = false;
 
 class LaunchError extends Error {
   constructor(
@@ -90,20 +93,20 @@ function watchExit(child: UtilityProcess, part: string): void {
 }
 
 /**
- * The key the app encrypts the secrets it stores with (AI keys). Made on the first launch and kept encrypted by
- * Windows for this user (DPAPI, through safeStorage) when available.
+ * The key the app encrypts the secrets it stores with (AI keys), kept encrypted for this user (DPAPI on Windows,
+ * through safeStorage) when available. One that cannot be read here is replaced instead of stopping the app (secret.ts).
  */
 function appSecret(): string {
-  const file = path.join(dataDir(), "secret.json");
-  if (existsSync(file)) {
-    const stored = JSON.parse(readFileSync(file, "utf8")) as { protected: boolean; value: string };
-    return stored.protected ? safeStorage.decryptString(Buffer.from(stored.value, "base64")) : stored.value;
+  const secret = loadAppSecret(path.join(dataDir(), "secret.json"), {
+    available: () => safeStorage.isEncryptionAvailable(),
+    encrypt: (plain) => safeStorage.encryptString(plain),
+    decrypt: (sealed) => safeStorage.decryptString(sealed),
+  });
+  if (secret.replaced) {
+    secretReplaced = true;
+    write("main", `the stored key could not be read here (another computer or user?): kept as ${path.basename(secret.replaced)}, made a new one`);
   }
-  const secret = randomBytes(48).toString("base64url");
-  const canProtect = safeStorage.isEncryptionAvailable();
-  const value = canProtect ? safeStorage.encryptString(secret).toString("base64") : secret;
-  writeFileSync(file, JSON.stringify({ protected: canProtect, value }), { mode: 0o600 });
-  return secret;
+  return secret.value;
 }
 
 function freePort(): Promise<number> {
@@ -454,6 +457,7 @@ async function launch(): Promise<void> {
     running = true;
     write("main", `ready on ${origin}${agentPort ? `; extension port ${agentPort}` : ""}`);
     await window.loadURL(startUrl);
+    if (secretReplaced) notify(messages.secretReplacedTitle, messages.secretReplaced);
     if (pendingLink) {
       const link = pendingLink;
       pendingLink = null;
