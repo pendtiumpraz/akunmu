@@ -153,6 +153,9 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 **2026-10-13 14:00 WIB**
 > naikkan versinya jadi 0.2.0 lalu rilis
 
+**2026-10-13 17:20 WIB**
+> hapus aset lama di rilis v0.1.0
+
 ---
 
 ## ✅ Approval & Feedback
@@ -169,3 +172,4 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 | 2026-10-13 12:00 | Rilis desktop | "update juga rilis desktopnya" (aset rilis `v0.1.0` diganti dengan build dari `main`) |
 | 2026-10-13 13:00 | Perbaikan desktop | "perbaiki bug secret.json itu, lalu push" (desktop tetap terbuka bila kunci tersimpan tak terbaca; push `main`) |
 | 2026-10-13 14:00 | Rilis 0.2.0 | "naikkan versinya jadi 0.2.0 lalu rilis" (versi 0.2.0, push `main`, rilis GitHub `v0.2.0` sebagai terbaru) |
+| 2026-10-13 17:20 | Rilis v0.1.0 | "hapus aset lama di rilis v0.1.0" (3 berkas dihapus; rilis dan tag tetap, catatannya menunjuk ke rilis terbaru) |
