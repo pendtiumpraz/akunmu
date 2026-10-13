@@ -172,16 +172,44 @@ describe("device tree layout", () => {
       const earlier = rows.filter((row) => row.account.id === account);
       const roll = next();
       const approvedFromId = roll < 0.45 && earlier.length > 0 ? earlier[Math.floor(next() * earlier.length)].id : roll > 0.97 ? 999 : null;
+      // A few sessions work on projects, with or without a screenshot.
+      const projects = Array.from({ length: next() < 0.2 ? 1 + Math.floor(next() * 3) : 0 }, (_, index) => ({
+        id: id * 10 + index,
+        name: `Project ${id}.${index}`,
+        url: null,
+        screenshot: next() < 0.6 ? `/shot-${id}-${index}.png` : null,
+      }));
       rows.push(
         session(id, account, 1 + (account % 3), 1 + Math.floor(next() * 6), place, {
           status: next() < 0.15 ? "signed_out" : "signed_in",
           approvedFromId,
           approvalMethod: approvedFromId ? "code" : null,
+          projects,
         }),
       );
     }
     return rows;
   }
+
+  it("hangs a session's projects (fruit) beside it, after the sessions it let in, with a stalk each", () => {
+    const shot = { id: 1, name: "Site", url: "https://example.com", screenshot: "/shot.png" };
+    const bare = { id: 2, name: "Video series", url: null, screenshot: null };
+    const rows = [session(1, 20, 2, 1, work, { projects: [shot, bare] }), session(2, 20, 2, 2, claudeCode, { approvedFromId: 1, approvalMethod: "code" })];
+    const { nodes, wires } = layoutDeviceForest(buildDeviceForest(rows, options));
+    const sprout = nodes.find((node) => node.kind === "sprout")!;
+    const fruits = nodes.filter((node) => node.kind === "fruit");
+    expect(fruits.map((node) => [node.id, node.x, node.height])).toEqual([
+      ["f:1:1", sproutX(1), DEVICE_TREE_SIZES.fruitHeight],
+      ["f:1:2", sproutX(1), DEVICE_TREE_SIZES.fruitBareHeight],
+    ]);
+    // Under the session it let in, in order, one row gap apart.
+    expect(fruits[0].y).toBe(sprout.y + DEVICE_TREE_SIZES.sproutHeight + DEVICE_TREE_SIZES.rowGap);
+    expect(fruits[1].y).toBe(fruits[0].y + fruits[0].height + DEVICE_TREE_SIZES.rowGap);
+    expect(wires.filter((wire) => wire.kind === "fruit").map((wire) => [wire.target, wire.sourceHandle, wire.fromId])).toEqual([
+      ["f:1:1", "out-1", 1],
+      ["f:1:2", "out-1", 1],
+    ]);
+  });
 
   it("never lets two nodes overlap, keeps every kind of node in its column and draws every session once", () => {
     const columns = {
@@ -204,7 +232,7 @@ describe("device tree layout", () => {
       const byId = new Map(nodes.map((node) => [node.id, node]));
       for (const node of nodes) {
         const trunk = byId.get(node.tree.key)!;
-        expect(node.x - trunk.x, node.id).toBe(node.kind === "sprout" ? sproutX(node.level) : columns[node.kind]);
+        expect(node.x - trunk.x, node.id).toBe(node.kind === "sprout" || node.kind === "fruit" ? sproutX(node.level) : columns[node.kind]);
       }
       for (const wire of wires) {
         expect(byId.has(wire.source) && byId.has(wire.target), wire.id).toBe(true);

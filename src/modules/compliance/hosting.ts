@@ -60,6 +60,9 @@ export function describeInfrastructure(components: readonly Infrastructure[], co
         return { ...base, ...regionLocation(vercelRegion(), common) };
       case "database":
         return { ...base, ...regionLocation(neonRegion(databaseHost()), common) };
+      // A Blob store's region cannot be read from its token: the operator states it in platform Settings.
+      case "storage":
+        return { ...base, ...regionLocation(null, common) };
       case "client":
         return { ...base, location: common.location.client, inIndonesia: null };
       case "ai": {

@@ -8,18 +8,19 @@ import type { ApprovalMethod } from "@/modules/signins/types";
 import { useI18n } from "@/shared/i18n/client";
 import type { Translator } from "@/shared/i18n/translate";
 import { cn } from "@/shared/ui/cn";
-import type { MapSignIn } from "../map-types";
+import type { TreeData } from "../map-types";
 import { APPROVAL_ICONS, approvalLabel, profileClientLabel, systemLabel } from "../ui";
 
 /** Pieces both tree views share: the sign-in rows they read, wires, leaf marks and approval chips. */
 
-export type Row = MapSignIn;
+/** A sign-in as the trees read it, with the projects it works on. */
+export type Row = TreeData["signIns"][number];
 
 /**
  * trunk: from a trunk (account or device) to what grows on it; branch: from a place to its providers; graft: an
  * approval between two sessions (with how); cross: two sessions of the same account (shown while one is lit).
  */
-export type WireKind = "trunk" | "branch" | "graft" | "cross";
+export type WireKind = "trunk" | "branch" | "graft" | "cross" | "fruit";
 export type WireData = { kind: WireKind; method: ApprovalMethod | null; depth: number; dimmed: boolean; active: boolean; live?: boolean };
 export type WireFlowEdge = Edge<WireData, "wire">;
 

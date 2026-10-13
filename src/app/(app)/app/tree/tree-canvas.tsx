@@ -2,7 +2,8 @@
 
 import "@xyflow/react/dist/base.css";
 import { Background, BackgroundVariant, Controls, MiniMap, Panel, ReactFlow, ReactFlowProvider, useNodesInitialized, useReactFlow, type Node } from "@xyflow/react";
-import { ArrowUpRight, AtSign, Boxes, CheckCheck, ExternalLink, GitBranch, History, KeyRound, Laptop, Leaf, LogOut, Pencil, Plus, Search, Sprout, TreeDeciduous, X } from "lucide-react";
+import { ArrowUpRight, AtSign, Boxes, CheckCheck, Cherry, ExternalLink, GitBranch, History, KeyRound, Laptop, Leaf, LogOut, Pencil, Plus, Search, Sprout, TreeDeciduous, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "@/shared/i18n/client";
 import { Button, ButtonLink, IconButton } from "@/shared/ui/button";
@@ -292,7 +293,9 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
           style={{ width: 176, height: 116, marginBottom: 124 }}
           bgColor="var(--surface)"
           maskColor="color-mix(in oklab, var(--canvas) 72%, transparent)"
-          nodeColor={(node) => (node.type === "account" || node.type === "device" ? "var(--trunk-bg)" : node.type === "sprout" ? "var(--accent-line)" : "var(--line-strong)")}
+          nodeColor={(node) =>
+            node.type === "account" || node.type === "device" ? "var(--trunk-bg)" : node.type === "sprout" ? "var(--accent-line)" : node.type === "fruit" ? "var(--bark)" : "var(--line-strong)"
+          }
         />
       </ReactFlow>
 
@@ -391,6 +394,34 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
               </dd>
             </div>
             <div>
+              <dt className="text-[11px] font-bold uppercase tracking-wider text-faint">{t("projects.workingOn")}</dt>
+              <dd className="mt-1 space-y-1 text-sm">
+                {(selected.projects ?? []).length === 0 ? (
+                  <span className="text-muted">{t("projects.noneForSession")}</span>
+                ) : (
+                  (selected.projects ?? []).map((project) => (
+                    <div key={project.id} className="flex items-center gap-2.5 rounded-lg px-1.5 py-1">
+                      <span className="relative inline-flex h-9 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-line bg-sunken text-bark">
+                        {project.screenshot ? (
+                          <Image src={project.screenshot} alt="" fill unoptimized sizes="56px" className="object-cover object-top" />
+                        ) : (
+                          <Cherry className="size-4" />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold text-ink">{project.name}</span>
+                        {project.url ? (
+                          <a href={project.url} target="_blank" rel="noreferrer noopener" className="block truncate font-mono text-xs text-accent hover:underline">
+                            {project.url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                          </a>
+                        ) : null}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </dd>
+            </div>
+            <div>
               <dt className="text-[11px] font-bold uppercase tracking-wider text-faint">{t("tree.alsoSignedIn", { count: format.number(sameAccount.length) })}</dt>
               <dd className="mt-1 space-y-1 text-sm">
                 {sameAccount.length === 0 ? (
@@ -430,6 +461,11 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
                 {t("signIns.signOut")}
               </Button>
             ) : null}
+            {canWrite ? (
+              <ButtonLink href={`/app/projects?session=${selected.id}`} size="sm" variant="ghost" icon={<Cherry className="size-4" />}>
+                {t("projects.addForSession")}
+              </ButtonLink>
+            ) : null}
             <ButtonLink href={`/app/accounts/${selected.account.id}`} size="sm" variant="ghost" icon={<ArrowUpRight className="size-4" />}>
               {t("tree.openAccount")}
             </ButtonLink>
@@ -457,6 +493,7 @@ function Legend({ mode, onClose }: { mode: TreeMode; onClose: () => void }) {
           { icon: <Boxes className="size-3.5 text-ink-2" />, label: t("tree.legendProvider") },
           ...leaves,
           { icon: <KeyRound className="size-3.5 text-accent" />, label: t("tree.legendGraft") },
+          { icon: <Cherry className="size-3.5 text-bark" />, label: t("tree.legendFruit") },
           { icon: <span className="block h-0 w-3.5 border-t-2 border-dashed border-accent" />, label: t("tree.legendCross") },
         ]
       : [

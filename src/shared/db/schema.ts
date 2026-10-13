@@ -11,3 +11,4 @@ export * from "../../modules/security/schema";
 export * from "../../modules/connect/schema";
 export * from "../../modules/compliance/schema";
 export * from "../../modules/privacy/schema";
+export * from "../../modules/projects/schema";

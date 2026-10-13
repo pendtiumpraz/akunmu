@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
-/** Security headers and Content-Security-Policy. AkunMu loads nothing from other origins. */
+/**
+ * Security headers and Content-Security-Policy. AkunMu loads nothing from other origins, except the project
+ * screenshots it stores in Vercel Blob (images only, from the Blob store's public host).
+ */
 const isDevelopment = process.env.NODE_ENV !== "production";
 /**
  * The desktop build (desktop/scripts/build.mjs): a standalone server the Electron shell runs on plain http at
@@ -12,7 +15,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
   "connect-src 'self'",
   "frame-src 'none'",

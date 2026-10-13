@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { asPlatform, db, type DbExecutor } from "../../shared/db";
 import { AppError, forbidden } from "../../shared/http/errors";
+import { removeStored, type StoredFile } from "../../shared/storage";
 import { accounts, providers } from "../accounts/schema";
 import { aiActions, aiConversations, aiMessages, aiUsage } from "../ai/schema";
 import { auditLogs } from "../audit/schema";
@@ -8,6 +9,7 @@ import { recordAudit } from "../audit/service";
 import { dpiaAssessments, privacyIncidents, processingActivities } from "../compliance/schema";
 import { findings, ingestTokens } from "../connect/schema";
 import { browserProfiles, devices } from "../devices/schema";
+import { projectSessions, projects } from "../projects/schema";
 import { appSettings } from "../settings/schema";
 import { signIns } from "../signins/schema";
 import { tenants } from "../tenants/schema";
@@ -24,14 +26,19 @@ import { accountConsents, privacyRequests } from "./schema";
  * whole workspace. Erasure deletes the rows for good (no trash), after the user typed a confirmation.
  */
 
-/** Map rows every member can read (map.read): the workspace's devices, profiles, providers, accounts and sign-ins. */
+/**
+ * Map rows every member can read (map.read): the workspace's devices, profiles, providers, accounts, sign-ins and
+ * projects (with the sessions working on each; a screenshot is given by its address).
+ */
 async function workspaceMap() {
-  const [deviceRows, profileRows, providerRows, accountRows, signInRows] = await Promise.all([
+  const [deviceRows, profileRows, providerRows, accountRows, signInRows, projectRows, linkRows] = await Promise.all([
     db().select().from(devices).where(isNull(devices.deletedAt)),
     db().select().from(browserProfiles).where(isNull(browserProfiles.deletedAt)),
     db().select().from(providers).where(and(isNull(providers.deletedAt), eq(providers.builtIn, false))),
     db().select().from(accounts).where(isNull(accounts.deletedAt)),
     db().select().from(signIns).where(isNull(signIns.deletedAt)),
+    db().select().from(projects).where(isNull(projects.deletedAt)),
+    db().select({ projectId: projectSessions.projectId, signInId: projectSessions.signInId }).from(projectSessions),
   ]);
   return {
     devices: deviceRows.map(({ id, name, kind, system, location, hostname, notes, lastCheckedAt, createdAt }) => ({ id, name, kind, system, location, hostname, notes, lastCheckedAt, createdAt })),
@@ -53,6 +60,16 @@ async function workspaceMap() {
       signedOutAt,
       review,
       notes,
+    })),
+    projects: projectRows.map(({ id, name, url, notes, screenshotUrl, screenshotAt, createdAt }) => ({
+      id,
+      name,
+      url,
+      notes,
+      screenshot: screenshotUrl && /^https?:\/\//.test(screenshotUrl) ? screenshotUrl : null,
+      screenshotAt,
+      createdAt,
+      signInIds: linkRows.filter((link) => link.projectId === id).map((link) => link.signInId),
     })),
   };
 }
@@ -151,17 +168,26 @@ export async function deleteMyAccount(user: Pick<User, "id" | "email" | "role">,
 
 /**
  * Erases a whole workspace (admins only, after typing its address): every row the workspace owns is deleted —
- * map, extension keys and findings, assistant chats, settings, privacy records, audit log — and so are its
- * members with their sessions and consent records. Requests members filed with the operator stay with the
- * operator. Runs as one transaction, so it either erases everything or nothing.
+ * map, projects, extension keys and findings, assistant chats, settings, privacy records, audit log — and so are its
+ * members with their sessions and consent records; the project screenshots are deleted from storage once the rows
+ * are gone. Requests members filed with the operator stay with the operator. The rows go in one transaction, so it
+ * either erases everything or nothing.
  */
 export async function deleteWorkspace(user: Pick<User, "role" | "tenantId">, tenantId: number, confirmation: string): Promise<void> {
   if (user.role !== "admin" || user.tenantId !== tenantId) throw forbidden();
   const workspace = await getTenant(tenantId);
   if (confirmation.trim().toLowerCase() !== workspace.slug.toLowerCase()) throw new AppError(422, "errors.confirmationMismatch");
+  const screenshots: StoredFile[] = [];
   await asPlatform(async () =>
     await db().transaction(async (transaction) => {
+      const stored = await transaction
+        .select({ url: projects.screenshotUrl, path: projects.screenshotPath })
+        .from(projects)
+        .where(eq(projects.tenantId, tenantId));
+      for (const { url, path } of stored) if (url && path) screenshots.push({ url, path });
       const owned = [
+        projectSessions,
+        projects,
         findings,
         ingestTokens,
         signIns,
@@ -192,4 +218,6 @@ export async function deleteWorkspace(user: Pick<User, "role" | "tenantId">, ten
       await recordAudit({ actorType: "system", action: "tenant.erased_by_admin", subjectType: "tenant", subjectId: tenantId, meta: { members: memberIds.length } }, transaction);
     }),
   );
+  // After the commit: a file that cannot be removed now must not bring the erased rows back.
+  for (const file of screenshots) await removeStored(file).catch(() => undefined);
 }

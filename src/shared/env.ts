@@ -79,6 +79,21 @@ export function cronSecret(): string | undefined {
   return read("CRON_SECRET");
 }
 
+/** Vercel Blob's token: files (project screenshots) go to Blob when it is set, else to the local uploads folder. */
+export function blobToken(): string | undefined {
+  return read("BLOB_READ_WRITE_TOKEN");
+}
+
+/** Running on Vercel, whose file system is read-only and short-lived (Vercel sets VERCEL=1). */
+export function onVercel(): boolean {
+  return read("VERCEL") === "1";
+}
+
+/** Where files go without Vercel Blob: AkunMu Desktop's data folder (set by the shell), else public/uploads. */
+export function uploadsDir(): string | undefined {
+  return read("AKUNMU_UPLOADS_DIR");
+}
+
 /** Region code of the running Vercel function (e.g. "sin1"), used to describe where data is processed. */
 export function vercelRegion(): string | undefined {
   return read("VERCEL_REGION");

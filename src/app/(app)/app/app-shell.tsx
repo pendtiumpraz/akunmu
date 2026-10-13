@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, AtSign, Boxes, ChevronDown, Fingerprint, Laptop, LogOut, Plug, Scale, Search, Settings, ShieldCheck, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, AtSign, Boxes, Cherry, ChevronDown, Fingerprint, Laptop, LogOut, Plug, Scale, Search, Settings, ShieldCheck, Sparkles, TreeDeciduous, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -28,6 +28,7 @@ const NAV: ShellNavItem[] = [
   { href: "/app/devices", labelKey: "nav.devices", icon: Laptop, color: "#3B82F6" },
   { href: "/app/accounts", labelKey: "nav.accounts", icon: AtSign, color: "#F59E0B" },
   { href: "/app/providers", labelKey: "nav.providers", icon: Boxes, color: "#A855F7" },
+  { href: "/app/projects", labelKey: "nav.projects", icon: Cherry, color: "#F87171" },
   { href: "/app/assistant", labelKey: "nav.assistant", icon: Sparkles, color: "#EC4899" },
 ];
 

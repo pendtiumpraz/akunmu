@@ -8,6 +8,7 @@ Built with the Sainskerta loop-v5 workflow: see `progress.md`, `user_requirement
 
 - Next.js 16 (App Router, Route Handlers) · React 19 · TypeScript 6 (strict) · Tailwind CSS 4
 - PostgreSQL (Neon) through Drizzle ORM; the driver lives only in `src/shared/db`
+- Vercel Blob for files (project screenshots), behind `src/shared/storage.ts`; a local folder when Blob is not set (desktop, development)
 - AI assistant through the provider gateway in `src/modules/ai` (Anthropic Messages or OpenAI-compatible)
 - Vitest + PGlite (in-memory PostgreSQL with row level security) for tests
 
@@ -41,6 +42,8 @@ tenants (workspaces)
 ├─ providers          26 built in (Google, Microsoft, GitHub, …) plus the workspace's own
 │   └─ accounts           provider + identifier (email, username or phone)
 ├─ sign_ins           account × device × (browser profile | app on the device)
+├─ projects           what sessions work on: name, site, notes, a screenshot (Blob URL or local file)
+│   └─ project_sessions   project × sign-in (the sessions working on it)
 ├─ ingest_tokens      one browser-extension key per device (only its hash is kept)
 ├─ findings           what the extension or AkunMu Desktop saw that the trees lack, waiting for yes or no
 ├─ processing_activities · dpia_assessments · privacy_incidents   the privacy records (also the platform's own, tenant_id null)
@@ -51,6 +54,7 @@ account_consents      proof of consent per user (platform only)
 - One active sign-in per account and place; signing out keeps the row as history.
 - A device can run several Claude Code accounts side by side, each from its own config folder through its own command (`claude-work` → `CLAUDE_CONFIG_DIR=~/.claude-work`). Each is a CLI profile, a place like a browser profile: the device page lists them under "CLI profiles", the trees draw each as a branch with the Claude account signed in to it.
 - A sign-in can name the sign-in of the same account that let it in (`approved_from_id`, with `approval_method`: code, link, QR or prompt); loops are refused. The trees grow from these links and never let two nodes overlap: by device (`src/modules/signins/device-tree.ts`: device → browser profiles, apps and CLIs → providers → logins, each with the sessions it let in hanging off it, on whichever device they are; the default view) or by account (`src/modules/signins/tree.ts`: account → the devices it was signed in on directly → the devices it reached from there). Both are pure and tested.
+- Projects (`/app/projects`) record what a session works on: a site, an app, a video series, with a screenshot (JPEG, PNG or WebP by its file signature, up to 4 MB). In the device trees each project hangs off its session as fruit, with its screenshot, after the sessions that session let in; the session's panel lists them too. Deleting a project deletes its screenshot file; erasing a workspace deletes them all.
 - A sign-in not confirmed for 30 days, or marked for review, shows under "To check".
 - Deleting a device trashes its profiles and sign-ins with the same timestamp; restoring brings them back together. The same goes for accounts and their sign-ins.
 - Free text (notes, labels) that looks like a secret (API keys, tokens, private keys, backup codes) is refused.
@@ -105,7 +109,7 @@ Code is English only (guarded by `tests/unit/code-language.test.ts`). Every user
 
 ## Deployment (Vercel)
 
-Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET` and `CRON_SECRET` in the project's environment (optionally `PLATFORM_OPERATOR_NAME` and `PLATFORM_CONTACT_EMAIL`). `vercel-build` runs the migrations, then `next build`.
+Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET` and `CRON_SECRET` in the project's environment (optionally `PLATFORM_OPERATOR_NAME` and `PLATFORM_CONTACT_EMAIL`), and connect a Vercel Blob store to the project (`BLOB_READ_WRITE_TOKEN`): without it, uploading a screenshot answers 503, since Vercel's file system keeps nothing. The CSP allows images from `*.public.blob.vercel-storage.com` only. `vercel-build` runs the migrations, then `next build`.
 
 ## Download & connect
 
@@ -131,6 +135,7 @@ Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `APP_SECRET` and `CRON_SECRET` in t
 - **Data.** Everything lives in `%APPDATA%\AkunMu`:
   - `database\`: back this folder up while AkunMu is closed;
   - `secret.json`: the key that encrypts stored AI keys, itself protected by Windows (DPAPI);
+  - `uploads\`: project screenshots (the desktop never uses Vercel Blob);
   - `logs\akunmu.log`.
 
   Uninstalling keeps this folder. `AKUNMU_DATA_DIR` points the app at another folder (such a run leaves `akunmu://` links to the installed app). On Linux the folder is `~/.config/AkunMu`.

@@ -2,6 +2,7 @@
   "infrastructure": {
     "app": { "name": "Vercel", "role": "AkunMu application hosting (server functions)" },
     "database": { "name": "Neon (PostgreSQL)", "role": "AkunMu database" },
+    "storage": { "name": "Vercel Blob", "role": "AkunMu file storage (project screenshots)" },
     "ai": { "name": "AI provider", "role": "Text processing by AI models for the assistant" },
     "client": { "name": "User's device", "role": "Browser extension and AkunMu Desktop (AkunMu Desktop data stays on the user's computer)" }
   },

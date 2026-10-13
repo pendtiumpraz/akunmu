@@ -29,7 +29,7 @@ export type DpiaCriterion = (typeof DPIA_CRITERIA)[number];
  * Systems the data of an activity passes through; locations are detected at runtime (see hosting.ts).
  * "client" is the user's own device (browser extension, AkunMu Desktop): listed as a system, never a transfer.
  */
-export const INFRASTRUCTURE = ["app", "database", "ai", "client"] as const;
+export const INFRASTRUCTURE = ["app", "database", "storage", "ai", "client"] as const;
 export type Infrastructure = (typeof INFRASTRUCTURE)[number];
 
 /** Components that run on the data subject's own device and therefore never count as a transfer abroad. */
@@ -114,7 +114,8 @@ export const ACTIVITIES: readonly ActivityDefinition[] = [
     code: "SIN",
     stats: ["signIns"],
     criteria: ["data_matching"],
-    infrastructure: ["app", "database"],
+    // storage: the screenshots of the projects the sessions work on.
+    infrastructure: ["app", "database", "storage"],
     risks: [
       { id: "takeover-map", category: "authorization", impact: 4, likelihood: 2, control: 2, treatment: "mitigate" },
       { id: "outdated-status", category: "data_quality", impact: 2, likelihood: 3, control: 2, treatment: "mitigate" },

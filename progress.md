@@ -9,11 +9,11 @@
 | Item | Status |
 |------|--------|
 | **Project** | `akunmu` |
-| **Fase Aktif** | `Fase 11: Profil CLI` — banyak akun Claude Code per perangkat (perintah + folder sendiri), pindai desktop |
+| **Fase Aktif** | `Fase 12: Proyek (buah di pohon)` — apa yang dikerjakan tiap sesi, dengan tangkapan layar di Vercel Blob |
 | **Status Loop** | `waiting` |
 | **Dimulai** | `2026-10-11 00:15` |
 | **Target Selesai** | — |
-| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 10 live (Neon `0004`; tinggal `CRON_SECRET` di Vercel); Fase 11 commit lokal, tanpa migrasi, menunggu izin push |
+| **Progress** | Live dipakai owner (ruang kerja Pribadi); Fase 10 live (Neon `0004`; tinggal `CRON_SECRET` di Vercel); Fase 11 (profil CLI, tanpa migrasi) dan Fase 12 (proyek, migrasi `0005`) commit lokal, menunggu izin "migrate dan push" |
 
 ---
 
@@ -120,6 +120,17 @@
 - [ ] Izin owner untuk push (tanpa migrasi Neon), lalu profil CLI dicatat di 5 perangkat: 8 perintah per perangkat, PC #1 tambah 1 (sudah dicek kering)
 - [ ] Rilis desktop baru supaya pemindaian profil Claude Code jalan di perangkat Windows (opsional, izin owner)
 
+### 🔄 Fase 12: Proyek — buah di pohon (owner 13 Okt: "… mengerjakan [situs] kamu screenshot lalu pasang screenshotnya di sana masukkan ke blob dan tampilan di workflownya")
+- [x] Proyek (`projects` + `project_sessions`, migrasi `0005`, hanya tambah tabel; RLS ENABLE + FORCE + `tenant_isolation` di keduanya): nama, alamat situs, catatan, tangkapan layar; dihubungkan ke sesi login yang mengerjakannya
+- [x] Penyimpanan berkas `src/shared/storage.ts`: Vercel Blob bila `BLOB_READ_WRITE_TOKEN` ada (web), folder lokal bila tidak (desktop: `<data>/uploads`); di Vercel tanpa Blob unggahan dijawab 503 dengan pesan jelas; gambar dicek dari tanda tangan berkas (JPEG/PNG/WebP), maks. 4 MB; CSP hanya menambah `*.public.blob.vercel-storage.com` untuk gambar
+- [x] Pohon per perangkat: proyek tumbuh sebagai **buah** dari sesinya (kartu bertangkapan layar, tangkai kayu), sesudah sesi yang masuk lewat sesi itu; panel sesi menampilkan "Mengerjakan" + "Tambah proyek"; legenda; minimap
+- [x] Halaman **Proyek** (`/app/projects`, menu rail): kartu bertangkapan layar, sesi yang mengerjakan, "Lihat di pohon"; form tambah/ubah (unggah/ganti/hapus tangkapan layar, pilih sesi per perangkat dengan pencarian)
+- [x] Kepatuhan: ekspor "Data saya" memuat proyek; hapus ruang kerja ikut menghapus berkas tangkapan layar; RoPA: data proyek + tangkapan layar di "Peta sesi login", komponen infrastruktur baru "Vercel Blob" (lokasi diisi operator), profil CLI di "Perangkat", email akun Claude Code di "Ekstensi & Desktop"
+- [x] Tes: 92 lulus di 14 berkas terkait (baru: proyek + tangkapan layar + isolasi ruang kerja, penyimpanan, buah di pohon termasuk 40 hutan acak tanpa tumpang tindih, hapus ruang kerja); tsc, lint, build tanpa peringatan; QA visual lokal 9 tangkapan (5 tangkapan layar situs asli dimuat, 0 tumpang tindih, 0 garis lepas, 0 galat, HP 390 px tanpa luber)
+- [x] Tangkapan layar 5 situs proyek owner diambil (1440×900, JPEG): Avara, AI Fluencer, Nalar, Sainskerta, Privasimu Knowledge Orbit — disimpan lokal, diunggah ke Blob saat data dicatat
+- [ ] Izin owner "migrate dan push" (Neon `0005`), lalu data owner di Laptop Privasimu Acer: profil CLI + login per perintah, login Claude Code lama dipindah ke profil CLI-nya, 7 proyek (5 bertangkapan layar di Blob)
+- [ ] `BLOB_READ_WRITE_TOKEN` tersedia di Vercel AkunMu (store Blob terhubung ke proyek) agar unggahan lewat web jalan (owner cek)
+
 ---
 
 ## Issue & Blocker
@@ -159,3 +170,4 @@
 | 2026-10-12 18:30 | 10 | Kepatuhan privasi (port dari EventMu, disesuaikan AkunMu): RoPA/DPIA/insiden + unduh PDF/DOCX, permintaan subjek data, persetujuan + halaman legal, data saya (unduh/hapus akun/hapus ruang kerja), retensi + cron, pengaturan bertab; migrasi `0004`; tes + build + QA lokal lulus; commit lokal, menunggu izin "migrate dan push" |
 | 2026-10-12 19:30 | 10 | Owner: "migrate dan push" → Neon `0004_compliance` diterapkan + diverifikasi (data lama utuh); push `main` → Vercel |
 | 2026-10-13 06:40 | 11 | Profil CLI (banyak akun Claude Code per perangkat) + pindai desktop; tes, build, QA lokal lulus; data Claude Desktop owner dicatat di Neon; commit lokal, menunggu izin push |
+| 2026-10-13 07:45 | 12 | Proyek sebagai buah di pohon + tangkapan layar (Blob/lokal), halaman Proyek, migrasi `0005`; tes, build, QA lokal lulus; commit lokal, menunggu izin "migrate dan push" |

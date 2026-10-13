@@ -216,6 +216,9 @@ async function startServer(port: number, databasePort: number, key: string, agen
       AKUNMU_DESKTOP: "1",
       AKUNMU_DESKTOP_TOKEN: key,
       AKUNMU_AGENT_ADDRESS: agentPort ? `http://${LOCAL_HOST}:${agentPort}` : "",
+      // Offline: project screenshots stay in the data folder, never in a Blob store from the user's environment.
+      AKUNMU_UPLOADS_DIR: path.join(dataDir(), "uploads"),
+      BLOB_READ_WRITE_TOKEN: "",
     },
   });
   server = child;

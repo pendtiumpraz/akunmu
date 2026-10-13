@@ -1,3 +1,6 @@
+import { mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertConversation, insertMessage } from "@/modules/ai/conversations";
@@ -8,10 +11,14 @@ import { deleteMyAccount, deleteWorkspace, exportMyData } from "@/modules/privac
 import { deleteRequest, fileUserRequest, listRequests, recordStaffRequest, requestsOfUser, respondToRequest } from "@/modules/privacy/requests";
 import { accountConsents, privacyRequests } from "@/modules/privacy/schema";
 import { POLICY_VERSION } from "@/modules/privacy/types";
+import { projects } from "@/modules/projects/schema";
+import { createProject, setProjectScreenshot } from "@/modules/projects/service";
+import { projectInputSchema } from "@/modules/projects/validation";
 import { signupSchema } from "@/modules/tenants/validation";
 import { tenants } from "@/modules/tenants/schema";
 import { users } from "@/modules/users/schema";
 import { asPlatform, inTenant } from "@/shared/db";
+import { parseWith } from "@/shared/http/validation";
 import { createTestTenant, openTestDatabase, type TestDatabase } from "../helpers/database";
 import { device, signIn, staffUser } from "../helpers/fixtures";
 
@@ -126,9 +133,15 @@ describe("my data", () => {
   });
 
   it("erases a whole workspace in one go and leaves other workspaces alone", async () => {
+    const uploads = mkdtempSync(path.join(tmpdir(), "akunmu-erase-"));
+    process.env.AKUNMU_UPLOADS_DIR = uploads;
     const admin = await staffUser();
     const laptop = await device(admin.id);
-    await signIn(admin.id, { deviceId: laptop.id }, { provider: "google", identifier: "owner@example.com" });
+    const session = await signIn(admin.id, { deviceId: laptop.id }, { provider: "google", identifier: "owner@example.com" });
+    const project = await createProject(parseWith(projectInputSchema, { name: "Landing page", signInIds: [session.id] }), admin.id);
+    await setProjectScreenshot(project.id, Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(32)]), admin.id);
+    const exported = await exportMyData(admin, database.tenantId);
+    expect(exported.map.projects).toMatchObject([{ name: "Landing page", signInIds: [session.id] }]);
     await fileUserRequest(admin, database.tenantId, { recipient: "workspace", requestType: "access" });
     await fileUserRequest(admin, database.tenantId, { recipient: "platform", requestType: "access" });
     const other = await createTestTenant(database.owner, "workspace-b");
@@ -146,5 +159,10 @@ describe("my data", () => {
     // The request to the operator is the operator's record of how it was handled.
     expect(await database.owner.select().from(privacyRequests)).toHaveLength(1);
     expect(await database.owner.select().from(devices).where(eq(devices.id, otherDevice.id))).toHaveLength(1);
+    // Projects go with their screenshot files.
+    expect(await database.owner.select().from(projects).where(eq(projects.tenantId, database.tenantId))).toHaveLength(0);
+    expect(readdirSync(uploads, { recursive: true }).map(String).filter((entry) => entry.endsWith(".jpg"))).toEqual([]);
+    delete process.env.AKUNMU_UPLOADS_DIR;
+    rmSync(uploads, { recursive: true, force: true });
   });
 });

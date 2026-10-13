@@ -7,6 +7,7 @@
  * has no tree of its own: its sessions hang where they grew. Pure functions shared by the screen and the tests.
  */
 import { isCliTool } from "../devices/types";
+import type { TreeProject } from "../projects/types";
 import { bestPacking, leafState, visibleSignIns, type ForestLayoutOptions, type ForestOptions, type LeafState, type TreeSignIn } from "./tree";
 import type { AppKind, ApprovalMethod } from "./types";
 
@@ -17,6 +18,8 @@ export type DeviceTreeSignIn = TreeSignIn & {
   profile: { id: number; name: string; browser?: string } | null;
   app: string | null;
   appKind: AppKind | null;
+  /** What the session works on: drawn as fruit hanging off it, after the sessions it let in. */
+  projects?: TreeProject[];
 };
 
 /** A login session and the sessions let in from it (on any device), each with its own. */
@@ -39,6 +42,11 @@ export function deviceKey(deviceId: number): string {
 /** The node of a session that hangs off another one. */
 export function sproutKey(signInId: number): string {
   return `s:${signInId}`;
+}
+
+/** The node of a project hanging off a session (one per session it hangs off). */
+export function fruitKey(signInId: number, projectId: number): string {
+  return `f:${signInId}:${projectId}`;
 }
 
 /** "p:<profile>", "a:<app>" or "d" (the device itself), as the map's place keys. */
@@ -171,6 +179,9 @@ export const DEVICE_TREE_SIZES = {
   twigPadding: 6,
   sproutWidth: 248,
   sproutHeight: 56,
+  /** A project (fruit): with its screenshot, or just its name and address. */
+  fruitHeight: 184,
+  fruitBareHeight: 62,
   columnGap: 96,
   /** Wider than the other gaps: the wires there carry how each session was let in ("code", "prompt", …). */
   graftGap: 136,
@@ -183,14 +194,17 @@ export type PlacedPlace<Row extends DeviceTreeSignIn> = Placed<Row> & { kind: "p
 export type PlacedTwig<Row extends DeviceTreeSignIn> = Placed<Row> & { kind: "twig"; place: PlaceBranch<Row>; twig: ProviderTwig<Row> };
 /** A session grown from a leaf (level 1) or from another grown session (one level more each step). */
 export type PlacedSprout<Row extends DeviceTreeSignIn> = Placed<Row> & { kind: "sprout"; leaf: SessionLeaf<Row>; level: number };
-export type PlacedDeviceNode<Row extends DeviceTreeSignIn> = PlacedDevice<Row> | PlacedPlace<Row> | PlacedTwig<Row> | PlacedSprout<Row>;
+/** A project a session works on, in the column right of that session (with the sessions it let in, below them). */
+export type PlacedFruit<Row extends DeviceTreeSignIn> = Placed<Row> & { kind: "fruit"; leaf: SessionLeaf<Row>; project: TreeProject; level: number };
+export type PlacedDeviceNode<Row extends DeviceTreeSignIn> = PlacedDevice<Row> | PlacedPlace<Row> | PlacedTwig<Row> | PlacedSprout<Row> | PlacedFruit<Row>;
 /**
  * trunk: from a device to its places; branch: from a place to its providers; graft: from a session to one let in from
- * it (with how), leaving from the leaf's port on its twig or from a grown session.
+ * it (with how), leaving from the leaf's port on its twig or from a grown session; fruit: from a session to a project
+ * it works on.
  */
 export type DeviceWire = {
   id: string;
-  kind: "trunk" | "branch" | "graft";
+  kind: "trunk" | "branch" | "graft" | "fruit";
   source: string;
   sourceHandle: string;
   target: string;
@@ -219,9 +233,16 @@ export function sproutX(level: number): number {
 const stack = (heights: number[]) => heights.reduce((sum, height) => sum + height, 0) + Math.max(0, heights.length - 1) * DEVICE_TREE_SIZES.rowGap;
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high);
 
-/** The height a grown session needs: the larger of its node and the sessions grown from it, stacked. */
+export function fruitHeight(project: TreeProject): number {
+  return project.screenshot ? DEVICE_TREE_SIZES.fruitHeight : DEVICE_TREE_SIZES.fruitBareHeight;
+}
+
+/** What hangs off a session, in order: the sessions it let in, then the projects it works on. */
+const childBands = (leaf: SessionLeaf<DeviceTreeSignIn>): number[] => [...leaf.grown.map(sproutBand), ...(leaf.row.projects ?? []).map(fruitHeight)];
+
+/** The height a grown session needs: the larger of its node and what hangs off it, stacked. */
 function sproutBand(leaf: SessionLeaf<DeviceTreeSignIn>): number {
-  return Math.max(DEVICE_TREE_SIZES.sproutHeight, stack(leaf.grown.map(sproutBand)));
+  return Math.max(DEVICE_TREE_SIZES.sproutHeight, stack(childBands(leaf)));
 }
 
 /** The middle of a twig's n-th leaf, from the twig's top. */
@@ -235,8 +256,9 @@ function twigPlan(twig: ProviderTwig<DeviceTreeSignIn>): { band: number; tops: n
   let band = twigHeight(twig);
   let free = 0;
   const tops = twig.leaves.map((leaf, index) => {
-    if (leaf.grown.length === 0) return 0;
-    const block = stack(leaf.grown.map(sproutBand));
+    const children = childBands(leaf);
+    if (children.length === 0) return 0;
+    const block = stack(children);
     const top = Math.max(free, leafMiddle(index) - block / 2);
     band = Math.max(band, top + block);
     free = top + block + DEVICE_TREE_SIZES.rowGap;
@@ -247,7 +269,10 @@ function twigPlan(twig: ProviderTwig<DeviceTreeSignIn>): { band: number; tops: n
 
 type Parts<Row extends DeviceTreeSignIn> = { nodes: PlacedDeviceNode<Row>[]; wires: DeviceWire[] };
 
-/** Places the sessions grown from `from` in the column of `level`, stacked from `top`, each in the middle of its band. */
+/**
+ * Places what hangs off `from` in the column of `level`, stacked from `top`: the sessions it let in, each in the middle
+ * of its band, then the projects it works on.
+ */
 function placeGrown<Row extends DeviceTreeSignIn>(tree: DeviceTree<Row>, from: { leaf: SessionLeaf<Row>; node: string; handle: string }, level: number, top: number, parts: Parts<Row>): void {
   let y = top;
   for (const leaf of from.leaf.grown) {
@@ -266,8 +291,26 @@ function placeGrown<Row extends DeviceTreeSignIn>(tree: DeviceTree<Row>, from: {
       fromId: from.leaf.row.id,
       toId: leaf.row.id,
     });
-    placeGrown(tree, { leaf, node: id, handle: "out" }, level + 1, y + (band - stack(leaf.grown.map(sproutBand))) / 2, parts);
+    placeGrown(tree, { leaf, node: id, handle: "out" }, level + 1, y + (band - stack(childBands(leaf))) / 2, parts);
     y += band + DEVICE_TREE_SIZES.rowGap;
+  }
+  for (const project of from.leaf.row.projects ?? []) {
+    const id = fruitKey(from.leaf.row.id, project.id);
+    const height = fruitHeight(project);
+    parts.nodes.push({ kind: "fruit", id, x: sproutX(level), y, width: DEVICE_TREE_SIZES.sproutWidth, height, tree, leaf: from.leaf, project, level });
+    parts.wires.push({
+      id: `${from.leaf.row.id}>f${project.id}`,
+      kind: "fruit",
+      source: from.node,
+      sourceHandle: from.handle,
+      target: id,
+      targetHandle: "in",
+      depth: 2 + level,
+      method: null,
+      fromId: from.leaf.row.id,
+      toId: null,
+    });
+    y += height + DEVICE_TREE_SIZES.rowGap;
   }
 }
 

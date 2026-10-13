@@ -1,7 +1,8 @@
 "use client";
 
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
-import { Leaf, MonitorSmartphone, Waypoints } from "lucide-react";
+import { Cherry, ExternalLink, Leaf, MonitorSmartphone, Waypoints } from "lucide-react";
+import Image from "next/image";
 import {
   DEVICE_TREE_SIZES,
   buildDeviceForest,
@@ -12,6 +13,7 @@ import {
   type DeviceForestLayout,
   type DeviceTree,
   type PlacedDevice,
+  type PlacedFruit,
   type PlacedPlace,
   type PlacedSprout,
   type PlacedTwig,
@@ -57,10 +59,16 @@ type DeviceData = { placed: PlacedDevice<Row>; dimmed: boolean; frame: string[];
 type PlaceData = { placed: PlacedPlace<Row>; dimmed: boolean };
 type TwigData = Lighting & { placed: PlacedTwig<Row>; dimmed: boolean; captions: Map<number, string> };
 type SproutData = Lighting & { placed: PlacedSprout<Row>; dimmed: boolean };
+type FruitData = { placed: PlacedFruit<Row>; dimmed: boolean };
 type DeviceFlowNode = Node<DeviceData, "device">;
 type PlaceFlowNode = Node<PlaceData, "place">;
 type TwigFlowNode = Node<TwigData, "twig">;
 type SproutFlowNode = Node<SproutData, "sprout">;
+type FruitFlowNode = Node<FruitData, "fruit">;
+type AnyFlowNode = DeviceFlowNode | PlaceFlowNode | TwigFlowNode | SproutFlowNode | FruitFlowNode;
+
+/** Whether anything hangs off a session (to show its out port). */
+const bears = (leaf: SessionLeaf<Row>) => leaf.grown.length > 0 || (leaf.row.projects?.length ?? 0) > 0;
 
 const leavesOf = (tree: DeviceTree<Row>) => tree.places.flatMap((place) => place.twigs.flatMap((twig) => twig.leaves));
 const idsOf = (leaves: SessionLeaf<Row>[]) => sessionsOf(leaves).map((leaf) => leaf.row.id);
@@ -71,7 +79,10 @@ function matches(tree: DeviceTree<Row>, needle: string): boolean {
     words.push(place.sample.profile?.name ?? place.sample.app ?? "");
     for (const twig of place.twigs) {
       words.push(twig.provider.name);
-      for (const { row } of sessionsOf(twig.leaves)) words.push(row.account.identifier, row.account.label ?? "", row.device.name, row.profile?.name ?? row.app ?? "");
+      for (const { row } of sessionsOf(twig.leaves)) {
+        words.push(row.account.identifier, row.account.label ?? "", row.device.name, row.profile?.name ?? row.app ?? "");
+        for (const project of row.projects ?? []) words.push(project.name, project.url ?? "");
+      }
     }
   }
   return words.join(" ").toLowerCase().includes(needle);
@@ -94,6 +105,8 @@ export function deviceScene(rows: Row[], options: { staleBefore: string; history
       under.set(node.id, idsOf([node.leaf]));
       ports.set(node.leaf.row.id, { node: node.id, out: "out", in: "in" });
     }
+    // A project lights up with the session working on it.
+    if (node.kind === "fruit") under.set(node.id, [node.leaf.row.id]);
   }
   const parentOf = new Map(layout.wires.filter((wire) => wire.kind === "graft").map((wire) => [wire.target, wire.source]));
   const shown = trees.flatMap((tree) => sessionsOf(leavesOf(tree)).map((leaf) => leaf.row));
@@ -148,7 +161,7 @@ function captionsFor(scene: DeviceScene, all: Row[], t: Translator): Map<number,
   return captions;
 }
 
-export function deviceFlow(scene: DeviceScene, view: SceneView, all: Row[], t: Translator): { nodes: (DeviceFlowNode | PlaceFlowNode | TwigFlowNode | SproutFlowNode)[]; edges: WireFlowEdge[] } {
+export function deviceFlow(scene: DeviceScene, view: SceneView, all: Row[], t: Translator): { nodes: AnyFlowNode[]; edges: WireFlowEdge[] } {
   const related = view.pointedId !== null ? relatedSessions(scene.shown, view.pointedId) : null;
   const hovered = view.hoveredNode !== null ? scene.under.get(view.hoveredNode) : undefined;
   const lit = related && related.signIns.size > 0 ? related.signIns : hovered ? new Set(hovered) : view.spotlight;
@@ -158,13 +171,14 @@ export function deviceFlow(scene: DeviceScene, view: SceneView, all: Row[], t: T
   const frames = new Map<string, string[]>();
   for (const node of scene.layout.nodes) frames.set(node.tree.key, [...(frames.get(node.tree.key) ?? []), node.id]);
 
-  const nodes = scene.layout.nodes.map((placed): DeviceFlowNode | PlaceFlowNode | TwigFlowNode | SproutFlowNode => {
+  const nodes = scene.layout.nodes.map((placed): AnyFlowNode => {
     // Sizes are fixed by the layout, so the nodes count as measured from the start.
     const base = { id: placed.id, position: { x: placed.x, y: placed.y }, width: placed.width, height: placed.height, measured: { width: placed.width, height: placed.height } };
     const dimmed = lit !== null && !hasLit(scene.under.get(placed.id));
     if (placed.kind === "device") return { ...base, type: "device", data: { placed, dimmed, frame: frames.get(placed.tree.key) ?? [placed.id], onFrame: view.onFrame } };
     if (placed.kind === "place") return { ...base, type: "place", data: { placed, dimmed } };
     if (placed.kind === "twig") return { ...base, type: "twig", data: { ...lighting, placed, dimmed, captions } };
+    if (placed.kind === "fruit") return { ...base, type: "fruit", data: { placed, dimmed } };
     return { ...base, type: "sprout", data: { ...lighting, placed, dimmed } };
   });
 
@@ -310,7 +324,7 @@ function TwigNode({ data }: NodeProps<TwigFlowNode>) {
                 <LeafMark state={leaf.state} />
               </button>
               <Handle type="target" position={Position.Left} id={`in-${id}`} isConnectable={false} className={cn("tree-port", !lit && "tree-port-ghost")} />
-              <Handle type="source" position={Position.Right} id={`out-${id}`} isConnectable={false} className={cn("tree-port", leaf.grown.length === 0 && !lit && "tree-port-ghost")} />
+              <Handle type="source" position={Position.Right} id={`out-${id}`} isConnectable={false} className={cn("tree-port", !bears(leaf) && !lit && "tree-port-ghost")} />
             </li>
           );
         })}
@@ -347,9 +361,58 @@ function SproutNode({ data }: NodeProps<SproutFlowNode>) {
         </span>
         <LeafMark state={leaf.state} />
       </button>
-      <Handle type="source" position={Position.Right} id="out" isConnectable={false} className={cn("tree-port", leaf.grown.length === 0 && !lit && "tree-port-ghost")} />
+      <Handle type="source" position={Position.Right} id="out" isConnectable={false} className={cn("tree-port", !bears(leaf) && !lit && "tree-port-ghost")} />
     </div>
   );
 }
 
-export const DEVICE_NODE_TYPES = { device: DeviceNode, place: PlaceNode, twig: TwigNode, sprout: SproutNode };
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+/** Fruit: a project the session it hangs off works on, with its screenshot when there is one. */
+function FruitNode({ data }: NodeProps<FruitFlowNode>) {
+  const { t } = useI18n();
+  const { project, level } = data.placed;
+  return (
+    <div className={cn("tree-node relative size-full", data.dimmed && "tree-dim")} style={depthStyle(3 + level)}>
+      <Handle type="target" position={Position.Left} id="in" isConnectable={false} className="tree-port" />
+      <div className="flex size-full flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-card">
+        {project.screenshot ? (
+          <div className="relative min-h-0 flex-1 border-b border-line bg-sunken">
+            <Image src={project.screenshot} alt={t("projects.screenshotOf", { name: project.name })} fill unoptimized draggable={false} sizes="248px" className="object-cover object-top" />
+          </div>
+        ) : null}
+        <div className="flex h-[60px] shrink-0 items-center gap-2.5 px-3">
+          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-bark-soft text-bark">
+            <Cherry className="size-4" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-bold text-ink" title={project.name}>
+              {project.name}
+            </span>
+            <span className="block truncate font-mono text-[11px] text-muted">{project.url ? hostOf(project.url) : t("projects.noUrl")}</span>
+          </span>
+          {project.url ? (
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              title={t("projects.openSite")}
+              aria-label={t("projects.openSite")}
+              className="nodrag inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-subtle hover:text-ink"
+            >
+              <ExternalLink className="size-4" />
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const DEVICE_NODE_TYPES = { device: DeviceNode, place: PlaceNode, twig: TwigNode, sprout: SproutNode, fruit: FruitNode };

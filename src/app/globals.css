@@ -384,6 +384,12 @@
     stroke: var(--accent);
     stroke-width: 2.25;
   }
+  /* A stalk from a session to the project it works on (fruit). */
+  .tree-wire-fruit {
+    stroke: var(--bark);
+    stroke-width: 1.75;
+    opacity: 0.9;
+  }
   /* Ports of sessions show only while their links are drawn. */
   .tree-canvas .tree-port-ghost {
     opacity: 0;
@@ -417,7 +423,8 @@
   }
   .tree-wire-trunk,
   .tree-wire-branch,
-  .tree-wire-graft {
+  .tree-wire-graft,
+  .tree-wire-fruit {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
     animation: tree-draw 640ms ease-out forwards;
@@ -426,6 +433,7 @@
   .tree-settled .tree-wire-trunk,
   .tree-settled .tree-wire-branch,
   .tree-settled .tree-wire-graft,
+  .tree-settled .tree-wire-fruit,
   .tree-settled .tree-wire-label {
     animation: none;
     stroke-dashoffset: 0;

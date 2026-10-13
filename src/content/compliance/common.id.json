@@ -2,6 +2,7 @@
   "infrastructure": {
     "app": { "name": "Vercel", "role": "Hosting aplikasi AkunMu (fungsi server)" },
     "database": { "name": "Neon (PostgreSQL)", "role": "Basis data AkunMu" },
+    "storage": { "name": "Vercel Blob", "role": "Penyimpanan berkas AkunMu (tangkapan layar proyek)" },
     "ai": { "name": "Penyedia AI", "role": "Pemrosesan teks oleh model AI untuk asisten" },
     "client": { "name": "Perangkat pengguna", "role": "Ekstensi browser dan AkunMu Desktop (data AkunMu Desktop tersimpan lokal di komputer pengguna)" }
   },

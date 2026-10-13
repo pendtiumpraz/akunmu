@@ -5,6 +5,7 @@ import { findOrCreateAccount, providerView } from "../accounts/service";
 import { recordAudit } from "../audit/service";
 import { countDevices, devicesCheckedBefore, findDeviceById, findProfileById, listProfiles } from "../devices/repository";
 import { deviceView, listDevicesView, profileView } from "../devices/service";
+import { projectsBySignIn } from "../projects/service";
 import {
   findSignInById,
   insertSignIn,
@@ -182,7 +183,9 @@ export async function deleteSignIn(id: number, actorId: number) {
  * out since, and the trees can show that history.
  */
 export async function treeView() {
-  const signIns = await signInRows({ includeSignedOut: true });
+  const [rows, projects] = await Promise.all([signInRows({ includeSignedOut: true }), projectsBySignIn()]);
+  // What each session works on hangs off it in the trees.
+  const signIns = rows.map((row) => ({ ...row, projects: projects.get(row.id) ?? [] }));
   return { signIns, staleBefore: staleBefore().toISOString(), staleAfterDays: STALE_AFTER_DAYS };
 }
 
