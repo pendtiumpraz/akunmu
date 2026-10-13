@@ -147,6 +147,9 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 **2026-10-13 12:00 WIB**
 > update juga rilis desktopnya
 
+**2026-10-13 13:00 WIB**
+> perbaiki bug secret.json itu, lalu push
+
 ---
 
 ## ✅ Approval & Feedback
@@ -161,3 +164,4 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 | 2026-10-12 19:25 | Fase 10 deploy | "migrate dan push" (Neon `0004` + push `main`) |
 | 2026-10-13 11:00 | Fase 11 + 12 deploy | "migrate dan push" (Neon `0005` + push `main`; profil CLI dan proyek owner dicatat) |
 | 2026-10-13 12:00 | Rilis desktop | "update juga rilis desktopnya" (aset rilis `v0.1.0` diganti dengan build dari `main`) |
+| 2026-10-13 13:00 | Perbaikan desktop | "perbaiki bug secret.json itu, lalu push" (desktop tetap terbuka bila kunci tersimpan tak terbaca; push `main`) |
