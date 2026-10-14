@@ -156,6 +156,18 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 **2026-10-13 17:20 WIB**
 > hapus aset lama di rilis v0.1.0
 
+**2026-10-13 17:35 WIB**
+> ya push
+
+**2026-10-14 14:00 WIB (Fase 12, data)** — alamat email disamarkan dengan nomor yang sama seperti 13 Okt (`[email …]`); situs proyek adalah situs publik
+> [email 2] di PC #1 ngerjain akunmu.sainskerta.net dan event.sainskerta.net pakai claude cli jadi cabang 2, screenshot aja 2 appsnya, lalu claude desktop [email 2] revamp stoodio.qmodo.co dan notaris apps notarsis.vercel.app, lalu [email 6] pakai claude desktop di laptop asus dia ngerjain Course LMS (ga perlu screenshot, kasih aja button upload untuk uplaod screenshotnya ke blob)
+
+> screenshot semua selain course LMS ya
+
+> [email 2] di PC #1 juga ngerjain nexus.privasimu.com (prod), dan privasimu.aisac.id (dev) Privasimu, dan ngerjain nadi-health.id
+
+> pakai claude-cli yg 3 terakhir ini
+
 ---
 
 ## ✅ Approval & Feedback
@@ -173,3 +185,5 @@ Pilihan owner atas usulan AI: **semua sekaligus**; yang ditemukan menjadi **sara
 | 2026-10-13 13:00 | Perbaikan desktop | "perbaiki bug secret.json itu, lalu push" (desktop tetap terbuka bila kunci tersimpan tak terbaca; push `main`) |
 | 2026-10-13 14:00 | Rilis 0.2.0 | "naikkan versinya jadi 0.2.0 lalu rilis" (versi 0.2.0, push `main`, rilis GitHub `v0.2.0` sebagai terbaru) |
 | 2026-10-13 17:20 | Rilis v0.1.0 | "hapus aset lama di rilis v0.1.0" (3 berkas dihapus; rilis dan tag tetap, catatannya menunjuk ke rilis terbaru) |
+| 2026-10-13 17:35 | Push dokumen | "ya push" (catatan penghapusan berkas `v0.1.0`, `8418164`) |
+| 2026-10-14 14:00 | Fase 12 data + tombol unggah | Proyek owner di PC #1 (CLI `claude` 5 proyek, Claude Desktop 2 proyek) dan Laptop ASUS (Claude Desktop [email 6], Course LMS) dicatat; tangkapan layar semua kecuali Course LMS; tombol unggah tangkapan layar di kartu proyek dan buah pohon |
