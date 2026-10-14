@@ -20,6 +20,7 @@ import { ProjectDrawer } from "../drawers/project-drawer";
 import type { TreeData } from "../map-types";
 import { PlaceIcon } from "../sign-in-actions";
 import { placeLabel } from "../ui";
+import { ScreenshotUpload } from "./screenshot-upload";
 
 type DrawerState = { project: ProjectView | null; sessionId: number | null } | null;
 
@@ -119,10 +120,11 @@ export function ProjectsManager({ startSessionId }: { startSessionId: number | n
                   {project.screenshot ? (
                     <Image src={project.screenshot} alt={t("projects.screenshotOf", { name: project.name })} fill unoptimized sizes="(min-width: 1536px) 33vw, (min-width: 768px) 50vw, 100vw" className="object-cover object-top" />
                   ) : (
-                    <span className="flex size-full flex-col items-center justify-center gap-1.5 text-faint">
+                    <div className="flex size-full flex-col items-center justify-center gap-1.5 text-faint">
                       <Cherry className="size-7" />
                       <span className="text-xs">{t("projects.noScreenshot")}</span>
-                    </span>
+                      {canWrite ? <ScreenshotUpload projectId={project.id} onUploaded={list.reload} className="mt-1.5" /> : null}
+                    </div>
                   )}
                 </div>
                 <div className="p-4">

@@ -13,7 +13,7 @@ import { PlaceIcon, canOpenInProfile, useSignInActions } from "../sign-in-action
 import { Freshness, ProviderAvatar, placeLabel, shortDate } from "../ui";
 import { ACCOUNT_NODE_TYPES, accountFlow, accountFrame, accountScene, accountStats, type SceneView } from "./account-mode";
 import { DEVICE_NODE_TYPES, deviceFlow, deviceFrame, deviceScene, deviceSpotlight, deviceStats } from "./device-mode";
-import { LeafMark, MethodChip, Wire, type WireFlowEdge } from "./parts";
+import { FruitActionsContext, LeafMark, MethodChip, Wire, type WireFlowEdge } from "./parts";
 
 /**
  * The trees canvas (ComfyUI-like, React Flow). Two ways to grow the forest:
@@ -161,6 +161,11 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
   const onFrame = (ids: string[]) => {
     if (canvas) void fitView({ nodes: ids.map((id) => ({ id })), padding: inPixels(framePadding(canvas)), maxZoom: 1.1, duration: 450 });
   };
+  // After an upload from a fruit the map loads again: its tree is framed then, as a tree asked for in the address is.
+  const onChanged = (deviceId: number) => {
+    pendingFocus.current = { kind: "device", id: deviceId };
+    reload();
+  };
   const view: SceneView = { pointedId: hovered ?? selectedId, hoveredNode, selectedId, onHover: setHovered, onSelect: select, onFrame, spotlight };
   const flow: { nodes: Node[]; edges: WireFlowEdge[] } = byDevice ? deviceFlow(byDevice, view, data.signIns, t) : byAccount ? accountFlow(byAccount, view) : { nodes: [], edges: [] };
   const stats = byDevice ? deviceStats(byDevice) : byAccount ? accountStats(byAccount) : null;
@@ -177,127 +182,129 @@ function Forest({ data, reload, canWrite, onRecord, focus = null }: { data: Tree
       className={cn("tree-canvas relative h-[calc(100dvh-15rem)] min-h-[440px] overflow-hidden rounded-panel border border-line sm:h-[calc(100dvh-11.5rem)]", settled && "tree-settled")}
       aria-label={t("tree.title")}
     >
-      <ReactFlow
-        nodes={flow.nodes}
-        edges={flow.edges}
-        nodeTypes={NODE_TYPES}
-        edgeTypes={EDGE_TYPES}
-        defaultViewport={{ ...START, zoom: 0.8 }}
-        minZoom={0.1}
-        maxZoom={1.75}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        nodesFocusable={false}
-        edgesFocusable={false}
-        zoomOnDoubleClick={false}
-        attributionPosition="bottom-left"
-        onPaneClick={() => select(null)}
-        onNodeMouseEnter={(_, node) => setHoveredNode(node.id)}
-        onNodeMouseLeave={() => setHoveredNode(null)}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} />
-        <Panel position="top-left" className="!m-2 sm:!m-3">
-          <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-line bg-surface/95 p-1.5 shadow-float backdrop-blur">
-            <label className="relative">
-              <span className="sr-only">{t("tree.search")}</span>
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-faint" />
-              <input
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
+      <FruitActionsContext.Provider value={{ canWrite, onChanged }}>
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
+          defaultViewport={{ ...START, zoom: 0.8 }}
+          minZoom={0.1}
+          maxZoom={1.75}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          nodesFocusable={false}
+          edgesFocusable={false}
+          zoomOnDoubleClick={false}
+          attributionPosition="bottom-left"
+          onPaneClick={() => select(null)}
+          onNodeMouseEnter={(_, node) => setHoveredNode(node.id)}
+          onNodeMouseLeave={() => setHoveredNode(null)}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} />
+          <Panel position="top-left" className="!m-2 sm:!m-3">
+            <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-line bg-surface/95 p-1.5 shadow-float backdrop-blur">
+              <label className="relative">
+                <span className="sr-only">{t("tree.search")}</span>
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-faint" />
+                <input
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setSpotlight(null);
+                  }}
+                  placeholder={t("tree.search")}
+                  className="h-8 w-40 rounded-lg bg-subtle pl-8 pr-2 text-[13px] text-ink outline-none placeholder:text-faint focus:ring-2 focus:ring-accent-line sm:w-48"
+                />
+              </label>
+              <div role="radiogroup" aria-label={t("tree.mode")} className="inline-flex rounded-lg bg-subtle p-0.5">
+                {(
+                  [
+                    ["device", Laptop, t("tree.modeDevice")],
+                    ["account", AtSign, t("tree.modeAccount")],
+                  ] as const
+                ).map(([value, Icon, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={mode === value}
+                    onClick={() => switchMode(value)}
+                    className={cn(
+                      "inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[12px] font-semibold transition-colors",
+                      mode === value ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink",
+                    )}
+                  >
+                    <Icon className="size-3.5" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                aria-pressed={history}
+                onClick={() => {
+                  setHistory((value) => !value);
                   setSpotlight(null);
                 }}
-                placeholder={t("tree.search")}
-                className="h-8 w-40 rounded-lg bg-subtle pl-8 pr-2 text-[13px] text-ink outline-none placeholder:text-faint focus:ring-2 focus:ring-accent-line sm:w-48"
-              />
-            </label>
-            <div role="radiogroup" aria-label={t("tree.mode")} className="inline-flex rounded-lg bg-subtle p-0.5">
-              {(
-                [
-                  ["device", Laptop, t("tree.modeDevice")],
-                  ["account", AtSign, t("tree.modeAccount")],
-                ] as const
-              ).map(([value, Icon, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={mode === value}
-                  onClick={() => switchMode(value)}
-                  className={cn(
-                    "inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[12px] font-semibold transition-colors",
-                    mode === value ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink",
-                  )}
-                >
-                  <Icon className="size-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              aria-pressed={history}
-              onClick={() => {
-                setHistory((value) => !value);
-                setSpotlight(null);
-              }}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-semibold transition-colors",
-                history ? "bg-accent-soft text-accent" : "text-ink-2 hover:bg-subtle",
-              )}
-            >
-              <History className="size-3.5" />
-              {t("tree.history")}
-            </button>
-            {stats ? (
-              <span className="hidden items-center gap-3 px-2 text-xs text-muted lg:flex">
-                <span className="inline-flex items-center gap-1">
-                  <TreeDeciduous className="size-3.5 text-ok" />
-                  {mode === "device" ? t("tree.countDevices", { count: format.number(stats.devices) }) : t("tree.countTrees", { count: format.number(stats.trees) })}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Leaf className="size-3.5 text-ok" />
-                  {t("tree.countSessions", { count: format.number(stats.sessions) })}
-                </span>
-                {stats.wilting > 0 ? (
-                  <span className="inline-flex items-center gap-1 font-semibold text-warn-ink">
-                    <Leaf className="size-3.5 text-warn" />
-                    {t("tree.countWilting", { count: format.number(stats.wilting) })}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-semibold transition-colors",
+                  history ? "bg-accent-soft text-accent" : "text-ink-2 hover:bg-subtle",
+                )}
+              >
+                <History className="size-3.5" />
+                {t("tree.history")}
+              </button>
+              {stats ? (
+                <span className="hidden items-center gap-3 px-2 text-xs text-muted lg:flex">
+                  <span className="inline-flex items-center gap-1">
+                    <TreeDeciduous className="size-3.5 text-ok" />
+                    {mode === "device" ? t("tree.countDevices", { count: format.number(stats.devices) }) : t("tree.countTrees", { count: format.number(stats.trees) })}
                   </span>
-                ) : null}
-              </span>
-            ) : null}
-          </div>
-        </Panel>
-        <Panel position="top-right" className={cn("!m-3 hidden xl:block", selected && "!hidden")}>
-          {legendOpen ? (
-            <Legend mode={mode} onClose={() => toggleLegend(false)} />
-          ) : (
-            <button
-              type="button"
-              onClick={() => toggleLegend(true)}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-surface/95 px-2.5 text-[12px] font-semibold text-ink-2 shadow-float backdrop-blur hover:text-ink"
-            >
-              <Leaf className="size-3.5 text-ok" />
-              {t("tree.legendTitle")}
-            </button>
-          )}
-        </Panel>
-        <Controls showInteractive={false} position="bottom-right" />
-        <MiniMap
-          position="bottom-right"
-          pannable
-          zoomable
-          className="!hidden md:!block"
-          style={{ width: 176, height: 116, marginBottom: 124 }}
-          bgColor="var(--surface)"
-          maskColor="color-mix(in oklab, var(--canvas) 72%, transparent)"
-          nodeColor={(node) =>
-            node.type === "account" || node.type === "device" ? "var(--trunk-bg)" : node.type === "sprout" ? "var(--accent-line)" : node.type === "fruit" ? "var(--bark)" : "var(--line-strong)"
-          }
-        />
-      </ReactFlow>
+                  <span className="inline-flex items-center gap-1">
+                    <Leaf className="size-3.5 text-ok" />
+                    {t("tree.countSessions", { count: format.number(stats.sessions) })}
+                  </span>
+                  {stats.wilting > 0 ? (
+                    <span className="inline-flex items-center gap-1 font-semibold text-warn-ink">
+                      <Leaf className="size-3.5 text-warn" />
+                      {t("tree.countWilting", { count: format.number(stats.wilting) })}
+                    </span>
+                  ) : null}
+                </span>
+              ) : null}
+            </div>
+          </Panel>
+          <Panel position="top-right" className={cn("!m-3 hidden xl:block", selected && "!hidden")}>
+            {legendOpen ? (
+              <Legend mode={mode} onClose={() => toggleLegend(false)} />
+            ) : (
+              <button
+                type="button"
+                onClick={() => toggleLegend(true)}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-surface/95 px-2.5 text-[12px] font-semibold text-ink-2 shadow-float backdrop-blur hover:text-ink"
+              >
+                <Leaf className="size-3.5 text-ok" />
+                {t("tree.legendTitle")}
+              </button>
+            )}
+          </Panel>
+          <Controls showInteractive={false} position="bottom-right" />
+          <MiniMap
+            position="bottom-right"
+            pannable
+            zoomable
+            className="!hidden md:!block"
+            style={{ width: 176, height: 116, marginBottom: 124 }}
+            bgColor="var(--surface)"
+            maskColor="color-mix(in oklab, var(--canvas) 72%, transparent)"
+            nodeColor={(node) =>
+              node.type === "account" || node.type === "device" ? "var(--trunk-bg)" : node.type === "sprout" ? "var(--accent-line)" : node.type === "fruit" ? "var(--bark)" : "var(--line-strong)"
+            }
+          />
+        </ReactFlow>
+      </FruitActionsContext.Provider>
 
       {data.signIns.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center p-6">

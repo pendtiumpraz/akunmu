@@ -3,7 +3,7 @@
 import { Cherry, ImagePlus, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { MAX_SCREENSHOT_BYTES, type ProjectView } from "@/modules/projects/types";
+import { MAX_SCREENSHOT_BYTES, SCREENSHOT_ACCEPT, type ProjectView } from "@/modules/projects/types";
 import { api, firstFieldErrors } from "@/shared/http/client";
 import { useI18n } from "@/shared/i18n/client";
 import { Button } from "@/shared/ui/button";
@@ -17,8 +17,6 @@ import { placeLabel } from "../ui";
 
 type Session = TreeData["signIns"][number];
 type Draft = { name: string; url: string; notes: string; signInIds: number[] };
-
-const IMAGE_ACCEPT = "image/png,image/jpeg,image/webp";
 
 /**
  * Add or edit a project: its name, site and notes, the login sessions working on it, and its screenshot (stored in
@@ -164,7 +162,7 @@ export function ProjectDrawer({
               <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-line px-3 text-[13px] font-semibold text-ink-2 hover:bg-subtle">
                 <ImagePlus className="size-4" />
                 {shownImage ? t("projects.replaceScreenshot") : t("projects.uploadScreenshot")}
-                <input type="file" accept={IMAGE_ACCEPT} className="sr-only" onChange={(event) => pick(event.target.files?.[0] ?? null)} />
+                <input type="file" accept={SCREENSHOT_ACCEPT} className="sr-only" onChange={(event) => pick(event.target.files?.[0] ?? null)} />
               </label>
               {shownImage ? (
                 <Button

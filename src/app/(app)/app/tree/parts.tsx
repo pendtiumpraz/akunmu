@@ -2,7 +2,7 @@
 
 import { EdgeLabelRenderer, getBezierPath, type Edge, type EdgeProps } from "@xyflow/react";
 import { GitBranch, Leaf } from "lucide-react";
-import type { CSSProperties } from "react";
+import { createContext, type CSSProperties } from "react";
 import type { LeafState } from "@/modules/signins/tree";
 import type { ApprovalMethod } from "@/modules/signins/types";
 import { useI18n } from "@/shared/i18n/client";
@@ -23,6 +23,13 @@ export type Row = TreeData["signIns"][number];
 export type WireKind = "trunk" | "branch" | "graft" | "cross" | "fruit";
 export type WireData = { kind: WireKind; method: ApprovalMethod | null; depth: number; dimmed: boolean; active: boolean; live?: boolean };
 export type WireFlowEdge = Edge<WireData, "wire">;
+
+/**
+ * What a fruit may do: when the viewer may change the map, offer to upload a missing screenshot, then load the map
+ * again with the tree it hangs in (that device's) in view. Given by the canvas around its nodes.
+ */
+export type FruitActions = { canWrite: boolean; onChanged: (deviceId: number) => void };
+export const FruitActionsContext = createContext<FruitActions>({ canWrite: false, onChanged: () => undefined });
 
 export function depthStyle(depth: number): CSSProperties {
   return { "--depth": depth } as CSSProperties;

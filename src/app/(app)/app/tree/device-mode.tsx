@@ -3,6 +3,7 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { Cherry, ExternalLink, Leaf, MonitorSmartphone, Waypoints } from "lucide-react";
 import Image from "next/image";
+import { useContext } from "react";
 import {
   DEVICE_TREE_SIZES,
   buildDeviceForest,
@@ -22,10 +23,11 @@ import {
 import { useI18n } from "@/shared/i18n/client";
 import type { Translator } from "@/shared/i18n/translate";
 import { cn } from "@/shared/ui/cn";
+import { ScreenshotUpload } from "../projects/screenshot-upload";
 import { PlaceIcon } from "../sign-in-actions";
 import { DeviceIcon, ProviderAvatar, approvalLabel, placeLabel, systemLabel } from "../ui";
 import type { SceneView } from "./account-mode";
-import { LeafMark, depthStyle, placeDetail, placeTitle, type Row, type WireFlowEdge } from "./parts";
+import { FruitActionsContext, LeafMark, depthStyle, placeDetail, placeTitle, type Row, type WireFlowEdge } from "./parts";
 
 /**
  * "By device": one tree per device where something was signed in directly. The device is the trunk, its browser
@@ -377,7 +379,8 @@ function hostOf(url: string): string {
 /** Fruit: a project the session it hangs off works on, with its screenshot when there is one. */
 function FruitNode({ data }: NodeProps<FruitFlowNode>) {
   const { t } = useI18n();
-  const { project, level } = data.placed;
+  const actions = useContext(FruitActionsContext);
+  const { project, level, tree } = data.placed;
   return (
     <div className={cn("tree-node relative size-full", data.dimmed && "tree-dim")} style={depthStyle(3 + level)}>
       <Handle type="target" position={Position.Left} id="in" isConnectable={false} className="tree-port" />
@@ -397,6 +400,9 @@ function FruitNode({ data }: NodeProps<FruitFlowNode>) {
             </span>
             <span className="block truncate font-mono text-[11px] text-muted">{project.url ? hostOf(project.url) : t("projects.noUrl")}</span>
           </span>
+          {actions.canWrite && !project.screenshot ? (
+            <ScreenshotUpload projectId={project.id} onUploaded={() => actions.onChanged(tree.device.id)} compact className="nodrag" />
+          ) : null}
           {project.url ? (
             <a
               href={project.url}

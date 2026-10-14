@@ -17,3 +17,6 @@ export type TreeProject = Pick<ProjectView, "id" | "name" | "url" | "screenshot"
 
 /** Vercel's function body limit is 4.5 MB; a screenshot stays under it. */
 export const MAX_SCREENSHOT_BYTES = 4 * 1024 * 1024;
+
+/** The image types a file picker offers for a screenshot (the server still checks each file's signature). */
+export const SCREENSHOT_ACCEPT = "image/png,image/jpeg,image/webp";
